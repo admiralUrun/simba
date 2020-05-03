@@ -3,7 +3,7 @@
 @import views.html.helper._
 
 @creteAnInput(keyInForm: String, label: String, layOutClass: String = "") = {
-    @inputText(cF(keyInForm), '_label -> label, '_help -> "", Symbol("class") -> layOutClass)
+    @inputText(cF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass)
 }
 
 @mainView("Новий Клієнт") {
@@ -12,25 +12,25 @@
     @form(routes.CustomerController.createCustomer()) {
         <fieldset>
             @CSRF.formField
-            <div class="container row">
-                @creteAnInput("firstName", "Ім'я *", "offset-1")
-                @creteAnInput("lastName", "Прізвище", "offset-2")
+            <div class="container-fluid row">
+                @creteAnInput("firstName", "Ім'я *", "col1")
+                @creteAnInput("lastName", "Прізвище", "offset col-auto")
             </div>
 
-            <div class="container row">
-                @creteAnInput("phone", "Телефон *", "offset-1")
-                @creteAnInput("phoneNote", "Як звиртатися", "offset-2")
+            <div class="container-fluid row">
+                @creteAnInput("phone", "Телефон *", "colFirst")
+                @creteAnInput("phoneNote", "Як звиртатися", "offset col-auto")
             </div>
-            <div class="container row">
-                @creteAnInput("phone2", "Додатковий Телефон", "offset-1")
-                @creteAnInput("phoneNote2", "Власник Дод. Телефону", "offset-2")
+            <div class="container-fluid row">
+                @creteAnInput("phone2", "Додатковий Телефон", "colFirst")
+                @creteAnInput("phoneNote2", "Власник Дод. Телефону", "offset col-auto")
             </div>
-            <div class="container row">
-                @creteAnInput("city", "Місто *", "offset-1")
-                @creteAnInput("address", "Адресса *", "offset-2")
-                @creteAnInput("flat", "Квартира", "offset-3")
-                @creteAnInput("entrance", "Під'їзд", "offset-4")
-                @creteAnInput("floor", "Поверх", "offset-5")
+            <div class="container-fluid row">
+                @creteAnInput("city", "Місто *", "colFirst")
+                @creteAnInput("address", "Адресса *", "offset col-auto")
+                @creteAnInput("flat", "Квартира", "offset col-auto")
+                @creteAnInput("entrance", "Під'їзд", "offset col-auto")
+                @creteAnInput("floor", "Поверх", "offset col-auto")
             </div>
             @creteAnInput("instagram", "Instagram")
             @creteAnInput("preferences", "Надає перевагу")

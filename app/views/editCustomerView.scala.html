@@ -2,9 +2,9 @@
 
     @import views.html.helper._
 
-    @creteAnInput(keyInForm: String, label: String) = {
-        @inputText(cF(keyInForm), '_label -> label, '_help -> "")
-    }
+@creteAnInput(keyInForm: String, label: String, layOutClass: String = "") = {
+    @inputText(cF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass)
+}
 
     @mainView(s"Клієнт $id: $name") {
         <h1>Змінити наявного Клієнта</h1>
@@ -12,17 +12,26 @@
     @form(routes.CustomerController.update()) {
         <fieldset>
             @CSRF.formField
-            @creteAnInput("firstName", "Ім'я *")
-            @creteAnInput("lastName", "Прізвище")
-            @creteAnInput("phone", "Телефон *")
-            @creteAnInput("phoneNote", "Як звиртатися")
-            @creteAnInput("phone2", "Додатковий Телефон")
-            @creteAnInput("phoneNote2", "Власник Дод. Телефону")
-            @creteAnInput("city", "Місто *")
-            @creteAnInput("address", "Адресса *")
-            @creteAnInput("flat", "Квартира")
-            @creteAnInput("entrance", "Під'їзд")
-            @creteAnInput("floor", "Поверх")
+            <div class="container-fluid row">
+                @creteAnInput("firstName", "Ім'я *", "col1")
+                @creteAnInput("lastName", "Прізвище", "offset col-auto")
+            </div>
+
+            <div class="container-fluid row">
+                @creteAnInput("phone", "Телефон *", "colFirst")
+                @creteAnInput("phoneNote", "Як звиртатися", "offset col-auto")
+            </div>
+            <div class="container-fluid row">
+                @creteAnInput("phone2", "Додатковий Телефон", "colFirst")
+                @creteAnInput("phoneNote2", "Власник Дод. Телефону", "offset col-auto")
+            </div>
+            <div class="container-fluid row">
+                @creteAnInput("city", "Місто *", "colFirst")
+                @creteAnInput("address", "Адресса *", "offset col-auto")
+                @creteAnInput("flat", "Квартира", "offset col-auto")
+                @creteAnInput("entrance", "Під'їзд", "offset col-auto")
+                @creteAnInput("floor", "Поверх", "offset col-auto")
+            </div>
             @creteAnInput("instagram", "Instagram")
             @creteAnInput("preferences", "Надає перевагу")
             @creteAnInput("notes", "Нотатка")
