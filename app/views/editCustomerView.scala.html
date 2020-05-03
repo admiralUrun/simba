@@ -2,8 +2,12 @@
 
     @import views.html.helper._
 
-@creteAnInput(keyInForm: String, label: String, layOutClass: String = "") = {
+@creteAnInput(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
+@if(showError && cF.hasErrors) {
+    @inputText(cF(keyInForm), '_label -> label, '_help -> "", '_error -> "Це поле повино бути повним", '_class -> layOutClass)
+} else {
     @inputText(cF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass)
+}
 }
 
     @mainView(s"Клієнт $id: $name") {
@@ -13,12 +17,12 @@
         <fieldset>
             @CSRF.formField
             <div class="container-fluid row">
-                @creteAnInput("firstName", "Ім'я *", "col1")
+                @creteAnInput("firstName", "Ім'я *", "col1", showError = true)
                 @creteAnInput("lastName", "Прізвище", "offset col-auto")
             </div>
 
             <div class="container-fluid row">
-                @creteAnInput("phone", "Телефон *", "colFirst")
+                @creteAnInput("phone", "Телефон *", "colFirst", showError = true)
                 @creteAnInput("phoneNote", "Як звиртатися", "offset col-auto")
             </div>
             <div class="container-fluid row">
@@ -26,8 +30,8 @@
                 @creteAnInput("phoneNote2", "Власник Дод. Телефону", "offset col-auto")
             </div>
             <div class="container-fluid row">
-                @creteAnInput("city", "Місто *", "colFirst")
-                @creteAnInput("address", "Адресса *", "offset col-auto")
+                @creteAnInput("city", "Місто *", "colFirst", showError = true)
+                @creteAnInput("address", "Адресса *", "offset col-auto", showError = true)
                 @creteAnInput("flat", "Квартира", "offset col-auto")
                 @creteAnInput("entrance", "Під'їзд", "offset col-auto")
                 @creteAnInput("floor", "Поверх", "offset col-auto")
@@ -36,6 +40,7 @@
             @creteAnInput("preferences", "Надає перевагу")
             @creteAnInput("notes", "Нотатка")
         </fieldset>
+
         <div class="actions">
             <input type="submit" value="Змінити" class="btn-primary"> Або
             <a href="@routes.CustomerController.toCustomersListPage()" class="btn">Скасувати</a>
