@@ -10,7 +10,7 @@ resolvers += "Akka Snapshot Repository" at "https://repo.akka.io/snapshots/"
 
 scalaVersion := "2.12.2"
 
-libraryDependencies ++= Seq(jdbc, ehcache, ws, specs2 % Test, guice,
+libraryDependencies ++= Seq(jdbc, ws, specs2 % Test, guice,
   "org.typelevel" %% "cats-core" % "2.1.1",
   "org.tpolecat" %% "doobie-core" % "0.8.8",
   "org.tpolecat" %% "doobie-h2" % "0.8.8",

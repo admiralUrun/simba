@@ -1,0 +1,70 @@
+@(customers: Seq[Customer])(implicit request: MessagesRequestHeader)
+@import helper._
+
+@header() = {
+@List((1, "id"), (2, "Ім'я"), (3, "Прізвище"),
+    (4, "Телефон"), (5, "Власник Телефону"),
+    (6, "Додатковий Телефон"), (7, "Власник Дод. Телефону"),
+    (8, "Місто"), (9, "Адреса"), (10, "Квартира"), (11, "Під'їзд"), (12, "Поверх"),
+    (13, "Instagram"),
+    (14, "Надає перевагу"), (15, "Нотатка")).map{ h =>
+        <th class="col@h._1 header">
+            @h._2
+        </th>
+    }
+}
+
+@mainView("Клієнти") {
+
+    @request.flash.get("success").map { message =>
+        <div class="alert-success">
+            <strong>Готово !</strong> @message
+        </div>
+    }
+
+    <div class="container-fluid">
+        <div class="row">
+            @form(routes.CustomerController.search(""), Symbol("class") -> "colFirst") {
+                <input type="search" name="search">
+                <input type="submit" id="searchSubmit" value="Пошук" class="btn btn-primary">
+            }
+            <div class="col"></div>
+            <a class="colLast btn btn-success" id="add" href="@routes.CustomerController.toCreateCustomerPage()">Додати Клієнта</a>
+        </div>
+    </div>
+
+    <div id="table">
+        @if(customers.nonEmpty) {
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                @header()
+                </tr>
+            </thead>
+            <tbody>
+            @customers.map { c =>
+                <tr>
+                    <td><a href="@routes.CustomerController.toEditCustomerPage(c.id.head)">@c.id</a></td>
+                    <td>@c.firstName</td>
+                    <td>@c.lastName.getOrElse("-")</td>
+                    <td>@c.phone</td>
+                    <td>@c.phoneNote.getOrElse("-")</td>
+                    <td>@c.phone2.getOrElse("-")</td>
+                    <td>@c.phoneNote2.getOrElse("-")</td>
+                    <td>@c.city</td>
+                    <td>@c.address</td>
+                    <td>@c.flat.getOrElse("-")</td>
+                    <td>@c.entrance.getOrElse("-")</td>
+                    <td>@c.floor.getOrElse("-")</td>
+                    <td>@c.instagram.getOrElse("-")</td>
+                    <td>@c.preferences.getOrElse("-")</td>
+                    <td>@c.notes.getOrElse("-")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    } else {
+        <h4 class="alert-info">Тут нікого не має, мяу</h4>
+    }
+    </div>
+}
