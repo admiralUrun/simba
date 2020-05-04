@@ -1,4 +1,4 @@
-@(id:String, cF: Form[Customer], name: String)(implicit requestHeader: MessagesRequestHeader)
+@(id:Int, cF: Form[Customer], name: String)(implicit requestHeader: MessagesRequestHeader)
 
     @import views.html.helper._
 
@@ -13,7 +13,7 @@
     @mainView(s"Клієнт $id: $name") {
         <h1>Змінити наявного Клієнта</h1>
 
-    @form(routes.CustomerController.update()) {
+    @form(routes.CustomerController.update(id)) {
         <fieldset>
             @CSRF.formField
             <div class="container-fluid row">

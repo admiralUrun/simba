@@ -29,6 +29,11 @@
             <strong>Готово !</strong> @message
         </div>
     }
+    @request.flash.get("error").map { message =>
+        <div class="alert-danger">
+            <strong>@message</strong>
+        </div>
+    }
 
     <div class="container-fluid">
         <div class="row">
@@ -61,7 +66,7 @@
                     <td>@c.phoneNote2.getOrElse("-")</td>
                     <td>@c.city</td>
                     <td>
-                        @c.address
+                        @c.address,
                         @adrressBuilder("Під'їзд", c.entrance)
                         @adrressBuilder("Поверх", c.floor)
                         @adrressBuilder("Квартира", c.flat, comaInTheEnd = false)

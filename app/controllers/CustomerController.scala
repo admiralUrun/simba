@@ -11,7 +11,7 @@ class CustomerController @Inject()(cM: CustomerModel, cc: MessagesControllerComp
 
   private val customerForm = Form(
     mapping(
-      "id" -> ignored(None: Option[String]),
+      "id" -> ignored(None: Option[Int]),
       "firstName" -> nonEmptyText,
       "lastName" -> optional(text),
       "phone" -> nonEmptyText,
@@ -38,17 +38,17 @@ class CustomerController @Inject()(cM: CustomerModel, cc: MessagesControllerComp
   def toCreateCustomerPage() = Action { implicit request =>
     Ok(views.html.createCustomerView(customerForm))
   }
-  def toEditCustomerPage(id: String) = Action { implicit request =>
+  def toEditCustomerPage(id: Int) = Action { implicit request =>
     val customer = cM.findByID(id)
     Ok(views.html.editCustomerView(id, customerForm.fill(customer), customer.firstName))
   }
 
-  def update() = Action { implicit request =>
+  def update(id: Int) = Action { implicit request =>
     customerForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.editCustomerView(formWithErrors.data("id"), formWithErrors, formWithErrors.data("firstName"))),
+      formWithErrors => BadRequest(views.html.editCustomerView(id, formWithErrors, formWithErrors.data("firstName"))),
       customer => {
-        cM.editCustomer(customer)
-        customerListPage.flashing("success" -> "Клієнта змінено, мяу")
+        if(cM.editCustomer(id, customer)) customerListPage.flashing("success" -> "Клієнта змінено, мяу")
+        else customerListPage.flashing("error" -> "Щось пішло не так ;(")
       }
     )
   }

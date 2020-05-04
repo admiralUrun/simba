@@ -31,28 +31,28 @@ class CustomerModel @Inject()(dM: DoobieModel) {
       .unsafeRunAsyncAndForget()
   }
 
-  def findByID(id: String): Customer = { // TODO: Ask senior how to make it better
+  def findByID(id: Int): Customer = { // TODO: Ask senior how to make it better
     sql"select * from customers where id = ${id}"
       .query[Customer]
       .to[List]
       .transact(xa)
       .unsafeRunSync().head
   }
-  def editCustomer(c: Customer): Unit = { // TODO fix it
+  def editCustomer(id: Int, c: Customer): Boolean = {
     sql"""update customers set first_name = ${c.firstName}, last_name = ${c.lastName},
          phone = ${c.phone}, phone_note = ${c.phoneNote},
          phone2 = ${c.phone2}, phone2_note = ${c.phoneNote2},
          city = ${c.city}, address = ${c.address}, flat = ${c.flat}, entrance = ${c.entrance}, floor = ${c.floor},
          instagram = ${c.instagram},
          preferences = ${c.preferences}, notes = ${c.notes}
-         where id = ${c.id}"""
+         where id = ${id}"""
       .update
       .run
       .transact(xa)
-      .unsafeRunAsyncAndForget()
+      .unsafeRunSync() == 1
   }
 }
-case class Customer(id: Option[String],
+case class Customer(id: Option[Int],
                     firstName:String, lastName:Option[String],
                     phone:String, phoneNote:Option[String],
                     phone2:Option[String], phoneNote2:Option[String],

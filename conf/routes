@@ -8,9 +8,9 @@ GET     /                           controllers.HomeController.index
 GET     /customers                  controllers.CustomerController.toCustomersListPage
 GET     /searchInCustomes           controllers.CustomerController.search(search)
 GET     /addCustomer                controllers.CustomerController.toCreateCustomerPage()
-GET     /editCustome/:id            controllers.CustomerController.toEditCustomerPage(id: String)
+GET     /editCustome/:id            controllers.CustomerController.toEditCustomerPage(id: Int)
 POST    /newCustomer                controllers.CustomerController.createCustomer()
-POST    /updateCustomer             controllers.CustomerController.update()
+POST    /updateCustomer/:id             controllers.CustomerController.update(id: Int)
 #---------------------------------------------------------------------------------------------
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
