@@ -15,7 +15,7 @@ class CustomerModel @Inject()(dM: DoobieModel) {
   }
 
   def insert(c: Customer): Unit = {
-    sql"""insert into customersView
+    sql"""insert into customers
            (first_name, last_name,
            phone, phone_note, phone2, phone2_note,
            city, address, flat, entrance, floor,
