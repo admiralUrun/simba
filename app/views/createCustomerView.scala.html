@@ -6,7 +6,7 @@
     @if(showError && cF.hasErrors) {
         @inputText(cF(keyInForm), '_label -> label, '_help -> "", '_error -> "Це поле повино бути повним", '_class -> layOutClass)
     } else {
-        @inputText(cF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass)
+        @inputText(cF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass, Symbol("class") -> "")
     }
 }
 
@@ -42,7 +42,7 @@
         </fieldset>
 
         <div class="actions">
-            <input type="submit" value="Додати Нового Клієнта" class="btn-primary"> Або
+            <input type="submit" value="Додати Нового Клієнта" class="btn btn-primary"> Або
             <a href="@routes.CustomerController.toCustomersListPage()" class="btn">Скасувати</a>
         </div>
     }
