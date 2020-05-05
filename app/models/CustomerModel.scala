@@ -14,7 +14,7 @@ class CustomerModel @Inject()(dM: DoobieModel) {
       .unsafeRunSync
   }
 
-  def insert(c: Customer): Unit = {
+  def insert(c: Customer): Boolean = {
     sql"""insert into customers
            (first_name, last_name,
            phone, phone_note, phone2, phone2_note,
@@ -28,7 +28,7 @@ class CustomerModel @Inject()(dM: DoobieModel) {
       .update
       .run
       .transact(xa)
-      .unsafeRunAsyncAndForget()
+      .unsafeRunSync() == 1
   }
 
   def findByID(id: Int): Customer = { // TODO: Ask senior how to make it better

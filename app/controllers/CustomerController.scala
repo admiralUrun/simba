@@ -8,7 +8,7 @@ import play.api.data._
 
 @Singleton
 class CustomerController @Inject()(cM: CustomerModel, cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
-
+type PlayAction = Action[AnyContent]
   private val customerForm = Form(
     mapping(
       "id" -> ignored(None: Option[Int]),
@@ -30,20 +30,20 @@ class CustomerController @Inject()(cM: CustomerModel, cc: MessagesControllerComp
   )
   private val customerListPage = Redirect(routes.CustomerController.toCustomersListPage())
 
-  def search(s:String) = TODO // TODO
+  def search(s: String): PlayAction = TODO // TODO
 
-  def toCustomersListPage = Action { implicit request =>
+  def toCustomersListPage: PlayAction = Action { implicit request =>
     Ok(views.html.customersView(cM.getAllTableRows))
   }
-  def toCreateCustomerPage() = Action { implicit request =>
+  def toCreateCustomerPage: PlayAction = Action { implicit request =>
     Ok(views.html.createCustomerView(customerForm))
   }
-  def toEditCustomerPage(id: Int) = Action { implicit request =>
+  def toEditCustomerPage(id: Int): PlayAction = Action { implicit request =>
     val customer = cM.findByID(id)
     Ok(views.html.editCustomerView(id, customerForm.fill(customer), customer.firstName))
   }
 
-  def update(id: Int) = Action { implicit request =>
+  def update(id: Int): PlayAction = Action { implicit request =>
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.editCustomerView(id, formWithErrors, formWithErrors.data("firstName"))),
       customer => {
@@ -52,12 +52,12 @@ class CustomerController @Inject()(cM: CustomerModel, cc: MessagesControllerComp
       }
     )
   }
-  def createCustomer() = Action { implicit request =>
+  def createCustomer: PlayAction = Action { implicit request =>
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.createCustomerView(formWithErrors)),
       newCustomer => {
-        cM.insert(newCustomer)
-        customerListPage.flashing("success" -> "Клієнта додано, мяу")
+        if(cM.insert(newCustomer)) customerListPage.flashing("success" -> "Клієнта додано, мяу")
+        else customerListPage.flashing("error" -> "Щось пішло не так ;(")
       }
     )
   }
