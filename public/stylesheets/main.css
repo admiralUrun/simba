@@ -1,6 +1,10 @@
 #search{
     position: relative;
 }
+.error{
+    color: red;
+}
+
 .fPxToRight{
     padding-left: 5px;
 }

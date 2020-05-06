@@ -2,21 +2,22 @@
 @import helper._
 
 @header() = {
-@List((1, "id"), (2, "Ім'я"), (3, "Прізвище"),
-    (4, "Телефон"), (5, "Власник Телефону"),
-    (6, "Додатковий Телефон"), (7, "Власник Дод. Телефону"),
-    (8, "Місто"), (9, "Адреса"),
-    (10, "Instagram"),
-    (11, "Надає перевагу"), (12, "Нотатка")).map{ h =>
-        <th class="col@h._1 header">
-            @h._2
-        </th>
+    @List((1, "id"), (2, "Ім'я"), (3, "Прізвище"),
+        (4, "Телефон"), (5, "Власник Телефону"),
+        (6, "Додатковий Телефон"), (7, "Власник Дод. Телефону"),
+        (8, "Місто"), (9, "Адреса"),
+        (10, "Instagram"),
+        (11, "Надає перевагу"), (12, "Нотатка")).map{ h =>
+            <th class="col@h._1 header">
+                @h._2
+            </th>
     }
 }
-    @adrressBuilder(name: String, varible: Option[String], comaInTheEnd: Boolean = true) = {
-        @if(varible.nonEmpty) {
+
+    @adrressBuilder(name: String, variable: Option[String], comaInTheEnd: Boolean = true) = {
+        @if(variable.nonEmpty) {
             @{
-             val full = name + ": " + varible.get
+             val full = name + ": " + variable.get
              if(comaInTheEnd) full + "," else full
             }
         } else {}

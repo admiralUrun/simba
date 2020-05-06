@@ -3,12 +3,18 @@
 @import views.html.helper._
 
 @creteAnInput(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
-    @if(showError && cF.hasErrors) {
-        @inputText(cF(keyInForm), '_label -> label, '_help -> "", '_error -> "Це поле повино бути повним", '_class -> layOutClass)
+    @if(showError) {
+        @inputText(cF(keyInForm), '_label -> label, '_help -> "", '_error -> "", '_class -> layOutClass)
     } else {
         @inputText(cF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass, Symbol("class") -> "")
     }
 }
+    @showError(keyInForm: String) = @{
+        cF.error(keyInForm) match {
+            case None => false
+            case Some(value) => true
+        }
+    }
 
 @mainView("Новий Клієнт") {
     <h1>Додати нового Клієнта</h1>
@@ -17,12 +23,12 @@
         <fieldset>
             @CSRF.formField
             <div class="container-fluid row">
-                @creteAnInput("firstName", "Ім'я *", "col1", showError = true)
+                @creteAnInput("firstName", "Ім'я *", "col1", showError("firstName"))
                 @creteAnInput("lastName", "Прізвище", "offset col-auto")
             </div>
 
             <div class="container-fluid row">
-                @creteAnInput("phone", "Телефон *", "colFirst", showError = true)
+                @creteAnInput("phone", "Телефон *", "colFirst", showError("phone"))
                 @creteAnInput("phoneNote", "Як звиртатися", "offset col-auto")
             </div>
             <div class="container-fluid row">
@@ -30,8 +36,8 @@
                 @creteAnInput("phoneNote2", "Власник Дод. Телефону", "offset col-auto")
             </div>
             <div class="container-fluid row">
-                @creteAnInput("city", "Місто *", "colFirst", showError = true)
-                @creteAnInput("address", "Адресса *", "offset col-auto", showError = true)
+                @creteAnInput("city", "Місто *", "colFirst", showError("city"))
+                @creteAnInput("address", "Адреса *", "offset col-auto", showError("address"))
                 @creteAnInput("entrance", "Під'їзд", "offset col-auto")
                 @creteAnInput("floor", "Поверх", "offset col-auto")
                 @creteAnInput("flat", "Квартира", "offset col-auto")
