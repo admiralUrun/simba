@@ -2,32 +2,28 @@
 @import helper._
 
 @header() = {
-    @List((1, "id"), (2, "Ім'я"), (3, "Прізвище"),
-        (4, "Телефон"), (5, "Власник Телефону"),
-        (6, "Додатковий Телефон"), (7, "Власник Дод. Телефону"),
-        (8, "Місто"), (9, "Адреса"),
-        (10, "Instagram"),
-        (11, "Надає перевагу"), (12, "Нотатка")).map{ h =>
-            <th class="col@h._1 header">
-                @h._2
+    @List("ID", "Ім'я", "Прізвище", "Телефон", "Власник Телефону", "Телефон 2", "Власник Дод. Телефону",
+        "Місто", "Адреса", "Instagram", "Надає перевагу", "Нотатка").zipWithIndex.map { case (i, header) =>
+            <th class="col@{i + 1} header">
+                @header
             </th>
     }
 }
+@*TODO: refactor this*@
+@adrressBuilder(name: String, variable: Option[String], comaInTheEnd: Boolean = true) = {
+    @if(variable.nonEmpty) {
+        @{
+         val full = name + ": " + variable.get
+         if(comaInTheEnd) full + "," else full
+        }
+    } else {}
+}
 
-    @adrressBuilder(name: String, variable: Option[String], comaInTheEnd: Boolean = true) = {
-        @if(variable.nonEmpty) {
-            @{
-             val full = name + ": " + variable.get
-             if(comaInTheEnd) full + "," else full
-            }
-        } else {}
-    }
-
-@mainView("Клієнти") {
+@main("Клієнти") {
 
     @request.flash.get("success").map { message =>
         <div class="alert-success">
-            <strong>Готово !</strong> @message
+            <strong>Готово!</strong> @message
         </div>
     }
     @request.flash.get("error").map { message =>
