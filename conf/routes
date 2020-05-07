@@ -5,8 +5,7 @@
 
 GET     /                               controllers.HomeController.index
 
-GET     /customers                      controllers.CustomerController.toCustomersListPage
-GET     /searchInCustomers              controllers.CustomerController.search(search)
+GET     /customers                      controllers.CustomerController.toCustomersListPage(search)
 GET     /addCustomer                    controllers.CustomerController.toCreateCustomerPage()
 GET     /editCustomer/:id               controllers.CustomerController.toEditCustomerPage(id: Int)
 POST    /newCustomer                    controllers.CustomerController.createCustomer()
