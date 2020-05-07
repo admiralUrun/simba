@@ -33,14 +33,14 @@ type PlayAction = Action[AnyContent]
   def search(s: String): PlayAction = TODO // TODO
 
   def toCustomersListPage: PlayAction = Action { implicit request =>
-    Ok(views.html.customersView(cM.getAllTableRows))
+    Ok(views.html.customers(cM.getAllTableRows))
   }
   def toCreateCustomerPage: PlayAction = Action { implicit request =>
-    Ok(views.html.createCustomerView(customerForm))
+    Ok(views.html.createCustomer(customerForm))
   }
   def toEditCustomerPage(id: Int): PlayAction = Action { implicit request =>
     val customer = cM.findByID(id)
-    Ok(views.html.editCustomerView(id, customerForm.fill(customer), customer.firstName))
+    Ok(views.html.editCustomer(id, customerForm.fill(customer), customer.firstName))
   }
 
   def update(id: Int): PlayAction = Action { implicit request =>

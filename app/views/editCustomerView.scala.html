@@ -1,3 +1,0 @@
-@(id:Int, cF: Form[Customer], name: String)(implicit requestHeader: MessagesRequestHeader)
-
-    @customerEdit(s"Клієнт $id: $name", routes.CustomerController.update(id), cF, "Змінити")

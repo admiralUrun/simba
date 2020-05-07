@@ -3,13 +3,13 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET     /                           controllers.HomeController.index
+GET     /                               controllers.HomeController.index
 
-GET     /customers                  controllers.CustomerController.toCustomersListPage
-GET     /searchInCustomers           controllers.CustomerController.search(search)
-GET     /addCustomer                controllers.CustomerController.toCreateCustomerPage()
-GET     /editCustomer/:id            controllers.CustomerController.toEditCustomerPage(id: Int)
-POST    /newCustomer                controllers.CustomerController.createCustomer()
+GET     /customers                      controllers.CustomerController.toCustomersListPage
+GET     /searchInCustomers              controllers.CustomerController.search(search)
+GET     /addCustomer                    controllers.CustomerController.toCreateCustomerPage()
+GET     /editCustomer/:id               controllers.CustomerController.toEditCustomerPage(id: Int)
+POST    /newCustomer                    controllers.CustomerController.createCustomer()
 POST    /updateCustomer/:id             controllers.CustomerController.update(id: Int)
 
 # Map static resources from the /public folder to the /assets URL path
