@@ -3,11 +3,11 @@ package controllers
 import javax.inject._
 import models.{Customer, CustomerModel}
 import play.api.data.Forms._
-import play.api.mvc._
 import play.api.data._
+import play.api.mvc._
 
 @Singleton
-class CustomerController @Inject()(cM: CustomerModel, cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
+class CustomerController @Inject()(customerModel: CustomerModel, cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
 type PlayAction = Action[AnyContent]
   private val customerForm = Form(
     mapping(
@@ -28,18 +28,18 @@ type PlayAction = Action[AnyContent]
       "notes" -> optional(text)
     )(Customer.apply)(Customer.unapply)
   )
-  private val customerListPage = Redirect(routes.CustomerController.toCustomersListPage())
+  private val customerListPage = Redirect(routes.CustomerController.toCustomersListPage(""))
 
-  def search(s: String): PlayAction = TODO // TODO
-
-  def toCustomersListPage: PlayAction = Action { implicit request =>
-    Ok(views.html.customers(cM.getAllTableRows))
+  def toCustomersListPage(search: String): PlayAction = Action { implicit request =>
+    Ok(views.html.customers(customerModel.getAllTableRows, search))
   }
+
   def toCreateCustomerPage: PlayAction = Action { implicit request =>
     Ok(views.html.createCustomer(customerForm))
   }
+
   def toEditCustomerPage(id: Int): PlayAction = Action { implicit request =>
-    val customer = cM.findByID(id)
+    val customer = customerModel.findByID(id)
     Ok(views.html.editCustomer(id, customerForm.fill(customer), customer.firstName))
   }
 
@@ -47,7 +47,7 @@ type PlayAction = Action[AnyContent]
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.editCustomer(id, formWithErrors, formWithErrors.data("firstName"))),
       customer => {
-        if(cM.editCustomer(id, customer)) customerListPage.flashing("success" -> "Клієнта змінено, мяу")
+        if(customerModel.editCustomer(id, customer)) customerListPage.flashing("success" -> "Клієнта змінено, мяу")
         else customerListPage.flashing("error" -> "Щось пішло не так ;(")
       }
     )
@@ -56,7 +56,7 @@ type PlayAction = Action[AnyContent]
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.createCustomer(formWithErrors)),
       newCustomer => {
-        if(cM.insert(newCustomer)) customerListPage.flashing("success" -> "Клієнта додано, мяу")
+        if(customerModel.insert(newCustomer)) customerListPage.flashing("success" -> "Клієнта додано, мяу")
         else customerListPage.flashing("error" -> "Щось пішло не так ;(")
       }
     )
