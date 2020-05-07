@@ -1,7 +1,7 @@
 package controllers
 
 import javax.inject._
-import models.{Customer, CustomerModel, DoobieModel}
+import models.{Customer, CustomerModel}
 import play.api.data.Forms._
 import play.api.mvc._
 import play.api.data._

@@ -1,15 +1,15 @@
 @(title: String, call: Call, cF: Form[Customer], buttonLabel: String)(implicit requestHeader: MessagesRequestHeader)
 @import views.html.helper._
 
-@creteAnInput(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
-@if(showError) {
-    @inputText(cF(keyInForm), '_label -> label, '_help -> "", '_error -> "", '_class -> layOutClass)
-} else {
-    @inputText(cF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass, Symbol("class") -> "")
-}
-}
-@showError(keyInForm: String) = @{
-    cF.error(keyInForm) match {
+    @creteAnInput(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
+        @if(showError) {
+            @inputText(cF(keyInForm), '_label -> label, '_help -> "", '_error -> "", '_class -> layOutClass)
+        } else {
+            @inputText(cF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass, Symbol("class") -> "")
+        }
+    }
+    @showError(keyInForm: String) = @{
+        cF.error(keyInForm) match {
         case None => false
         case Some(value) => true
     }
