@@ -7,7 +7,7 @@ import javax.sql.DataSource
 import play.api.db.DBApi
 
 
-class DoobieModel @Inject()(dbApi: DBApi) {
+class DoobieStore @Inject()(dbApi: DBApi) {
   private implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
   protected val (xa, release) = transactor(dbApi.database("default").dataSource).allocated.unsafeRunSync()
   def getXa(): DataSourceTransactor[IO] = xa

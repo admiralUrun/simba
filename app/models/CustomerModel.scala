@@ -4,7 +4,7 @@ import doobie.implicits._
 import javax.inject._
 
 @Singleton
-class CustomerModel @Inject()(dM: DoobieModel) {
+class CustomerModel @Inject()(dM: DoobieStore) {
   protected val xa = dM.getXa()
   def getAllTableRows: Seq[Customer] = {
     sql"select * from customers"
