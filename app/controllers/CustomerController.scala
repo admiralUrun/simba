@@ -45,7 +45,7 @@ type PlayAction = Action[AnyContent]
 
   def update(id: Int): PlayAction = Action { implicit request =>
     customerForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.editCustomerView(id, formWithErrors, formWithErrors.data("firstName"))),
+      formWithErrors => BadRequest(views.html.editCustomer(id, formWithErrors, formWithErrors.data("firstName"))),
       customer => {
         if(cM.editCustomer(id, customer)) customerListPage.flashing("success" -> "Клієнта змінено, мяу")
         else customerListPage.flashing("error" -> "Щось пішло не так ;(")
@@ -54,7 +54,7 @@ type PlayAction = Action[AnyContent]
   }
   def createCustomer: PlayAction = Action { implicit request =>
     customerForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.createCustomerView(formWithErrors)),
+      formWithErrors => BadRequest(views.html.createCustomer(formWithErrors)),
       newCustomer => {
         if(cM.insert(newCustomer)) customerListPage.flashing("success" -> "Клієнта додано, мяу")
         else customerListPage.flashing("error" -> "Щось пішло не так ;(")
