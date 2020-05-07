@@ -1,4 +1,4 @@
-@(title: String, call: Call, cF: Form[Customer], buttonLabel: String)(implicit requestHeader: MessagesRequestHeader)
+@(title: String, formCall: Call, cF: Form[Customer], buttonLabel: String)(implicit requestHeader: MessagesRequestHeader)
 @import views.html.helper._
 
     @creteAnInput(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
@@ -17,7 +17,7 @@
 
 @main(title) {
 
-    @form(call) {
+    @form(formCall) {
         <fieldset>
             @CSRF.formField
             <div class="container-fluid row">
