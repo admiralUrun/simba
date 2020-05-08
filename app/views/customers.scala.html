@@ -9,18 +9,9 @@
             </th>
     }
 }
-@*TODO: refactor this*@
-@adrressBuilder(name: String, variable: Option[String], comaInTheEnd: Boolean = true) = {
-    @if(variable.nonEmpty) {
-        @{
-         val full = name + ": " + variable.get
-         if(comaInTheEnd) full + "," else full
-        }
-    } else {}
-}
 
-@formatPhone(phone: Option[String], note: Option[String]) = @{
-    phone.map(p => p + note.map(n => s" ($n)").getOrElse("")).getOrElse("-")
+@formatString(o: Option[String], n: Option[String]) = @{
+    o.map(p => p + n.map(n => s"($n)").getOrElse("")).getOrElse("")
 }
 
 @main("Клієнти") {
@@ -59,14 +50,14 @@
                     <td><a href="@routes.CustomerController.toEditCustomerPage(c.id.head)">@c.id</a></td>
                     <td>@c.firstName</td>
                     <td>@c.lastName.getOrElse("-")</td>
-                    <td>@formatPhone(Option(c.phone), c.phoneNote)</td>
-                    <td>@formatPhone(c.phone2, c.phoneNote2)</td>
+                    <td>@formatString(Option(c.phone), c.phoneNote)</td>
+                    <td>@formatString(c.phone2, c.phoneNote2)</td>
                     <td>@c.city</td>
                     <td>
                         @c.address,
-                        @adrressBuilder("Під'їзд", c.entrance)
-                        @adrressBuilder("Поверх", c.floor)
-                        @adrressBuilder("Квартира", c.flat, comaInTheEnd = false)
+                        @formatString(c.entrance, Option("Під'їзд"))
+                        @formatString(c.floor, Option("Поверх"))
+                        @formatString(c.flat, Option("Квартира"))
                     </td>
                     <td>@c.instagram.getOrElse("-")</td>
                     <td>@c.preferences.getOrElse("-")</td>
