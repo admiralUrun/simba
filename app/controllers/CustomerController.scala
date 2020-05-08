@@ -47,8 +47,7 @@ type PlayAction = Action[AnyContent]
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.editCustomer(id, formWithErrors, formWithErrors.data("firstName"))),
       customer => {
-        if(customerModel.editCustomer(id, customer)) customerListPage.flashing("success" -> "Клієнта змінено, мяу")
-        else customerListPage.flashing("error" -> "Щось пішло не так ;(")
+        resultWithFlash(customerModel.editCustomer(id, customer),"Клієнта змінено, мяу")
       }
     )
   }
@@ -56,9 +55,13 @@ type PlayAction = Action[AnyContent]
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.createCustomer(formWithErrors)),
       newCustomer => {
-        if(customerModel.insert(newCustomer)) customerListPage.flashing("success" -> "Клієнта додано, мяу")
-        else customerListPage.flashing("error" -> "Щось пішло не так ;(")
+        resultWithFlash(customerModel.insert(newCustomer),"Клієнта додано, мяу")
       }
     )
+  }
+
+  private def resultWithFlash(modelResult: Boolean, successFlash: String, errorFlash: String = "Щось пішло не так ;("): Result = {
+    if(modelResult) customerListPage.flashing("success" -> successFlash)
+    else customerListPage.flashing("error" -> errorFlash)
   }
 }
