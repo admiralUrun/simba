@@ -31,10 +31,10 @@ class CustomerModel @Inject()(dM: DoobieStore) {
       .unsafeRunSync() == 1
   }
 
-  def findByID(id: Int): Customer = { // TODO: Ask senior how to make it better
+  def findByID(id: Int): Customer = {
     sql"select * from customers where id = ${id}"
       .query[Customer]
-      .to[List]
+      .option
       .transact(xa)
       .unsafeRunSync().head
   }

@@ -51,6 +51,7 @@ type PlayAction = Action[AnyContent]
       }
     )
   }
+
   def createCustomer: PlayAction = Action { implicit request =>
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.createCustomer(formWithErrors)),
