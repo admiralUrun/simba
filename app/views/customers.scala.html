@@ -30,7 +30,7 @@
     <div class="container-fluid">
         <div class="row">
             @form(routes.CustomerController.toCustomersListPage(""), Symbol("class") -> "colFirst") {
-                <input type="search" name="search" value="@search">
+                <input name="search" type="search" value="@search">
                 <input type="submit" id="searchSubmit" value="Пошук" class="btn btn-primary">
             }
             <div class="col"></div>

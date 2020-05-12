@@ -1,6 +1,7 @@
 package controllers
 
 import javax.inject._
+import models.ImporterModel
 import play.api.mvc._
 
 /**
@@ -17,6 +18,12 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
    * a path of `/`.
    */
   def index = Action {
+    Ok(views.html.index())
+  }
+
+  def importFromCVS() = Action { implicit request =>
+    val importer = new ImporterModel
+    importer.importCustomersFromCSV
     Ok(views.html.index())
   }
 

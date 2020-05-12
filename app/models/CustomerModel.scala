@@ -1,11 +1,12 @@
 package models
+import cats.effect.IO
 import doobie._
 import doobie.implicits._
 import javax.inject._
 
 @Singleton
 class CustomerModel @Inject()(dM: DoobieStore) {
-  protected val xa = dM.getXa()
+  protected val xa: DataSourceTransactor[IO] = dM.getXa()
   def getAllTableRows: Seq[Customer] = {
     sql"select * from customers"
       .query[Customer]
@@ -15,6 +16,13 @@ class CustomerModel @Inject()(dM: DoobieStore) {
   }
 
   def insert(c: Customer): Boolean = {
+    getInsertFragment(c)
+      .update
+      .run
+      .transact(xa)
+      .unsafeRunSync() == 1
+  }
+  private def getInsertFragment(c:Customer): Fragment = {
     sql"""insert into customers
            (first_name, last_name,
            phone, phone_note, phone2, phone2_note,
@@ -25,14 +33,10 @@ class CustomerModel @Inject()(dM: DoobieStore) {
                 ${c.city}, ${c.address}, ${c.flat}, ${c.entrance}, ${c.floor},
                 ${c.instagram},
                 ${c.preferences}, ${c.notes})"""
-      .update
-      .run
-      .transact(xa)
-      .unsafeRunSync() == 1
   }
 
   def findByID(id: Int): Customer = {
-    sql"select * from customers where id = ${id}"
+    sql"select * from customers where id = $id"
       .query[Customer]
       .option
       .transact(xa)
@@ -45,7 +49,7 @@ class CustomerModel @Inject()(dM: DoobieStore) {
          city = ${c.city}, address = ${c.address}, flat = ${c.flat}, entrance = ${c.entrance}, floor = ${c.floor},
          instagram = ${c.instagram},
          preferences = ${c.preferences}, notes = ${c.notes}
-         where id = ${id}"""
+         where id = $id"""
       .update
       .run
       .transact(xa)

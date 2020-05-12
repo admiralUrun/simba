@@ -1,4 +1,4 @@
-@(title: String, formCall: Call, cF: Form[Customer], buttonLabel: String)(implicit requestHeader: MessagesRequestHeader)
+@(title: String, formCall: Call, cF: Form[Customer], buttonLabel: String, xButton: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
 @import views.html.helper._
 
     @creteAnInput(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
@@ -50,4 +50,12 @@
             <a href="@routes.CustomerController.toCustomersListPage("")" class="btn">Скасувати</a>
         </div>
     }
+    @if(xButton) {
+        <div class="container-fluid">
+            @form(routes.HomeController.importFromCVS()){
+                @CSRF.formField
+                <input type="submit" value="Додати купу" class="btn btn-danger">
+            }
+        </div>
+    } else {}
 }
