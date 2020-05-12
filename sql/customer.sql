@@ -1,3 +1,4 @@
+insert into customers (first_name, phone, city, address, flat, entrance, floor, instagram) values ('Алена', '093 455 48 87', 'Київ', 'Драйзера 11а', '169', '2', ' 5', '_alionka_k');
 insert into customers (first_name, phone, city, address, flat, entrance, instagram) values ('Оксана', '093 484 94 09', 'Київ', 'пер. Ковальский 11', '6', ' 3 ', '_oksana_skubak_');
 insert into customers (first_name, last_name, phone, city, address, flat, entrance, floor, instagram, notes) values ('Александра', 'Ходоренко', '063 860 89 91', 'Київ', 'Березнякковская 22', '21', '1', '4', '_smska_', 'старая знакомая Оли');
 insert into customers (first_name, phone, city, address, flat, entrance, floor, instagram) values ('Анна', '098 886 58 25', 'Київ', 'Золотоустівська 46', ' 45', '1', ' 8 ', 'a.alekseyenko');
