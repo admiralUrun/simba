@@ -1,1 +1,55 @@
-@()
+@(orders:Seq[Order], search:String)(implicit request: MessagesRequestHeader)
+@import helper._
+    @header() = {
+        @List("3").zipWithIndex.map{ case (header, i) =>
+        <th class="col@{i + 1} header">
+            @header
+        </th>
+    }
+}
+    @getFlashes = {
+        @request.flash.get("success").map { message =>
+        <div class="alert-success">
+            <strong>Готово!</strong> @message
+        </div>
+    }
+        @request.flash.get("error").map { message =>
+        <div class="alert-danger">
+            <strong>@message</strong>
+        </div>
+    }
+    }
+@main("Замовлення") {
+
+    @getFlashes
+
+    <div class="container-fluid">
+        <div class="row">
+            @form(routes.OrderController.toOrderListPage(""), Symbol("class") -> "colFirst") {
+                <input name="search" type="search" value="@search">
+                <input type="submit" id="searchSubmit" value="Пошук" class="btn btn-primary">
+            }
+            <div class="col"></div>
+            <a class="colLast btn btn-success" id="add" href="@routes.CustomerController.toCreateCustomerPage()">Додати</a>
+        </div>
+    </div>
+
+    <div id="table">
+    @if(orders.nonEmpty) {
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>@header()</tr>
+            </thead>
+            <tbody>
+            @orders.map { c =>
+                <tr>
+
+                </tr>
+            }
+            </tbody>
+        </table>
+    } else {
+        <h4 class="alert-info">Як там бізнес?, мяу</h4>
+    }
+    </div>
+}

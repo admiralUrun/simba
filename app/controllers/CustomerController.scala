@@ -7,7 +7,7 @@ import play.api.data._
 import play.api.mvc._
 
 @Singleton
-class CustomerController @Inject()(customerModel: CustomerModel, cc: MessagesControllerComponents) extends MessagesAbstractController(cc) {
+class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
 type PlayAction = Action[AnyContent]
   private val customerForm = Form(
     mapping(
@@ -28,10 +28,11 @@ type PlayAction = Action[AnyContent]
       "notes" -> optional(text)
     )(Customer.apply)(Customer.unapply)
   )
-  private val customerListPage = Redirect(routes.CustomerController.toCustomersListPage(""))
+  private val customerListPage = Redirect(routes.CustomerController.toCustomersListPage("", ""))
 
-  def toCustomersListPage(search: String): PlayAction = Action { implicit request =>
-    Ok(views.html.customers(customerModel.getAllTableRows, search))
+  def toCustomersListPage(search: String, select: String): PlayAction = Action { implicit request =>
+    val rows = if(search.isEmpty) customerModel.getAllTableRows else customerModel.getAllTableRowsWhere(search, select)
+    Ok(views.html.customers(rows, search))
   }
 
   def toCreateCustomerPage: PlayAction = Action { implicit request =>

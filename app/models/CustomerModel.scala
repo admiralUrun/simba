@@ -5,8 +5,8 @@ import doobie.implicits._
 import javax.inject._
 
 @Singleton
-class CustomerModel @Inject()(dM: DoobieStore) {
-  protected val xa: DataSourceTransactor[IO] = dM.getXa()
+class CustomerModel @Inject()(dS: DoobieStore) {
+  protected val xa: DataSourceTransactor[IO] = dS.getXa()
   def getAllTableRows: Seq[Customer] = {
     sql"select * from customers"
       .query[Customer]
@@ -15,14 +15,29 @@ class CustomerModel @Inject()(dM: DoobieStore) {
       .unsafeRunSync
   }
 
-  def insert(c: Customer): Boolean = {
-    getInsertFragment(c)
-      .update
-      .run
+  def getAllTableRowsWhere(search: String, select: String): Seq[Customer] = {
+    def getAllTableRowsWhere(s: String, select: String): Fragment = {
+      def getFragmentForPhones(s: String): Fragment = {
+        sql"""select * from customers where phone = $s or phone2 = $s
+             or phone like $s or phone2 like $s""" // TODO: Ask senior how to do it better
+      }
+
+      if (select == "id") sql"select * from customers where id = $s"
+      else if (select == "name") sql"select * from customers where fist_name = $s"
+      else if (select == "lastName") sql"select * from customers where last_name = $s"
+      else if (select == "phones") getFragmentForPhones(s)
+      else if (select == "instagram") sql"select * from customers where instagram = $s"
+      else sql"select * from customers"
+    }
+
+    getAllTableRowsWhere(search, select)
+      .query[Customer]
+      .to[List]
       .transact(xa)
-      .unsafeRunSync() == 1
+      .unsafeRunSync
   }
-  private def getInsertFragment(c:Customer): Fragment = {
+
+  def insert(c: Customer): Boolean = {
     sql"""insert into customers
            (first_name, last_name,
            phone, phone_note, phone2, phone2_note,
@@ -33,6 +48,10 @@ class CustomerModel @Inject()(dM: DoobieStore) {
                 ${c.city}, ${c.address}, ${c.flat}, ${c.entrance}, ${c.floor},
                 ${c.instagram},
                 ${c.preferences}, ${c.notes})"""
+      .update
+      .run
+      .transact(xa)
+      .unsafeRunSync() == 1
   }
 
   def findByID(id: Int): Customer = {
