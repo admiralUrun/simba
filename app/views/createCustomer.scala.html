@@ -1,5 +1,5 @@
 @(cF: Form[Customer])(implicit requestHeader: MessagesRequestHeader)
- @createOrEditTemplate("Новий Клієнт",
+ @createOrEditCustomerTemplate("Новий Клієнт",
   routes.CustomerController.createCustomer(),
   cF,
   buttonLabel =  "Додати нового Клієнта")

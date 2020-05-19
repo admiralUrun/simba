@@ -1,7 +1,7 @@
 package controllers
 
 import javax.inject._
-import models._
+import models.{OrderModel, PlayOrderForEditAndCreate, PlayOrderForDisplay}
 import play.api.data.Forms._
 import play.api.data.Form
 import play.api.mvc._

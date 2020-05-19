@@ -12,8 +12,8 @@ class OrderModel @Inject()(dS: DoobieStore) {
   private var classicMenu: Map[String, Recipe] = Map()
   private var liteMenu: Map[String, Recipe] = Map()
   private var blackestMenu: Map[String, Recipe] = Map()
-  private var soup: Recipe = ???
-  private var desert: Recipe = ???
+//  private var soup: Recipe = ???
+//  private var desert: Recipe = ???
 
   def getAllTableRows: Map[Date, List[Order]] = { // TODO fix bug with query: I can't cast select in Order
 //        sql"select * from orders"
@@ -31,6 +31,7 @@ case class Order(id: Option[Int],
                  deliverFrom: LocalTime, deliverTo: LocalTime,
                  total: Int,
                  paid: Boolean, delivered: Boolean, note: Option[String])
+
 case class Recipe(id: Int, name:String, quantity:Int)
 
 case class PlayOrderForDisplay(id: Option[Int],
