@@ -1,0 +1,15 @@
+@(title: String, formCall: Call, cF: Form[PlayOrderForEditAndCreate], buttonLabel: String)(implicit requestHeader: MessagesRequestHeader)
+@import views.html.helper._
+
+@main(title) {
+    @form(formCall) {
+        <fieldset>
+            @CSRF.formField
+        </fieldset>
+
+        <div class="actions">
+            <input type="submit" value="@buttonLabel" class="btn btn-primary"> Або
+            <a href="@routes.OrderController.toOrderFeedPage("")" class="btn">Скасувати</a>
+        </div>
+    }
+}

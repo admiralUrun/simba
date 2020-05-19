@@ -19,12 +19,29 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
       "total" -> number,
       "paid" -> boolean, "delivered" -> boolean,
       "note" -> optional(text)
-    )(PlayOrderForEditAndCreate.apply)(PlayOrderForEditAndCreate.unapply)
-  )
+    )(PlayOrderForEditAndCreate.apply)(PlayOrderForEditAndCreate.unapply))
+  private val orderFeedPage = Redirect(routes.OrderController.toOrderFeedPage(""))
 
-  def toOrderListPage(search: String): PlayAction = Action { implicit request =>
+  def toOrderFeedPage(search: String): PlayAction = Action { implicit request =>
     val orders = orderModel.getAllTableRows
     Ok(views.html.orders(Map(), search))
   }
+
+  def toOrderEditPage(id:Int): PlayAction = Action { implicit request =>
+    Ok(views.html.editOrder(id, orderForm)) // TODO fill with order
+  }
+
+  def toOrderCreatePage: PlayAction = Action { implicit request =>
+    Ok(views.html.createOrder(orderForm))
+  }
+
+  def updateOrder(id: Int): PlayAction = Action { implicit request =>
+    orderFeedPage
+  }
+
+  def createOrder: PlayAction = Action { implicit request =>
+    orderFeedPage
+  }
+
 
 }

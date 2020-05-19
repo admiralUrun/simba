@@ -1,0 +1,3 @@
+@(oF: Form[PlayOrderForEditAndCreate])(implicit requestHeader: MessagesRequestHeader)
+
+@createOrEditOrderTemplate("Створити нове замовлення", routes.OrderController.createOrder, oF, "Створити")
