@@ -1,10 +1,29 @@
-@(title: String, formCall: Call, cF: Form[PlayOrderForEditAndCreate], buttonLabel: String)(implicit requestHeader: MessagesRequestHeader)
+@(title: String, formCall: Call, oF: Form[PlayOrderForEditAndCreate], buttonLabel: String)(implicit requestHeader: MessagesRequestHeader)
 @import views.html.helper._
 
+@inputLocalTime(name: String) = {
+    @{/* TODO find a better way to insert local time  */}
+    <input type="datetime-local"
+    name="@name" value="2018-06-12T19:30"
+    min="2018-06-07T00:00" max="2018-06-14T00:00">
+}
+@inputStuffInOrder = {
+    @inputText(oF("inOrder"))
+}
 @main(title) {
     @form(formCall) {
         <fieldset>
             @CSRF.formField
+            @inputText(oF("customersID"))
+            @inputDate(oF("orderDay"))
+            @inputDate(oF("deliveryDay"))
+            @inputLocalTime("deliverFrom")
+            @inputLocalTime("deliverTo")
+            @inputStuffInOrder
+            @inputText(oF("total"))
+            @checkbox(oF("paid"))
+            @checkbox(oF("delivered"))
+            @inputText(oF("note"))
         </fieldset>
 
         <div class="actions">
