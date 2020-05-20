@@ -12,8 +12,14 @@
         cF.error(keyInForm) match {
         case None => false
         case Some(value) => true
+        }
     }
-}
+    @insertNotes(c: Option[Customer]) = @{
+        c match {
+            case None => ""
+            case Some(_) => c.head.notes
+        }
+    }
 
 @main(title) {
 
@@ -42,7 +48,10 @@
             </div>
             @creteAnInput("instagram", "Instagram")
             @creteAnInput("preferences", "Надає перевагу")
-            @creteAnInput("notes", "Нотатка")
+            <div class="form-group">
+                <label for="note">Нотатка</label>
+                <textarea class="form-control" id="notes" name="notes" rows="3">@insertNotes(cF.value)</textarea>
+            </div>
         </fieldset>
 
         <div class="actions">

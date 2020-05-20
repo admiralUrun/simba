@@ -14,7 +14,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
       "id" -> ignored(None: Option[Int]),
       "customerID" -> number,
       "orderDay" -> date, "deliveryDay" -> date,
-      "deliverFrom" -> localTime, "deliverTo" -> localTime,
+      "deliverFrom" -> nonEmptyText, "deliverTo" -> nonEmptyText,
       "inOrder" -> nonEmptyText,
       "total" -> number,
       "paid" -> boolean, "delivered" -> boolean,

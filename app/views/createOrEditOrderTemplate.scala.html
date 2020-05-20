@@ -1,29 +1,54 @@
 @(title: String, formCall: Call, oF: Form[PlayOrderForEditAndCreate], buttonLabel: String)(implicit requestHeader: MessagesRequestHeader)
 @import views.html.helper._
 
-@inputLocalTime(name: String) = {
-    @{/* TODO find a better way to insert local time  */}
-    <input type="datetime-local"
-    name="@name" value="2018-06-12T19:30"
-    min="2018-06-07T00:00" max="2018-06-14T00:00">
-}
+    @creteAnInputText(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
+    @if(showError) {
+        @inputText(oF(keyInForm), '_label -> label, '_help -> "", '_error -> "", '_class -> layOutClass)
+    } else {
+        @inputText(oF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass, Symbol("class") -> "")
+    }
+    }
+    @showError(keyInForm: String) = @{
+        oF.error(keyInForm) match {
+            case None => false
+            case Some(value) => true
+        }
+    }
 @inputStuffInOrder = {
-    @inputText(oF("inOrder"))
+    <div class="container-fluid row">
+        <input type="text" id="inOrder" name="inOrder" value="" class="col-1" style="display: none">
+        place to Think on
+    </div>
+}
+
+@inputCustomer = {
+    @inputText(oF("customersID") , 'id -> "customersID", '_help -> "", 'style -> "display: none")
 }
 @main(title) {
     @form(formCall) {
         <fieldset>
             @CSRF.formField
-            @inputText(oF("customersID"))
-            @inputDate(oF("orderDay"))
-            @inputDate(oF("deliveryDay"))
-            @inputLocalTime("deliverFrom")
-            @inputLocalTime("deliverTo")
-            @inputStuffInOrder
+            <div class="container-fluid row">@inputCustomer</div>
+            <div class="container-fluid row">
+                @inputDate(oF("orderDay"), '_class -> " col-auto")
+                @inputDate(oF("deliveryDay"), '_class -> " col-auto")
+            </div>
+            <label class="label" for="dataInput">Час доставки </label>
+            <div id="dataInput" class="container-fluid row">
+                <input id="deliverFrom" name="deliverFrom" type="text" class=" col-auto">
+                     <b class="col-auto"> По </b>
+                <input id="deliverTo" name="deliverTo" type="text" class=" col-auto">
+            </div>
             @inputText(oF("total"))
-            @checkbox(oF("paid"))
-            @checkbox(oF("delivered"))
-            @inputText(oF("note"))
+            <div class="container-fluid row">
+                @checkbox(oF("paid"), '_help -> "", '_class -> "col-1")
+                @checkbox(oF("delivered"), '_help -> "", '_class -> "col-2")
+            </div>
+            @inputStuffInOrder
+            <div class="form-group">
+                <label for="note">Нотатка</label>
+                <textarea class="form-control" id="note" name="note" rows="3"></textarea>
+            </div>
         </fieldset>
 
         <div class="actions">

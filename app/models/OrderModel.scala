@@ -45,8 +45,8 @@ case class PlayOrderForDisplay(id: Option[Int],
 case class PlayOrderForEditAndCreate(id: Option[Int],
                                customerID: Int,
                                orderDay: Date, deliveryDay: Date,
-                               deliverFrom: LocalTime, deliverTo: LocalTime,
-                               inOrder:String,
+                               deliverFrom: String, deliverTo: String,
+                               inOrder: String,
                                total: Int,
                                paid: Boolean, delivered: Boolean, note: Option[String])
 
