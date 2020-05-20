@@ -14,6 +14,12 @@
         case Some(value) => true
     }
 }
+@insertNotes(c: Option[PlayOrderForEditAndCreate]) = @{
+    c match {
+        case None => ""
+        case Some(_) => c.head.note
+    }
+}
 
 @createADropItem(title: String, name: String, value: String) = {
     <a class="dropdown-item" href="#" onclick="let @name = '@value';
@@ -77,7 +83,7 @@
             @inputStuffInOrder
             <div class="form-group">
                 <label for="note">Нотатка</label>
-                <textarea class="form-control" id="note" name="note" rows="3"></textarea>
+                <textarea class="form-control" id="note" name="note" rows="3">@insertNotes(oF.value)</textarea>
             </div>
         </fieldset>
 
