@@ -1,23 +1,53 @@
 @(title: String, formCall: Call, oF: Form[PlayOrderForEditAndCreate], buttonLabel: String)(implicit requestHeader: MessagesRequestHeader)
 @import views.html.helper._
 
-    @creteAnInputText(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
+@creteAnInputText(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
     @if(showError) {
         @inputText(oF(keyInForm), '_label -> label, '_help -> "", '_error -> "", '_class -> layOutClass)
     } else {
         @inputText(oF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass, Symbol("class") -> "")
     }
+}
+@showError(keyInForm: String) = @{
+    oF.error(keyInForm) match {
+        case None => false
+        case Some(value) => true
     }
-    @showError(keyInForm: String) = @{
-        oF.error(keyInForm) match {
-            case None => false
-            case Some(value) => true
-        }
-    }
+}
+
+@createADropItem(title: String, name: String, value: String) = {
+    <a class="dropdown-item" href="#" onclick="let @name = '@value';
+            addToOrder(@name)">@title</a>
+}
+@createADropDown(menuTitle:String, id: String, typeOfMenu: String) = {
+    <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="@id" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            @menuTitle
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+            @createADropItem("5 на 2", "fiveOnTwo", s"5 on 2($typeOfMenu)")
+            @createADropItem("5 на 4", "fiveOnFour", s"5 on 4($typeOfMenu)")
+            @createADropItem("3 на 2", "threeOnTwo", s"3 on 2($typeOfMenu)")
+            @createADropItem("3 на 4", "threeOnFour", s"3 on 4($typeOfMenu)")
+            @createADropItem(s"$menuTitle 1", typeOfMenu + "One", s"1($typeOfMenu)")
+            @createADropItem(s"$menuTitle 2", typeOfMenu + "Two", s"2($typeOfMenu)")
+            @createADropItem(s"$menuTitle 3", typeOfMenu + "Tree", s"3($typeOfMenu)")
+            @createADropItem(s"$menuTitle 4", typeOfMenu + "Four", s"4($typeOfMenu)")
+            @createADropItem(s"$menuTitle 5", typeOfMenu + "Five", s"5($typeOfMenu)")
+        </div>
+    </div>
+}
 @inputStuffInOrder = {
     <div class="container-fluid row">
         <input type="text" id="inOrder" name="inOrder" value="" class="col-1" style="display: none">
         place to Think on
+    @createADropDown("Класичне", "classicMenu", "classic")
+    @createADropDown("Лайт", "liteMenu", "lite")
+    @createADropDown("Сніданок", "breakfastMenu", "breakfast")
+    <button class="btn btn-info" href="#" type="button" onclick="let soup = 'soup';
+    addToOrder(soup)">Суп</button>
+    <button class="btn btn-info" href="#" type="button" onclick="let desert = 'desert';
+    addToOrder(desert)">Десерт</button>
     </div>
 }
 
@@ -56,4 +86,5 @@
             <a href="@routes.OrderController.toOrderFeedPage("")" class="btn">Скасувати</a>
         </div>
     }
+    <script src="@routes.Assets.versioned("javascript/orderScript.js")"></script>
 }
