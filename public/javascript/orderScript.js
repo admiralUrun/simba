@@ -4,11 +4,10 @@ function addToOrder(item, title) {
     let isValueEmpty = inOrder === ''
     if (isValueEmpty) {
         order.val(item)
-        addElementForDisplay(isValueEmpty, title)
     } else {
         order.val(inOrder + ', ' + item)
-        addElementForDisplay(isValueEmpty, item)
     }
+    addElementForDisplay(isValueEmpty, title)
 }
 
 function addElementForDisplay(isEmpty, text) {
