@@ -1,5 +1,4 @@
 function addToOrder(item) {
-    console.log(item);
     let order = $('#inOrder')
     let inOrder = order.val()
     let isValueEmpty = inOrder === ''
@@ -14,25 +13,34 @@ function addToOrder(item) {
 
 function addElementForDisplay(isEmpty, text) {
     function addElementForDisplay(index) {
-        $('<li>'+ text + '<button type="button" class="close" aria-label="Close">\n' +
-            '  <span aria-hidden="true">&times;</span>\n' +
-            '</button></li>\n', {
-            id: 'element' + index,
-            type: 'button',
-            class: 'list-group-item',
-            "onclick": deleteFromOrder(index)
-        }).appendTo('ul')
+        $(`<li class="list-group-item" id="element${index}">${text} <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder(${index})"><span aria-hidden="true">&times;</span></button></li>`).appendTo('ul')
     }
-    let order = $('#inOrder')
     if(isEmpty) {
         addElementForDisplay(0)
     } else {
-        let inOrder = order.val().split(',')
-        addElementForDisplay(inOrder.length - 1)
-        console.log(inOrder.length)
+        addElementForDisplay($('#inOrder').val().split(',').length - 1)
     }
 }
 
-function deleteFromOrder(index) {
-console.log('Delete' + index)
+function deleteFromOrder(indexToRemove) {
+    function getNewValueForInput(array) {
+        let result = ''
+        for (let i = 0; i < array.length; i++) {
+            if (i === indexToRemove) {}
+            else if (result === '') {
+                result += array[i];
+            } else {
+                result += ',' + array[i]
+            }
+        }
+        return result;
+    }
+    let order = $('#inOrder')
+    if (order.val().indexOf(',') > 1) {
+        order.val(getNewValueForInput(order.val().split(',')))
+        $(`#element${indexToRemove}`).remove()
+    } else {
+        $(`#element${indexToRemove}`).remove()
+        order.val('')
+    }
 }
