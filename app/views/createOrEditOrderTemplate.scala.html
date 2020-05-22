@@ -45,14 +45,21 @@
 }
 @inputStuffInOrder = {
     <div class="container-fluid row">
-        <input type="text" id="inOrder" name="inOrder" value="" class="col-1">
-    @createADropDown("Класичне", "classicMenu", "classic")
-    @createADropDown("Лайт", "liteMenu", "lite")
-    @createADropDown("Сніданок", "breakfastMenu", "breakfast")
-    <button class="btn btn-info" href="#" type="button" onclick="let soup = 'soup';
-    addToOrder(soup)">Суп</button>
-    <button class="btn btn-info" href="#" type="button" onclick="let desert = 'desert';
-    addToOrder(desert)">Десерт</button>
+        <input type="text" id="inOrder" name="inOrder" value="" class="col-1" style="display: none">
+        <div class="container-fluid row">
+            <ul class="list-group">
+
+            </ul>
+        </div>
+        <div class="container-fluid row">
+        @createADropDown("Класичне", "classicMenu", "classic")
+        @createADropDown("Лайт", "liteMenu", "lite")
+        @createADropDown("Сніданок", "breakfastMenu", "breakfast")
+        <button class="btn btn-info" href="#" type="button" onclick="let soup = 'soup';
+        addToOrder(soup)">Суп</button>
+        <button class="btn btn-info" href="#" type="button" onclick="let desert = 'desert';
+        addToOrder(desert)">Десерт</button>
+        </div>
     </div>
 }
 
