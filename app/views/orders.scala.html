@@ -1,58 +1,12 @@
 @import java.util.Date
 @(orders:Map[Date, List[PlayOrderForDisplay]], search:String)(implicit request: MessagesRequestHeader)
 @import helper._
-    @header() = {
-        @List("id", "Замовник", "Адреса", "Дата Замовлення", "Дата Доставки", "Сума", "Оплата", "Статус", "Нотатка").zipWithIndex.map{ case (header, i) =>
-        <th class="col@{i + 1} header">
-            @header
-        </th>
-    }
-}
-    @getFlashes = {
-        @request.flash.get("success").map { message =>
-        <div class="alert-success">
-            <strong>Готово!</strong> @message
-        </div>
-        }
-        @request.flash.get("error").map { message =>
-        <div class="alert-danger">
-            <strong>@message</strong>
-        </div>
-        }
-    }
-
-    @formatingDate(d:Date) = @{
-        val monthsTranslate = Map(
-            "Jan" -> "Січень",
-            "Feb" -> "Лютий",
-            "Mar" -> "Березень",
-            "Apr" -> "Квітень",
-            "May" -> "Травень",
-            "Jun" -> "Червень",
-            "Jul" -> "Липень",
-            "Aug" -> "Серпень",
-            "Sep" -> "Вересень",
-            "Oct" -> "Жовтень",
-            "Nov" -> "Листопад",
-            "Dec" -> "Грудень",
-        )
-        val weekDayTranslate = Map(
-            "Mon" -> "Понеділок",
-            "Tue" -> "Вівторок",
-            "Wed" -> "Середа",
-            "Thu" -> "Четверг",
-            "Fri" -> "П'ятниця",
-            "Sat" -> "Суббота",
-            "Sun" -> "Неділя"
-        )
-        val dateArray = d.toString.split(" ")
-        weekDayTranslate(dateArray(0)) + " " + dateArray(2) + " " + monthsTranslate(dateArray(1)) + " " + dateArray(5)
-    }
+@import services.SimbaHTMLHelper._
 
     @getDateRow(d: Date) = {
         <tr>
             <tb>
-                <h4>@formatingDate(d)</h4>
+                <h4>@formattingDate(d)</h4>
             </tb>
         </tr>
     }
@@ -63,9 +17,6 @@
     }
 
     @getCustomerAddressForView(c: Customer) = @{
-        def formatString(o: Option[String], n: Option[String]) = {
-            o.map(p => p + n.map(n => s"($n)").getOrElse("")).getOrElse("")
-        }
         s"${c.city} ${c.address} ${formatString(c.entrance, Option("Під'їзд"))} ${formatString(c.floor, Option("Поверх"))} ${formatString(c.flat, Option("Квартира"))}"
     }
 
@@ -75,7 +26,7 @@
     }
 @main("Замовлення") {
 
-    @getFlashes
+    @getFlash(request)
 
     <div class="container-fluid">
         <div class="row">
@@ -93,7 +44,7 @@
     @if(orders.nonEmpty) {
         <table class="table table-striped table-bordered">
             <thead>
-                <tr>@header()</tr>
+                <tr>@tableHeaders(List("id", "Замовник", "Адреса", "Дата Замовлення", "Дата Доставки", "Сума", "Оплата", "Статус", "Нотатка"))</tr>
             </thead>
             <tbody>
             @orders.map { t =>
@@ -103,8 +54,8 @@
                       <tb>@o.id</tb>
                       <td>@getCustomerDataForView(o.customer)</td>
                       <td>@getCustomerAddressForView(o.customer)</td>
-                      <tb>@formatingDate(o.orderDay)</tb>
-                      <tb>@formatingDate(o.deliveryDay)</tb>
+                      <tb>@formattingDate(o.orderDay)</tb>
+                      <tb>@formattingDate(o.deliveryDay)</tb>
                       <tb>@o.inOrder</tb>
                       <tb>@o.total</tb>
                       <tb>@formatBoolean(o.paid, "Оплаченно", "Не оплаченно")</tb>

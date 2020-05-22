@@ -1,34 +1,10 @@
 @(customers: Seq[Customer], search: String)(implicit request: MessagesRequestHeader)
 @import helper._
+@import services.SimbaHTMLHelper._
 
-@header() = {
-    @List("ID", "Ім'я", "Прізвище", "Телефон", "Телефон 2",
-        "Місто", "Адреса", "Instagram", "Надає перевагу", "Нотатка").zipWithIndex.map{ case (header, i) =>
-            <th class="col@{i + 1} header">
-                @header
-            </th>
-    }
-}
-
-@formatString(o: Option[String], n: Option[String]) = @{
-    o.map(p => p + n.map(n => s"($n)").getOrElse("")).getOrElse("")
-}
-
-@getFlashes = {
-    @request.flash.get("success").map { message =>
-        <div class="alert-success">
-            <strong>Готово!</strong> @message
-        </div>
-    }
-    @request.flash.get("error").map { message =>
-        <div class="alert-danger">
-            <strong>@message</strong>
-        </div>
-    }
-}
 
 @main("Клієнти") {
-    @getFlashes
+    @getFlash(request)
 
     <div class="container-fluid">
         <div class="row">
@@ -54,7 +30,8 @@
         @if(customers.nonEmpty) {
         <table class="table table-striped table-bordered">
             <thead>
-                <tr>@header()</tr>
+                <tr>@tableHeaders(List("ID", "Ім'я", "Прізвище", "Телефон", "Телефон 2",
+                    "Місто", "Адреса", "Instagram", "Надає перевагу", "Нотатка"))</tr>
             </thead>
             <tbody>
             @customers.map { c =>

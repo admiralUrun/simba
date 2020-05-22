@@ -43,6 +43,7 @@
         </div>
     </div>
 }
+
 @inputStuffInOrder = {
     <div class="container-fluid row">
         <input type="text" id="inOrder" name="inOrder" value="" class="col-1" style="display: none">
@@ -71,7 +72,11 @@
             @CSRF.formField
             <div class="container-fluid row">@inputCustomer</div>
             <div class="container-fluid row">
-                @inputDate(oF("orderDay"), '_class -> " col-auto")
+                <input name="orderDay" type="text" value="@{
+                    import java.util.Date
+                    val d = new Date()
+                    d.toString}">
+
                 @inputDate(oF("deliveryDay"), '_class -> " col-auto")
             </div>
             <label class="label" for="dataInput">Час доставки </label>
