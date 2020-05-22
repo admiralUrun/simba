@@ -1,10 +1,10 @@
-function addToOrder(item) {
+function addToOrder(item, title) {
     let order = $('#inOrder')
     let inOrder = order.val()
     let isValueEmpty = inOrder === ''
     if (isValueEmpty) {
         order.val(item)
-        addElementForDisplay(isValueEmpty, item)
+        addElementForDisplay(isValueEmpty, title)
     } else {
         order.val(inOrder + ', ' + item)
         addElementForDisplay(isValueEmpty, item)

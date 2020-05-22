@@ -22,8 +22,8 @@
 }
 
 @createADropItem(title: String, name: String, value: String) = {
-    <a class="dropdown-item" href="#" onclick="let @name = '@value';
-            addToOrder(@name)">@title</a>
+    <a class="dropdown-item" href="#" onclick="let @name = '@value'; let title = '@title';
+            addToOrder(@name, title)">@title</a>
 }
 @createADropDown(menuTitle:String, id: String, typeOfMenu: String) = {
     <div class="dropdown">
@@ -54,10 +54,10 @@
         @createADropDown("Класичне", "classicMenu", "classic")
         @createADropDown("Лайт", "liteMenu", "lite")
         @createADropDown("Сніданок", "breakfastMenu", "breakfast")
-        <button class="btn btn-info" href="#" type="button" onclick="let soup = 'soup';
-        addToOrder(soup)">Суп</button>
-        <button class="btn btn-info" href="#" type="button" onclick="let desert = 'desert';
-        addToOrder(desert)">Десерт</button>
+        <button class="btn btn-info" href="#" type="button" onclick="let soup = 'soup'; let title = 'Суп';
+        addToOrder(soup, title)">Суп</button>
+        <button class="btn btn-info" href="#" type="button" onclick="let desert = 'desert'; let title = 'Десерт';
+        addToOrder(desert, title)">Десерт</button>
         </div>
     </div>
 }
