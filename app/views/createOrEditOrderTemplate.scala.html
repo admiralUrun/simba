@@ -1,5 +1,5 @@
 @import java.util.Date
-@(title: String, formCall: Call, oF: Form[PlayOrderForEditAndCreate], buttonLabel: String)(implicit requestHeader: MessagesRequestHeader)
+@(title: String, formCall: Call, oF: Form[PlayOrderForEditAndCreate], buttonLabel: String, isCreate: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
 @import views.html.helper._
 @import services.SimbaHTMLHelper._
 
@@ -62,6 +62,27 @@
 @inputCustomer = {
     @inputText(oF("customersID") , 'id -> "customersID", '_help -> "", 'style -> "display: none")
 }
+
+@getCheckBoxVaule(keyInForm: String) = @{
+    if(isCreate) false
+    else oF(keyInForm).value match {
+        case None => false
+        case Some(value) => value.toBoolean
+    }
+}
+
+@createBooleanInput(nameInForm:String, trueLabel:String, falseLabel:String, checked:Boolean = false, col:String = "auto") = {
+<input id="@nameInForm" name="@nameInForm" value="@checked" style="display: none">
+    @if(checked) {
+        <button id="@nameInForm-button" class="btn col-@col btn-success" type="button" onclick="changeButton(`@nameInForm-button`, `@trueLabel`, `@falseLabel`, `@nameInForm`);">
+            @trueLabel
+        </button>
+    } else {
+        <button id="@nameInForm-button" class="btn col-@col btn-danger" type="button" onclick="changeButton(`@nameInForm-button`, `@trueLabel`, `@falseLabel`, `@nameInForm`);">
+            @falseLabel
+        </button>
+    }
+}
 @main(title) {
     @form(formCall) {
         <fieldset>
@@ -77,8 +98,8 @@
             </div>
             @inputText(oF("total"))
             <div class="container-fluid row">
-                @checkbox(oF("paid"), '_help -> "", '_class -> "col-1")
-                @checkbox(oF("delivered"), '_help -> "", '_class -> "col-2")
+                @createBooleanInput("paid", "Оплаченно", "Не оплаченно", getCheckBoxVaule("paid"))
+                @createBooleanInput("delivered", "Доставленно", "Не доставленно", getCheckBoxVaule("delivered"))
             </div>
             @inputStuffInOrder
             <div class="form-group">

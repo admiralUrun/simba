@@ -43,3 +43,25 @@ function deleteFromOrder(indexToRemove) {
         order.val('')
     }
 }
+
+function changeButton(id, trueLabel, falseLabel, inputID) {
+    function getNewClassForButton() {
+        let classArray = button.attr('class').split(" ")
+        classArray.pop()
+        if (isChecked) {
+           return classArray.join(" ") + ' btn-danger'
+        } else {
+            return classArray.join(" ") + ' btn-success'
+        }
+    }
+    let input = $(`#`+ inputID)
+    let button = $(`#` + id)
+    let isChecked = (input.val() === 'true')
+    if(isChecked) {
+        button.text(falseLabel)
+    } else {
+        button.text(trueLabel)
+    }
+    button.attr('class', getNewClassForButton())
+    input.val(!isChecked)
+}
