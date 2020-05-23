@@ -6,7 +6,7 @@
     @getDateRow(d: Date) = {
         <tr>
             <tb>
-                <h4>@formattingDate(d)</h4>
+                <h4>@formattingDateForDisplay(d)</h4>
             </tb>
         </tr>
     }
@@ -54,8 +54,8 @@
                       <tb>@o.id</tb>
                       <td>@getCustomerDataForView(o.customer)</td>
                       <td>@getCustomerAddressForView(o.customer)</td>
-                      <tb>@formattingDate(o.orderDay)</tb>
-                      <tb>@formattingDate(o.deliveryDay)</tb>
+                      <tb>@formattingDateForDisplay(o.orderDay)</tb>
+                      <tb>@formattingDateForDisplay(o.deliveryDay)</tb>
                       <tb>@o.inOrder</tb>
                       <tb>@o.total</tb>
                       <tb>@formatBoolean(o.paid, "Оплаченно", "Не оплаченно")</tb>

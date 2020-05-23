@@ -1,5 +1,6 @@
 @(title: String, formCall: Call, cF: Form[Customer], buttonLabel: String, xButton: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
 @import views.html.helper._
+@import services.SimbaHTMLHelper._
 
     @creteAnInput(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
         @if(showError) {
@@ -12,12 +13,6 @@
         cF.error(keyInForm) match {
         case None => false
         case Some(value) => true
-        }
-    }
-    @insertNotes(c: Option[Customer]) = @{
-        c match {
-            case None => ""
-            case Some(_) => c.head.notes
         }
     }
 
