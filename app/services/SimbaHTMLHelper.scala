@@ -1,17 +1,20 @@
 package services
+import java.time.DayOfWeek
 import java.util.Date
-
+import java.text.SimpleDateFormat
 import models.{Customer, PlayOrderForEditAndCreate}
 import play.api.mvc.MessagesRequestHeader
 import play.twirl.api.Html
+
 object SimbaHTMLHelper {
   type HTMLLines = String
   private val b ="\""
+  private val formatter = new SimpleDateFormat("yyyy-MM-dd")
   def formatString(o: Option[String], n: Option[String]): String = {
     o.map(p => p + n.map(n => s"($n)").getOrElse("")).getOrElse("")
   }
 
-  def getFlash(request: MessagesRequestHeader): Html = {
+  def getFlash()(implicit request: MessagesRequestHeader): Html = {
     def getFlash(option: Option[String]):String = {
       if (option.nonEmpty) option.map { message =>
         s"<div class=$b alert-success $b><strong>$message</strong></div>"
@@ -49,10 +52,12 @@ object SimbaHTMLHelper {
     val dateArray = d.toString.split(" ")
     weekDayTranslate(dateArray(0)) + " " + dateArray(2) + " " + monthsTranslate(dateArray(1)) + " " + dateArray(5)
   }
-  def formattingDateForForm(d:Date): String = {
-    import java.text.SimpleDateFormat
-    val formatter = new SimpleDateFormat("yyyy-MM-dd")
-    formatter.format(d)
+  def formattingDateForForm(d:Date): String = formatter.format(d)
+  def getNextSunday(): String = {
+    import java.util.Calendar
+    val c = Calendar.getInstance
+    c.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+    formattingDateForForm(c.getTime)
   }
 
   def tableHeaders(heads: List[String]): Html = {
