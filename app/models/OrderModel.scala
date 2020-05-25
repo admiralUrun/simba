@@ -12,16 +12,24 @@ class OrderModel @Inject()(dS: DoobieStore) {
   private var classicMenu: Map[String, Recipe] = Map()
   private var liteMenu: Map[String, Recipe] = Map()
   private var blackestMenu: Map[String, Recipe] = Map()
-//  private var soup: Recipe = ???
-//  private var desert: Recipe = ???
+  //  private var soup: Recipe = ???
+  //  private var desert: Recipe = ???
 
   def getAllTableRows: Map[Date, List[Order]] = { // TODO fix bug with query: I can't cast select in Order
-//        sql"select * from orders"
-//          .query[Order]
-//          .to[List]
-//          .transact(xa)
-//          .unsafeRunSync.groupBy(_.deliveryDay)
+    //        sql"select * from orders"
+    //          .query[Order]
+    //          .to[List]
+    //          .transact(xa)
+    //          .unsafeRunSync.groupBy(_.deliveryDay)
     Map()
+  }
+
+  def insert(o: PlayOrderForEditAndCreate): Boolean = {
+    ???
+  }
+
+  def edit(o: PlayOrderForEditAndCreate): Boolean = {
+    ???
   }
 }
 

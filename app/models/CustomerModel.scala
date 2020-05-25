@@ -15,22 +15,14 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .unsafeRunSync
   }
 
-  def getAllTableRowsWhere(search: String, select: String): Seq[Customer] = {
-    def getAllTableRowsWhere(s: String, select: String): Fragment = {
-      def getFragmentForPhones(s: String): Fragment = {
-        sql"""select * from customers where phone = $s or phone2 = $s
-             or phone like $s or phone2 like $s""" // TODO: Ask senior how to do it better
-      }
 
-      if (select == "id") sql"select * from customers where id = $s"
-      else if (select == "name") sql"select * from customers where fist_name = $s"
-      else if (select == "lastName") sql"select * from customers where last_name = $s"
-      else if (select == "phones") getFragmentForPhones(s)
-      else if (select == "instagram") sql"select * from customers where instagram = $s"
-      else sql"select * from customers"
-    }
-
-    getAllTableRowsWhere(search, select)
+  def getAllTableRowsWhere(search: String): Seq[Customer] = {
+    sql"""select * from customers where
+          first_name like $search or
+           last_name like $search or
+            phone like $search or
+             phone2 like $search or
+              instagram like $search"""
       .query[Customer]
       .to[List]
       .transact(xa)
