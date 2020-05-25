@@ -1,5 +1,4 @@
 package services
-import java.time.DayOfWeek
 import java.util.Date
 import java.text.SimpleDateFormat
 import models.{Customer, PlayOrderForEditAndCreate}
@@ -53,7 +52,7 @@ object SimbaHTMLHelper {
     weekDayTranslate(dateArray(0)) + " " + dateArray(2) + " " + monthsTranslate(dateArray(1)) + " " + dateArray(5)
   }
   def formattingDateForForm(d:Date): String = formatter.format(d)
-  def getNextSunday(): String = {
+  def getNextSunday: String = {
     import java.util.Calendar
     val c = Calendar.getInstance
     c.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
@@ -75,8 +74,6 @@ object SimbaHTMLHelper {
     }
   }
 
-  private def htmlBuilder(s: List[HTMLLines]): Html = {
-    Html(s.mkString("\n"))
-  }
+  private def htmlBuilder(s: List[HTMLLines]): Html = Html(s.mkString("\n"))
 
 }

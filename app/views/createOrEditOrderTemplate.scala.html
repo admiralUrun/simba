@@ -89,7 +89,7 @@
             @CSRF.formField
             <div class="container-fluid row">@inputCustomer</div>
             <input name="orderDay" type="text" value="@formattingDateForForm(new Date())" style="display: none">
-            <input name="deliveryDay" type="text" value="@getNextSunday()" style="display: none">
+            <input name="deliveryDay" type="text" value="@getNextSunday" style="display: none">
             <label class="label" for="dataInput">Час доставки </label>
             <div id="dataInput" class="container-fluid row">
                 <input id="deliverFrom" name="deliverFrom" type="text" class=" col-auto">
