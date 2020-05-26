@@ -1,4 +1,8 @@
-@(title: String, formCall: Call, cF: Form[Customer], buttonLabel: String, xButton: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
+@(title: String, formCall: Call,
+        cF: Form[Customer],
+        buttonLabel: String,
+        submitCall: Call = routes.CustomerController.toCustomersListPage(""),
+        xButton: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
 @import views.html.helper._
 @import services.SimbaHTMLHelper._
 
@@ -51,7 +55,7 @@
 
         <div class="actions">
             <input type="submit" value="@buttonLabel" class="btn btn-primary"> Або
-            <a href="@routes.CustomerController.toCustomersListPage("", "")" class="btn">Скасувати</a>
+            <a href="@submitCall" class="btn">Скасувати</a>
         </div>
     }
 

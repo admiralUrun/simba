@@ -5,6 +5,7 @@ import models.{Customer, CustomerModel}
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc._
+import play.api.libs.json._
 
 @Singleton
 class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
@@ -28,9 +29,9 @@ type PlayAction = Action[AnyContent]
       "notes" -> optional(text)
     )(Customer.apply)(Customer.unapply)
   )
-  private val customerListPage = Redirect(routes.CustomerController.toCustomersListPage("", ""))
+  private val customerListPage = Redirect(routes.CustomerController.toCustomersListPage(""))
 
-  def toCustomersListPage(search: String, select: String): PlayAction = Action { implicit request =>
+  def toCustomersListPage(search: String): PlayAction = Action { implicit request =>
     val rows = if(search.isEmpty) customerModel.getAllTableRows else customerModel.getAllTableRowsWhere(search)
     Ok(views.html.customers(rows, search))
   }
