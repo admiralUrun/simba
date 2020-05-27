@@ -59,9 +59,6 @@
     </div>
 }
 
-@inputCustomer = {
-    @inputText(oF("customersID") , 'id -> "customersID", '_help -> "", 'style -> "display: none")
-}
 
 @getCheckBoxVaule(keyInForm: String) = @{
     if(isCreate) false
@@ -72,7 +69,7 @@
 }
 
 @createBooleanInput(nameInForm:String, trueLabel:String, falseLabel:String, checked:Boolean = false, col:String = "auto") = {
-<input id="@nameInForm" name="@nameInForm" value="@checked" style="display: none">
+    <input id="@nameInForm" name="@nameInForm" value="@checked" style="display: none">
     @if(checked) {
         <button id="@nameInForm-button" class="btn col-@col btn-success" type="button" onclick="changeButton(`@nameInForm-button`, `@trueLabel`, `@falseLabel`, `@nameInForm`);">
             @trueLabel
@@ -84,10 +81,36 @@
     }
 }
 @main(title) {
+    <div class="container-fluid">
+        <div class="row">
+            @form(routes.CustomerController.getCustomersForOrderSearch(""), Symbol("class") -> "colFirst") {
+                <div class="input-group col-md">
+                    <input id="search" name="search" type="search" class="form-control col-md" list="searchList" >
+                    <input type="button" id="searchSubmit" value="Пошук" class="btn btn-primary offset-sm-1">
+                    <script>
+                        $(document).ready(function () {
+                          $("#searchSubmit").click(
+                              function() {
+                                  let searchParams = $("#search").val()
+                                $.get("/searchCustomerForOrder?search=" + searchParams, function (data, status) {
+                                    takeCustomerJSONAddToUI(data)
+                                })
+                              }
+                          );
+                        })
+                    </script>
+                </div>
+            }
+            <div class="col"></div>
+            <a class="colLast btn btn-success disabled" id="add" href="@routes.CustomerController.toCreateCustomerPage()">Додати</a>
+        </div>
+    </div>
     @form(formCall) {
         <fieldset>
             @CSRF.formField
-            <div class="container-fluid row">@inputCustomer</div>
+            <div class="container-fluid row">
+                <input id="customersID" name="customersID" style="display: none">
+            </div>
             <input name="orderDay" type="text" value="@formattingDateForForm(new Date())" style="display: none">
             <input name="deliveryDay" type="text" value="@getNextSunday" style="display: none">
             <label class="label" for="dataInput">Час доставки </label>
@@ -113,5 +136,7 @@
             <a href="@routes.OrderController.toOrderFeedPage("")" class="btn">Скасувати</a>
         </div>
     }
-    <script src="@routes.Assets.versioned("javascript/orderScript.js")"></script>
+    <script charset="UTF-8" src="@routes.Assets.versioned("javascript/orderScript.js")"></script>
+ @* <script charset="utf-8" type="text/javascript" src="@routes.HomeController.javascriptRoutes"></script> *@
+    <p id="JSON">3</p>
 }

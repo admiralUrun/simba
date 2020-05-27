@@ -10,6 +10,7 @@ import play.api.libs.json._
 @Singleton
 class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
 type PlayAction = Action[AnyContent]
+type  JSONWrites[Customer] = OWrites[Customer]
   private val customerForm = Form(
     mapping(
       "id" -> ignored(None: Option[Int]),
@@ -34,6 +35,12 @@ type PlayAction = Action[AnyContent]
   def toCustomersListPage(search: String): PlayAction = Action { implicit request =>
     val rows = if(search.isEmpty) customerModel.getAllTableRows else customerModel.getAllTableRowsWhere(search)
     Ok(views.html.customers(rows, search))
+  }
+
+  def getCustomersForOrderSearch(search: String): PlayAction = Action {
+    implicit val residentWrites: JSONWrites[Customer] = Json.writes[Customer]
+    val json = Json.toJson(customerModel.getAllTableRowsWhere(search))
+    Ok(json)
   }
 
   def toCreateCustomerPage: PlayAction = Action { implicit request =>

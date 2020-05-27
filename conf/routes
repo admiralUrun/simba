@@ -4,13 +4,15 @@
 # ~~~~
 
 GET     /                               controllers.HomeController.index
+#GET     /javascriptRoutes               controllers.HomeController.javascriptRoutes
+POST    /importCustomers                controllers.HomeController.importFromCVS()
 
-GET     /customers                      controllers.CustomerController.toCustomersListPage(search, searchSelect)
+GET     /customers                      controllers.CustomerController.toCustomersListPage(search)
 GET     /addCustomer                    controllers.CustomerController.toCreateCustomerPage()
 GET     /editCustomer/:id               controllers.CustomerController.toEditCustomerPage(id: Int)
 POST    /newCustomer                    controllers.CustomerController.createCustomer()
 POST    /updateCustomer/:id             controllers.CustomerController.update(id: Int)
-POST    /importCustomers                controllers.HomeController.importFromCVS()
+GET     /searchCustomerForOrder        controllers.CustomerController.getCustomersForOrderSearch(search)
 
 GET     /orders                         controllers.OrderController.toOrderFeedPage(search)
 GET     /createOrder                    controllers.OrderController.toOrderCreatePage

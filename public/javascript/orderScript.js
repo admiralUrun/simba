@@ -65,3 +65,12 @@ function changeButton(id, trueLabel, falseLabel, inputID) {
     button.attr('class', getNewClassForButton())
     input.val(!isChecked)
 }
+
+function setCustomerForOrder() {
+    // TODO make a UI changes as hide a search and display Customer ALSO set proper vales!
+}
+
+function takeCustomerJSONAddToUI(JSONArray) {
+    console.log("Okay that is works")
+    console.log(JSONArray)
+}
