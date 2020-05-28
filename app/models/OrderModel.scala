@@ -57,4 +57,3 @@ case class PlayOrderForEditAndCreate(id: Option[Int],
                                inOrder: String,
                                total: Int,
                                paid: Boolean, delivered: Boolean, note: Option[String])
-

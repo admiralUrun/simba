@@ -1,20 +1,25 @@
 jQuery.exists = function(selector) {return ($(selector).length > 0);}
 jQuery.isDefended = function(object) {return object !== null}
-function addToOrder(item, title) {
+function addToOrder(item, title, cost) {
+    let total = $('#total')
+    let totalText = $('#totalText')
     let order = $('#inOrder')
     let inOrder = order.val()
     let isValueEmpty = inOrder === ''
     if (isValueEmpty) {
         order.val(item)
+        total.val(cost)
     } else {
         order.val(inOrder + ', ' + item)
+        total.val(Number(total.val()) + Number(cost))
     }
-    addElementForDisplay(isValueEmpty, title)
+    addElementForDisplay(isValueEmpty, title, cost)
+    totalText.html(total.val())
 }
 
-function addElementForDisplay(isEmpty, text) {
+function addElementForDisplay(isEmpty, text, cost) {
     function addElementForDisplay(index) {
-        $(`<li class="list-group-item" id="element${index}">${text} <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder(${index})"><span aria-hidden="true">&times;</span></button></li>`).appendTo('ul')
+        $(`<li class="list-group-item" id="element${index}">${text} <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder(${index}, ${cost})"><span aria-hidden="true">&times;</span></button></li>`).appendTo('ul')
     }
     if(isEmpty) {
         addElementForDisplay(0)
@@ -23,7 +28,9 @@ function addElementForDisplay(isEmpty, text) {
     }
 }
 
-function deleteFromOrder(indexToRemove) {
+function deleteFromOrder(indexToRemove, cost) {
+    let total = $('#total')
+    let totalText = $('#totalText')
     function getNewValueForInput(array) {
         let result = ''
         for (let i = 0; i < array.length; i++) {
@@ -44,6 +51,8 @@ function deleteFromOrder(indexToRemove) {
         $(`#element${indexToRemove}`).remove()
         order.val('')
     }
+    total.val(Number(total.val()) - Number(cost))
+    totalText.html(total.val())
 }
 
 function changeButton(id, trueLabel, falseLabel, inputID) {
@@ -76,7 +85,7 @@ function takeJSONFromDateSetCustomerForOrder(customerID) {
             }
             function addCustomerToOrderAndToUI(c) {
                 function getAFullAddress() {
-                    return c.address + formatSting(c.entrance) + formatSting(c.foolr) + formatSting(c.flat)
+                    return c.address + formatSting(c.entrance) + formatSting(c.floor) + formatSting(c.flat)
                 }
                 $(`#customersID`).val(`${c.id}`)
                 $(`<h4 id="customer">${c.firstName} ${formatSting(c.lastName)} Телефон:${c.phone}  Місто:${c.city} Адреса:${getAFullAddress()}</h4>
@@ -84,13 +93,12 @@ function takeJSONFromDateSetCustomerForOrder(customerID) {
                     .appendTo($('#customerInformation'))
             }
             function allSearchElementsStyleDisplayNone() {
-                $("#searchDIV").css('display', 'none')
+                $("#searchDIV").hide()
             }
             allSearchElementsStyleDisplayNone()
             addCustomerToOrderAndToUI(customer)
     }
     let json = $(`#${customerID}`).data('customerJSON')
-    console.log(json)
     setCustomerForOrder(json)
     }
 
@@ -114,8 +122,6 @@ function takeCustomerJSONAddToUI(JSONArray) {
     JSONArray.forEach(function (c) {
         addDropItem(c)
     })
-    // console.log("Okay that is works")
-    // console.log(JSONArray)
 }
 
 function editCustomerInOrder() {
