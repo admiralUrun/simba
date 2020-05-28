@@ -5,6 +5,7 @@ import models.{OrderModel, PlayOrderForEditAndCreate}
 import play.api.data.Forms._
 import play.api.data.Form
 import play.api.mvc._
+import views.{OrderMenu, OrderMenuItem}
 
 @Singleton
 class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
@@ -28,11 +29,11 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   def toOrderEditPage(id:Int): PlayAction = Action { implicit request =>
-    Ok(views.html.editOrder(id, orderForm)) // TODO fill with order
+    Ok(views.html.editOrder(id, orderForm, getMenus)) // TODO fill with order
   }
 
   def toOrderCreatePage: PlayAction = Action { implicit request =>
-    Ok(views.html.createOrder(orderForm))
+    Ok(views.html.createOrder(orderForm, getMenus))
   }
 
   def updateOrder(id: Int): PlayAction = Action { implicit request =>
@@ -42,6 +43,6 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   def createOrder: PlayAction = Action { implicit request =>
     orderFeedPage
   }
-
+  private def getMenus: List[OrderMenu] = orderModel.getMenus
 
 }

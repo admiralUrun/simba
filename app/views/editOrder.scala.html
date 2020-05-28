@@ -1,3 +1,4 @@
-@(id:Int, oF: Form[PlayOrderForEditAndCreate])(implicit requestHeader: MessagesRequestHeader)
+@import views.OrderMenu
+@(id:Int, oF: Form[PlayOrderForEditAndCreate], menus: List[OrderMenu])(implicit requestHeader: MessagesRequestHeader)
 
-@createOrEditOrderTemplate(s"Замовлення $id", routes.OrderController.updateOrder(id), oF, "Змінити", List())
+@createOrEditOrderTemplate(s"Замовлення $id", routes.OrderController.updateOrder(id), oF, "Змінити", menus)

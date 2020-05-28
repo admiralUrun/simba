@@ -31,16 +31,7 @@
             @menuTitle
         </button>
         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-        @inMenu.map(i => createADropItem(i.title, i.value, i.cost))
-            @createADropItem(s"5 на 2 $menuTitle ", s"5 on 2($typeOfMenu)", 500)
-            @createADropItem(s"5 на 4 $menuTitle ", s"5 on 4($typeOfMenu)", 500)
-            @createADropItem(s"3 на 2 $menuTitle ", s"3 on 2($typeOfMenu)", 500)
-            @createADropItem(s"3 на 4 $menuTitle ", s"3 on 4($typeOfMenu)", 500)
-            @createADropItem(s"$menuTitle 1 ", s"1($typeOfMenu)", 500)
-            @createADropItem(s"$menuTitle 2 ", s"2($typeOfMenu)", 500)
-            @createADropItem(s"$menuTitle 3 ", s"3($typeOfMenu)", 500)
-            @createADropItem(s"$menuTitle 4 ", s"4($typeOfMenu)", 500)
-            @createADropItem(s"$menuTitle 5 ", s"5($typeOfMenu)", 500)
+            @inMenu.map(i => createADropItem(i.title, i.value, i.cost))
         </div>
     </div>
     }
@@ -55,11 +46,6 @@
         </div>
         <div class="container-fluid row">
             @inMenu.map(menu => createADropDown(menu.title, "", menu.menuItems))
-            @createADropDown("Класичне", "classic", List())
-            @createADropDown("Лайт", "lite", List())
-            @createADropDown("Сніданок", "breakfast", List())
-            <button class="btn btn-info" type="button" onclick="addToOrder('soup', 'Суп')">Суп</button>
-            <button class="btn btn-info" type="button" onclick="addToOrder('desert', 'Десерт')">Десерт</button>
         </div>
     </div>
 }

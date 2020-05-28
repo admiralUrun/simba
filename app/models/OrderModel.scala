@@ -4,7 +4,9 @@ import doobie._
 import doobie.implicits._
 import java.util.Date
 import java.time.LocalTime
+
 import javax.inject._
+import views.{OrderMenu, OrderMenuItem}
 
 @Singleton
 class OrderModel @Inject()(dS: DoobieStore) {
@@ -30,6 +32,43 @@ class OrderModel @Inject()(dS: DoobieStore) {
 
   def edit(o: PlayOrderForEditAndCreate): Boolean = {
     ???
+  }
+
+  def getMenus: List[OrderMenu] = {
+    List(
+      OrderMenu("Класичне", List(
+        OrderMenuItem("5 на 2 Класичне", "5 on 2(classic)", 1289),
+        OrderMenuItem("5 на 4 Класичне", "5 on 4(classic)", 2249),
+        OrderMenuItem("3 на 2 Класичне", "3 on 2(classic)", 849),
+        OrderMenuItem("3 на 4 Класичне", "3 on 4(classic)", 1489),
+        OrderMenuItem("Класичне 1", "1(classic)", 70),
+        OrderMenuItem("Класичне 2", "2(classic)", 70),
+        OrderMenuItem("Класичне 3", "3(classic)", 70),
+        OrderMenuItem("Класичне 4", "4(classic)", 70),
+        OrderMenuItem("Класичне 5", "5(classic)", 70))),
+      OrderMenu("Лайт", List(
+        OrderMenuItem("5 на 2 Лайт", "5 on 2(lite)", 1289),
+        OrderMenuItem("5 на 4 Лайт", "5 on 4(lite)", 2249),
+        OrderMenuItem("3 на 2 Лайт", "3 on 2(lite)", 849),
+        OrderMenuItem("3 на 4 Лайт", "3 on 4(lite)", 1489),
+        OrderMenuItem("Лайт 1", "1(lite)", 70),
+        OrderMenuItem("Лайт 2", "2(lite)", 70),
+        OrderMenuItem("Лайт 3", "3(lite)", 70),
+        OrderMenuItem("Лайт 4", "4(lite)", 70),
+        OrderMenuItem("Лайт 5", "5(lite)", 70))),
+      OrderMenu("Сніданок", List(
+        OrderMenuItem("5 на 2 Сніданок", "5 on 2(breakfast)", 849),
+        OrderMenuItem("5 на 4 Сніданок", "5 on 4(breakfast)", 1589),
+        OrderMenuItem("3 на 2 Сніданок", "3 on 2(breakfast)", 549),
+        OrderMenuItem("3 на 4 Сніданок", "3 on 4(breakfast)", 989),
+        OrderMenuItem("Сніданок 1", "1(breakfast)", 70),
+        OrderMenuItem("Сніданок 2", "2(breakfast)", 70),
+        OrderMenuItem("Сніданок 3", "3(breakfast)", 70),
+        OrderMenuItem("Сніданок 4", "4(breakfast)", 70),
+        OrderMenuItem("Сніданок 5", "5(breakfast)", 70))),
+      OrderMenu("Десерт", List( OrderMenuItem("Десерт", "desert", 249)) ),
+      OrderMenu("Суп", List( OrderMenuItem("Суп", "soup", 229)) ),
+    )
   }
 }
 
