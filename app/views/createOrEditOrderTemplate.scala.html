@@ -82,27 +82,34 @@
 }
 @main(title) {
     <div class="container-fluid">
-        <div class="row">
-            @form(routes.CustomerController.getCustomersForOrderSearch(""), Symbol("class") -> "colFirst") {
-                <div class="input-group col-md">
-                    <input id="search" name="search" type="search" class="form-control col-md" list="searchList" >
+        <div id="customerInformation" class="row">
+            <form>
+                <div id="searchDIV" class="input-group col-md">
+                    <input id="search" name="search" type="search" class="form-control dropdown-toggle col-auto" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <div id="searchMenu" class="dropdown-menu">
+                        <span class="dropdown-header">Тут можна знайти Клієнта</span>
+                    </div>
                     <input type="button" id="searchSubmit" value="Пошук" class="btn btn-primary offset-sm-1">
-                    <script>
+                </div>
+                <script>
                         $(document).ready(function () {
+                           $("#search").keyup(
+                              function() {
+                                  let searchParams = $("#search").val()
+                                  if (searchParams.length === 0)  cleanDropMenu();
+                                  else {}
+                              }
+                          );
                           $("#searchSubmit").click(
                               function() {
                                   let searchParams = $("#search").val()
-                                $.get("/searchCustomerForOrder?search=" + searchParams, function (data, status) {
-                                    takeCustomerJSONAddToUI(data)
-                                })
+                                  $.get("/searchCustomerForOrder?search=" + searchParams, function (data) { takeCustomerJSONAddToUI(data) })
                               }
                           );
                         })
                     </script>
-                </div>
-            }
-            <div class="col"></div>
-            <a class="colLast btn btn-success disabled" id="add" href="@routes.CustomerController.toCreateCustomerPage()">Додати</a>
+            </form>
+           <!-- <a class="colLast btn btn-success disabled" id="add" href="@routes.CustomerController.toCreateCustomerPage()">Додати</a> -->
         </div>
     </div>
     @form(formCall) {
@@ -138,5 +145,4 @@
     }
     <script charset="UTF-8" src="@routes.Assets.versioned("javascript/orderScript.js")"></script>
  @* <script charset="utf-8" type="text/javascript" src="@routes.HomeController.javascriptRoutes"></script> *@
-    <p id="JSON">3</p>
 }
