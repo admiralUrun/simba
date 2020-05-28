@@ -79,11 +79,12 @@ function takeJSONFromDateSetCustomerForOrder(customerID) {
                     return c.address + formatSting(c.entrance) + formatSting(c.foolr) + formatSting(c.flat)
                 }
                 $(`#customersID`).val(`${c.id}`)
-                $(`<h4 id="customer">${c.firstName} ${formatSting(c.lastName)} Телефон:${c.phone}  Місто:${c.city} Адреса:${getAFullAddress()}</h4>`) // FOR first time
+                $(`<h4 id="customer">${c.firstName} ${formatSting(c.lastName)} Телефон:${c.phone}  Місто:${c.city} Адреса:${getAFullAddress()}</h4>
+                    <button id="editButton" class="btn btn-success" onclick="editCustomerInOrder()">Знайти іншого</button>`) // FOR first time
                     .appendTo($('#customerInformation'))
             }
             function allSearchElementsStyleDisplayNone() {
-                $("#searchDIV").css('display', 'none') //= "display: none"
+                $("#searchDIV").css('display', 'none')
             }
             allSearchElementsStyleDisplayNone()
             addCustomerToOrderAndToUI(customer)
@@ -92,7 +93,6 @@ function takeJSONFromDateSetCustomerForOrder(customerID) {
     console.log(json)
     setCustomerForOrder(json)
     }
-
 
 function takeCustomerJSONAddToUI(JSONArray) {
     // <div id="dropdown-menu" className="dropdown-menu">
@@ -116,6 +116,13 @@ function takeCustomerJSONAddToUI(JSONArray) {
     })
     // console.log("Okay that is works")
     // console.log(JSONArray)
+}
+
+function editCustomerInOrder() {
+    $(`#customersID`).val("")
+    $(`#customer`).remove()
+    $(`#editButton`).remove()
+    $("#searchDIV").show()
 }
 
 function cleanDropMenu() {
