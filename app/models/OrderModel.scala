@@ -4,9 +4,7 @@ import doobie._
 import doobie.implicits._
 import java.util.Date
 import java.time.LocalTime
-
 import javax.inject._
-import views.{OrderMenu, OrderMenuItem}
 
 @Singleton
 class OrderModel @Inject()(dS: DoobieStore) {
@@ -18,12 +16,11 @@ class OrderModel @Inject()(dS: DoobieStore) {
   //  private var desert: Recipe = ???
 
   def getAllTableRows: Map[Date, List[Order]] = { // TODO fix bug with query: I can't cast select in Order
-    //        sql"select * from orders"
-    //          .query[Order]
-    //          .to[List]
-    //          .transact(xa)
-    //          .unsafeRunSync.groupBy(_.deliveryDay)
-    Map()
+    sql"select * from orders"
+      .query[Order]
+      .to[List]
+      .transact(xa)
+      .unsafeRunSync.groupBy(_.deliveryDay)
   }
 
   def insert(o: PlayOrderForEditAndCreate): Boolean = {
@@ -34,7 +31,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
     ???
   }
 
-  def getMenus: List[OrderMenu] = {
+  def getMenusToolsForAddingToOrder: List[OrderMenu] = {
     List(
       OrderMenu("Класичне", List(
         OrderMenuItem("5 на 2 Класичне", "5 on 2(classic)", 1289),
@@ -75,7 +72,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
 case class Order(id: Option[Int],
                  customerId: Int,
                  orderDay: Date, deliveryDay: Date,
-                 deliverFrom: LocalTime, deliverTo: LocalTime,
+                 deliverFrom: Date, deliverTo: Date,
                  total: Int,
                  paid: Boolean, delivered: Boolean, note: Option[String])
 
@@ -96,3 +93,6 @@ case class PlayOrderForEditAndCreate(id: Option[Int],
                                inOrder: String,
                                total: Int,
                                paid: Boolean, delivered: Boolean, note: Option[String])
+
+case class OrderMenuItem(title: String, value: String, cost: Int)
+case class OrderMenu(title:String, menuItems:List[OrderMenuItem])

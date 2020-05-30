@@ -2,9 +2,7 @@ package controllers
 
 import javax.inject._
 import models.ImporterModel
-import play.api.http.MimeTypes
 import play.api.mvc._
-import play.api.routing.JavaScriptReverseRouter
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
@@ -13,6 +11,8 @@ import play.api.routing.JavaScriptReverseRouter
 class HomeController @Inject()(cc: ControllerComponents) extends AbstractController(cc) {
 
 //  def javascriptRoutes: Action[AnyContent] = Action { implicit request =>
+//    import play.api.http.MimeTypes
+//    import play.api.routing.JavaScriptReverseRouter
 //    Ok(JavaScriptReverseRouter("jsRoutes")(
 //      routes.javascript.CustomerController.getCustomersForOrderSearch)
 //    ).as(MimeTypes.JAVASCRIPT)

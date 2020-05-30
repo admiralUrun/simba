@@ -1,6 +1,16 @@
 jQuery.exists = function(selector) {return ($(selector).length > 0);}
 jQuery.isDefended = function(object) {return object !== null}
 function addToOrder(item, title, cost) {
+    function addElementForDisplay(isEmpty, text, cost) {
+        function addElementForDisplay(index) {
+            $(`<li class="list-group-item" id="element${index}">${text} <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder(${index}, ${cost})"><span aria-hidden="true">&times;</span></button></li>`).appendTo('ul')
+        }
+        if(isEmpty) {
+            addElementForDisplay(0)
+        } else {
+            addElementForDisplay(order.val().split(',').length - 1)
+        }
+    }
     let total = $('#total')
     let totalText = $('#totalText')
     let order = $('#inOrder')
@@ -14,18 +24,7 @@ function addToOrder(item, title, cost) {
         total.val(Number(total.val()) + Number(cost))
     }
     addElementForDisplay(isValueEmpty, title, cost)
-    totalText.html(total.val())
-}
-
-function addElementForDisplay(isEmpty, text, cost) {
-    function addElementForDisplay(index) {
-        $(`<li class="list-group-item" id="element${index}">${text} <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder(${index}, ${cost})"><span aria-hidden="true">&times;</span></button></li>`).appendTo('ul')
-    }
-    if(isEmpty) {
-        addElementForDisplay(0)
-    } else {
-        addElementForDisplay($('#inOrder').val().split(',').length - 1)
-    }
+    totalText.html(total.val() +  '₴')
 }
 
 function deleteFromOrder(indexToRemove, cost) {
@@ -52,7 +51,7 @@ function deleteFromOrder(indexToRemove, cost) {
         order.val('')
     }
     total.val(Number(total.val()) - Number(cost))
-    totalText.html(total.val())
+    totalText.html(total.val() +  '₴')
 }
 
 function changeButton(id, trueLabel, falseLabel, inputID) {
@@ -79,16 +78,16 @@ function changeButton(id, trueLabel, falseLabel, inputID) {
 
 function takeJSONFromDateSetCustomerForOrder(customerID) {
     function setCustomerForOrder(customer) {
-        function formatSting(s) {
+        function getValeOrEmptyString(s) {
             if($.isDefended(s)) return ' ' + s;
                 else return ''
             }
             function addCustomerToOrderAndToUI(c) {
                 function getAFullAddress() {
-                    return c.address + formatSting(c.entrance) + formatSting(c.floor) + formatSting(c.flat)
+                    return c.address + getValeOrEmptyString(c.entrance) + getValeOrEmptyString(c.floor) + getValeOrEmptyString(c.flat)
                 }
                 $(`#customersID`).val(`${c.id}`)
-                $(`<h4 id="customer">${c.firstName} ${formatSting(c.lastName)} Телефон:${c.phone}  Місто:${c.city} Адреса:${getAFullAddress()}</h4>
+                $(`<h4 id="customer">${c.firstName} ${getValeOrEmptyString(c.lastName)} Телефон:${c.phone}  Місто:${c.city} Адреса:${getAFullAddress()}</h4>
                     <button id="editButton" class="btn btn-success" onclick="editCustomerInOrder()">Знайти іншого</button>`) // FOR first time
                     .appendTo($('#customerInformation'))
             }
@@ -103,12 +102,6 @@ function takeJSONFromDateSetCustomerForOrder(customerID) {
     }
 
 function takeCustomerJSONAddToUI(JSONArray) {
-    // <div id="dropdown-menu" className="dropdown-menu">
-    //     <span className="dropdown-item-text">Dropdown item text</span>
-    //     <a className="dropdown-item" href="#">Action</a>
-    //     <a className="dropdown-item" href="#">Another action</a>
-    //     <a className="dropdown-item" href="#">Something else here</a>
-    // </div>
     function addDropItem(Customer) {
         let elementExists = document.getElementById(`customer${Customer.id}`);
         if(elementExists) {}
@@ -133,5 +126,5 @@ function editCustomerInOrder() {
 
 function cleanDropMenu() {
     document.getElementById('searchMenu').innerHTML = ''
- $(`<span class="dropdown-header">Тут можна знайти Клієнта</span>`).appendTo($("#searchMenu"))
+    $(`<span class="dropdown-header">Тут можна знайти Клієнта</span>`).appendTo($("#searchMenu"))
 }

@@ -1,8 +1,8 @@
 @import java.util.Date
 @import views.html.helper._
 @import services.SimbaHTMLHelper._
-@import views.OrderMenu
-@import views.OrderMenuItem
+@import models.OrderMenu
+@import models.OrderMenuItem
 @(title: String, formCall: Call, oF: Form[PlayOrderForEditAndCreate], buttonLabel: String, inMenu:List[OrderMenu], isCreate: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
 @creteAnInputText(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
     @if(showError) {
@@ -37,7 +37,7 @@
     }
 }
 
-@inputStuffInOrder = {
+@inputForOrder = {
     <div class="container-fluid row">
         <input type="text" id="inOrder" name="inOrder" value="" class="col-1" style="display: none">
         <div class="container-fluid row">
@@ -109,23 +109,28 @@
             <div class="container-fluid row">
                 <input id="customersID" name="customersID" style="display: none">
             </div>
+
             <input name="orderDay" type="text" value="@formattingDateForForm(new Date())" style="display: none">
             <input name="deliveryDay" type="text" value="@getNextSunday" style="display: none">
+
             <label class="label" for="dataInput">Час доставки </label>
             <div id="dataInput" class="container-fluid row">
                 <input id="deliverFrom" name="deliverFrom" type="text" class=" col-auto">
                      <b class="col-auto"> По </b>
                 <input id="deliverTo" name="deliverTo" type="text" class=" col-auto">
             </div>
+
             <input id="total" type="text" style="display: none;">
             <label>Всьго</label>
-            <h5 id="totalText">0</h5>
-            @* inputText(oF("total")) *@
+            <h5 id="totalText">0 ₴</h5>
+
             <div class="container-fluid row">
                 @createBooleanInput("paid", "Оплаченно", "Не оплаченно", getCheckBoxVaule("paid"))
                 @createBooleanInput("delivered", "Доставленно", "Не доставленно", getCheckBoxVaule("delivered"))
             </div>
-            @inputStuffInOrder
+
+            @inputForOrder
+
             <div class="form-group">
                 <label for="note">Нотатка</label>
                 <textarea class="form-control" id="note" name="note" rows="3">@insertNotes(oF.value)</textarea>

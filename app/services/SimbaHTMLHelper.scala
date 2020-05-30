@@ -14,17 +14,16 @@ object SimbaHTMLHelper {
   }
 
   def getFlash()(implicit request: MessagesRequestHeader): Html = {
-    def getFlash(option: Option[String]):String = {
+    def getFlash(option: Option[String]): HTMLLines = {
       if (option.nonEmpty) option.map { message =>
         s"<div class=$b alert-success $b><strong>$message</strong></div>"
       }.head
       else ""
     }
-    Html(getFlash(request.flash.get("success")) +"\n" +
-      getFlash(request.flash.get("error")))
+    htmlBuilder(List(getFlash(request.flash.get("success")), getFlash(request.flash.get("error"))))
   }
 
-  def formattingDateForDisplay(d:Date):String = {
+  def formattingDateForDisplay(d:Date): String = {
     val monthsTranslate = Map(
       "Jan" -> "Січень",
       "Feb" -> "Лютий",

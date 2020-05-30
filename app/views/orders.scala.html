@@ -1,7 +1,7 @@
-@import java.util.Date
-@(orders:Map[Date, List[PlayOrderForDisplay]], search:String)(implicit request: MessagesRequestHeader)
 @import helper._
 @import services.SimbaHTMLHelper._
+@import java.util.Date
+@(orders:Map[Date, List[PlayOrderForDisplay]], search:String)(implicit request: MessagesRequestHeader)
 
     @getDateRow(d: Date) = {
         <tr>

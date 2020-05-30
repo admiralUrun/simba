@@ -34,10 +34,12 @@
                 @creteAnInput("phone", "Телефон *", "colFirst", showError("phone"))
                 @creteAnInput("phoneNote", "Нотатка Телефону", "offset col-auto")
             </div>
+
             <div class="container-fluid row">
                 @creteAnInput("phone2", "Додатковий Телефон", "colFirst")
                 @creteAnInput("phoneNote2", "Нотатка Дод. Телефону", "offset col-auto")
             </div>
+
             <div class="container-fluid row">
                 @creteAnInput("city", "Місто *", "colFirst", showError("city"))
                 @creteAnInput("address", "Адреса *", "offset col-auto", showError("address"))
@@ -45,8 +47,10 @@
                 @creteAnInput("floor", "Поверх", "offset col-auto")
                 @creteAnInput("flat", "Квартира", "offset col-auto")
             </div>
+
             @creteAnInput("instagram", "Instagram")
             @creteAnInput("preferences", "Надає перевагу")
+
             <div class="form-group">
                 <label for="note">Нотатка</label>
                 <textarea class="form-control" id="notes" name="notes" rows="3">@insertNotes(cF.value)</textarea>
