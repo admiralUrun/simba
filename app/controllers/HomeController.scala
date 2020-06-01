@@ -1,8 +1,8 @@
 package controllers
 
 import javax.inject._
-import models.ImporterModel
 import play.api.mvc._
+import services.importer.CustomerImporter
 /**
  * This controller creates an `Action` to handle HTTP requests to the
  * application's home page.
@@ -28,8 +28,8 @@ class HomeController @Inject()(cc: ControllerComponents) extends AbstractControl
   }
 
   def importFromCVS() = Action { implicit request =>
-    val importer = new ImporterModel
-    importer.importCustomersFromCSV
+    val importer = new CustomerImporter
+    // importer.importCustomersFromCSV
     Ok(views.html.index())
   }
 
