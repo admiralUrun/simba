@@ -76,7 +76,7 @@ case class Order(id: Option[Int],
                  total: Int,
                  paid: Boolean, delivered: Boolean, note: Option[String])
 
-case class Recipe(id: Int, name:String, quantity:Int)
+case class Recipe(id: Option[Int], name:String)
 
 case class PlayOrderForDisplay(id: Option[Int],
                                customer: Customer,

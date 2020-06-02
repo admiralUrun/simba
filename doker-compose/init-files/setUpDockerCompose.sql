@@ -31,7 +31,8 @@ create table ingredients (
     description varchar(256) not null,
     -- SI unit, g, mg, l, etc.
     unit varchar(4) not null,
-    art_by int
+    art_by int unique
+    -- art_by mean article Belarus
 );
 
 drop table if exists recipes;

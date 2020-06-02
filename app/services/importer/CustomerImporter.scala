@@ -72,22 +72,13 @@ class CustomerImporter extends Importer {
     "notes" ->  "notes"
   )
 
-  def takePropertiesFormCustomer(c: Customer): List[String] = {
-    List("id",
+  def generateInsertForCustomer(customer:Customer): SQLCommand =  {
+    "insert into customers " + generateInsertingProperties(getProperties(List("id",
       "firstName", "lastName",
       "phone", "phoneNote",
       "phone2", "phoneNote2",
       "city", "address", "flat", "entrance", "floor",
       "instagram",
-      "preferences", "notes").zip(c.productIterator.toList).filter(_._2 != null).map(_._1)
-  }
-  def takeVariablesFormCustomer(c: Customer): List[String] = {
-    c.productIterator.toList.filter(_ != null).map {
-      case Some(v) => v.toString
-      case a => a.toString
-    }
-  }
-  def generateInsertForCustomer(customer:Customer): SQLCommand =  {
-    "insert into customers " + generateInsertingProperties(takePropertiesFormCustomer(customer), customersTableProperties) + generateInsertingVariables(takeVariablesFormCustomer(customer)) + "; \n"
+      "preferences", "notes"), customer.productIterator), customersTableProperties) + generateInsertingVariables(getVariables(customer.productIterator)) + "; \n"
   }
 }
