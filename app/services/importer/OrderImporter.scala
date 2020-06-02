@@ -53,7 +53,7 @@ class OrderImporter extends Importer {
     }
     def importRecipeIngredients: List[SQLCommand] = {
       def getRecipeIngredientsFromLine(a: Array[String]): (RecipeIngredients, String) = {
-        (RecipeIngredients(null, null, a(4), a(5)), a(2))
+        (RecipeIngredients(Option(1), Option(2), a(4), a(5)), a(2))
       }
       def generateRecipeIngredientsForIngredients(recipeIngredients: (RecipeIngredients, String), recipe: String): SQLCommand = {
         startOfSQLCommand("recipe_ingredients") +
@@ -73,8 +73,8 @@ class OrderImporter extends Importer {
       getAllSQLCommands(generateRecipeIngredientsForIngredients, 4, lines.length - 1)
     }
 
-    writer(new PrintWriter(new FileOutputStream(recipes, true)), importRecipe)
-    writer(new PrintWriter(new FileOutputStream(ingredients, true)), importIngredients)
+//    writer(new PrintWriter(new FileOutputStream(recipes, true)), importRecipe)
+//    writer(new PrintWriter(new FileOutputStream(ingredients, true)), importIngredients)
     writer(new PrintWriter(new FileOutputStream(recipeIngredients, true)), importRecipeIngredients)
   }
 }
