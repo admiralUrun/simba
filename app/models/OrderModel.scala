@@ -68,6 +68,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
   }
 }
 
+
 case class Order(id: Option[Int],
                  customerId: Int,
                  orderDay: Date, deliveryDay: Date,
