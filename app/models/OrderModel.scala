@@ -10,7 +10,7 @@ import javax.inject._
 class OrderModel @Inject()(dS: DoobieStore) {
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
 
-  def getAllTableRows: Map[Date, List[Order]] = { // TODO fix bug with query: I can't cast select in Order
+  def getAllTableRows: Map[Date, List[Order/*PlayOrderForDisplay*/]] = { // TODO fix bug with query: I can't cast select in Order
     sql"select * from orders"
       .query[Order]
       .to[List]

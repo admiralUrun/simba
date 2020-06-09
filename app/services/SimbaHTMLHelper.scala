@@ -6,7 +6,6 @@ import play.api.mvc.MessagesRequestHeader
 import play.twirl.api.Html
 
 object SimbaHTMLHelper {
-  type HTMLLines = String
   private val b ="\""
   private val formatter = new SimpleDateFormat("yyyy-MM-dd")
   def formatString(o: Option[String], n: Option[String]): String = {
@@ -14,13 +13,13 @@ object SimbaHTMLHelper {
   }
 
   def getFlash()(implicit request: MessagesRequestHeader): Html = {
-    def getFlash(option: Option[String]): HTMLLines = {
+    def getFlash(option: Option[String]): SHTML = {
       if (option.nonEmpty) option.map { message =>
-        s"<div class=$b alert-success $b><strong>$message</strong></div>"
+        SHTML(s"<div class=$b alert-success $b><strong>$message</strong></div>")
       }.head
-      else ""
+      else SHTML("")
     }
-    htmlBuilder(List(getFlash(request.flash.get("success")), getFlash(request.flash.get("error"))))
+    (getFlash(request.flash.get("success")) += getFlash(request.flash.get("error"))).toPlayHTML
   }
 
   def formattingDateForDisplay(d:Date): String = {
@@ -59,9 +58,9 @@ object SimbaHTMLHelper {
   }
 
   def tableHeaders(heads: List[String]): Html = {
-    htmlBuilder(heads.zipWithIndex.map{ case (header, i) =>
+    SHTML(heads.zipWithIndex.map{ case (header, i) =>
       s"<th class=$b col${i + 1} header$b>$header</th>"
-    })
+    }).toPlayHTML
   }
 
   def insertNotes(a: Option[Any]): String = {
@@ -72,7 +71,4 @@ object SimbaHTMLHelper {
       case _ => ""
     }
   }
-
-  private def htmlBuilder(s: List[HTMLLines]): Html = Html(s.mkString("\n"))
-
 }

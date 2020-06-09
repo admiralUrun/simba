@@ -2,8 +2,8 @@ package services.importer
 import models.Recipe
 import com.github.tototoshi.csv.CSVReader
 import java.io.{File, FileOutputStream, PrintWriter}
-
 import scala.annotation.tailrec
+
 class OrderImporter extends Importer {
   private val recipeProperties = Map(
     "id" -> "id",
@@ -72,8 +72,8 @@ class OrderImporter extends Importer {
       getAllSQLCommands(generateRecipeIngredientsForIngredients, 4, lines.length - 1)
     }
 
-//    writer(new PrintWriter(new FileOutputStream(recipes, true)), importRecipe)
-//    writer(new PrintWriter(new FileOutputStream(ingredients, true)), importIngredients)
+    writer(new PrintWriter(new FileOutputStream(recipes, true)), importRecipe)
+    writer(new PrintWriter(new FileOutputStream(ingredients, true)), importIngredients)
     writer(new PrintWriter(new FileOutputStream(recipeIngredients, true)), importRecipeIngredients)
   }
 }
