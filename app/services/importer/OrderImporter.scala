@@ -18,8 +18,7 @@ class OrderImporter extends Importer {
   private val recipeIngredientsProperties = Map(
     "recipeId" -> "recipe_id",
     "ingredientId" -> "ingredient_id",
-    "netto" -> "netto",
-    "brutto" -> "brutto"
+    "netto" -> "netto"
   )
   def importAllFromCSV(csv: File, recipes: File, ingredients: File, recipeIngredients: File): Unit = {
     val lines = CSVReader.open(csv).all().toArray
@@ -53,7 +52,7 @@ class OrderImporter extends Importer {
     }
     def importRecipeIngredients: List[SQLCommand] = {
       def getRecipeIngredientsFromLine(a: Array[String]): (RecipeIngredients, String) = {
-        (RecipeIngredients(Option(1), Option(2), a(4), a(5)), a(2))
+        (RecipeIngredients(Option(1), Option(2), a(4).replace(',', '.')), a(2))
       }
       def generateRecipeIngredientsForIngredients(recipeIngredients: (RecipeIngredients, String), recipe: String): SQLCommand = {
         startOfSQLCommand("recipe_ingredients") +
@@ -99,4 +98,4 @@ object OrderImporter extends OrderImporter with App {
 }
 // case class Recipe(id: Int, name: String)
 case class Ingredient(id: Option[Int], description: String, unit: String, artBy: Int)
-case class RecipeIngredients(recipeId: Option[Int], ingredientId: Option[Int], netto: String, brutto: String)
+case class RecipeIngredients(recipeId: Option[Int], ingredientId: Option[Int], netto: String)

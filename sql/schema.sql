@@ -44,8 +44,6 @@ create table recipe_ingredients (
     ingredient_id int,
     -- TODO: do we need both? as decimal?
     netto decimal,
-    brutto decimal,
-
     primary key (recipe_id, ingredient_id)
 );
 
