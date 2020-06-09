@@ -53,7 +53,8 @@ drop table if exists offers;
 create table offers (
     id int primary key auto_increment,
     name varchar(128),
-    price int not null
+    price int not null,
+    menu_type varchar(128)
 );
 
 drop table if exists offer_recipes;
@@ -75,6 +76,8 @@ create table orders (
 
     total int not null,
 
+    offline_delivery boolean not null,
+    delivery_on_monday boolean not null,
     paid boolean not null,
     delivered boolean not null,
     note text

@@ -12,13 +12,16 @@ GET     /addCustomer                    controllers.CustomerController.toCreateC
 GET     /editCustomer/:id               controllers.CustomerController.toEditCustomerPage(id: Int)
 POST    /newCustomer                    controllers.CustomerController.createCustomer()
 POST    /updateCustomer/:id             controllers.CustomerController.update(id: Int)
-GET     /searchCustomerForOrder        controllers.CustomerController.getCustomersForOrderSearch(search)
+GET     /searchCustomerForOrder         controllers.CustomerController.getCustomersForOrderSearch(search)
 
 GET     /orders                         controllers.OrderController.toOrderFeedPage(search)
 GET     /createOrder                    controllers.OrderController.toOrderCreatePage
 GET     /editOrder/:id                  controllers.OrderController.toOrderEditPage(id: Int)
 POST    /newOrder                       controllers.OrderController.createOrder
 POST    /updateOrder/:id                controllers.OrderController.updateOrder(id: Int)
+GET     /offersSettings                 controllers.OrderController.toOrderSettingsPage
+GET     /offferSettings/:title/:menuName                 controllers.OrderController.toSetOfferPage(title: String, menuName: String)
+POST    /setOffer                       controllers.OrderController.setOffer
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
 

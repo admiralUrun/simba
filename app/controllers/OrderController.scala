@@ -17,6 +17,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
       "deliverFrom" -> nonEmptyText, "deliverTo" -> nonEmptyText,
       "inOrder" -> nonEmptyText,
       "total" -> number,
+      "offlineDelivery" -> boolean, "deliveryOnMonday" -> boolean,
       "paid" -> boolean, "delivered" -> boolean,
       "note" -> optional(text)
     )(PlayOrderForEditAndCreate.apply)(PlayOrderForEditAndCreate.unapply))
@@ -28,11 +29,23 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   def toOrderEditPage(id:Int): PlayAction = Action { implicit request =>
-    Ok(views.html.editOrder(id, orderForm, orderModel.getMenusToolsForAddingToOrder)) // TODO fill with order
+    Ok(views.html.editOrder(id, orderForm, orderModel.getMenusToolsForAddingToOrder, orderModel.getInOrderToTextWithCostMap)) // TODO fill with order
   }
 
   def toOrderCreatePage: PlayAction = Action { implicit request =>
     Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder))
+  }
+
+  def toOrderSettingsPage: PlayAction = Action { implicit request =>
+    Ok(views.html.setOffersForOrders())
+  }
+
+  def toSetOfferPage(title: String, menuTitle: String): PlayAction = Action { implicit request =>
+    Ok(views.html.setOffer(title, menuTitle))
+  }
+
+  def setOffer: PlayAction = Action { implicit request =>
+    Ok("")
   }
 
   def updateOrder(id: Int): PlayAction = Action { implicit request =>

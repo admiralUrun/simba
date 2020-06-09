@@ -1,0 +1,36 @@
+@import views.html.helper._
+@import services.SimbaHTMLHelper._
+
+@(title: String, menuName: String)
+    @main(title) {
+    <div class="row">
+        @form(routes.OrderController.toOrderSettingsPage(), Symbol("class") -> "container-fluid") {
+            <div class="row container-fluid">
+                <label class="label" for="first">@title 1</label>
+                <input name="first" type="number">
+            </div>
+
+            <div class="row container-fluid">
+                <label class="label" for="second">@title 2</label>
+                <input name="second" type="number">
+            </div>
+
+            <div class="row container-fluid">
+                <label class="label" for="third">@title 3</label>
+                <input name="third" type="number">
+            </div>
+
+            <div class="row container-fluid">
+                <label class="label" for="fourth">@title 4</label>
+                <input name="fourth" type="number">
+            </div>
+
+            <div class="row container-fluid">
+                <label class="label" for="fifth">@title 5</label>
+                <input name="fifth" type="number">
+            </div>
+
+            <button class="btn btn-success" type="submit">Налаштувати</button>
+        }
+    </div>
+    }

@@ -67,7 +67,7 @@ object SimbaHTMLHelper {
   def insertNotes(a: Option[Any]): String = {
     a match {
       case None => ""
-      case Some(PlayOrderForEditAndCreate(_, _, _, _, _, _, _, _, _, _, note)) => note.getOrElse("")
+      case Some(PlayOrderForEditAndCreate(_, _, _, _, _, _, _, _, _, _, _, _, note)) => note.getOrElse("")
       case Some(Customer(_, _, _, _, _, _,_ , _, _, _, _, _, _, _, notes)) => notes.getOrElse("")
       case _ => ""
     }

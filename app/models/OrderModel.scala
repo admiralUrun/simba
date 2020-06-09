@@ -9,11 +9,6 @@ import javax.inject._
 @Singleton
 class OrderModel @Inject()(dS: DoobieStore) {
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
-  private var classicMenu: Map[String, Recipe] = Map()
-  private var liteMenu: Map[String, Recipe] = Map()
-  private var blackestMenu: Map[String, Recipe] = Map()
-  //  private var soup: Recipe = ???
-  //  private var desert: Recipe = ???
 
   def getAllTableRows: Map[Date, List[Order]] = { // TODO fix bug with query: I can't cast select in Order
     sql"select * from orders"
@@ -31,7 +26,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
     ???
   }
 
-  def getMenusToolsForAddingToOrder: List[OrderMenu] = {
+  def getMenusToolsForAddingToOrder: List[OrderMenu] = { // TODO take it from offers
     List(
       OrderMenu("Класичне", List(
         OrderMenuItem("5 на 2 Класичне", "5 on 2(classic)", 1289),
@@ -63,9 +58,13 @@ class OrderModel @Inject()(dS: DoobieStore) {
         OrderMenuItem("Сніданок 3", "3(breakfast)", 70),
         OrderMenuItem("Сніданок 4", "4(breakfast)", 70),
         OrderMenuItem("Сніданок 5", "5(breakfast)", 70))),
-      OrderMenu("Десерт", List( OrderMenuItem("Десерт", "desert", 249)) ),
-      OrderMenu("Суп", List( OrderMenuItem("Суп", "soup", 229)) ),
+      OrderMenu("Десерт", List(OrderMenuItem("Десерт", "desert", 249))),
+      OrderMenu("Суп", List(OrderMenuItem("Суп", "soup", 229))),
     )
+  }
+
+  def getInOrderToTextWithCostMap: Map[String, (String, Int)] = {
+    Map()
   }
 }
 
@@ -74,6 +73,7 @@ case class Order(id: Option[Int],
                  orderDay: Date, deliveryDay: Date,
                  deliverFrom: Date, deliverTo: Date,
                  total: Int,
+                 offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                  paid: Boolean, delivered: Boolean, note: Option[String])
 
 case class Recipe(id: Option[Int], name:String)
@@ -84,15 +84,21 @@ case class PlayOrderForDisplay(id: Option[Int],
                                deliverFrom: LocalTime, deliverTo: LocalTime,
                                inOrder:String,
                                total: Int,
+                               offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                                paid: Boolean, delivered: Boolean, note: Option[String])
 
 case class PlayOrderForEditAndCreate(id: Option[Int],
-                               customerID: Int,
-                               orderDay: Date, deliveryDay: Date,
-                               deliverFrom: String, deliverTo: String,
-                               inOrder: String,
-                               total: Int,
-                               paid: Boolean, delivered: Boolean, note: Option[String])
+                                     customerID: Int,
+                                     orderDay: Date, deliveryDay: Date,
+                                     deliverFrom: String, deliverTo: String,
+                                     inOrder: String,
+                                     total: Int,
+                                     offlineDelivery: Boolean, deliveryOnMonday: Boolean,
+                                     paid: Boolean, delivered: Boolean, note: Option[String])
 
-case class OrderMenuItem(title: String, value: String, cost: Int)
-case class OrderMenu(title:String, menuItems:List[OrderMenuItem])
+case class OrderMenuItem(name: String, value: String, cost: Int)
+case class OrderMenu(title: String, menuItems: List[OrderMenuItem])
+
+case class Offer(id: Int, name: String, price: Int, menuType: String)
+
+case class RecipesPrices(first: Int, second: Int, third: Int, fourth: Int, fifth: Int)

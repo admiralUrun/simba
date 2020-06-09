@@ -1,4 +1,10 @@
 @import models.OrderMenu
-@(id:Int, oF: Form[PlayOrderForEditAndCreate], menus: List[OrderMenu])(implicit requestHeader: MessagesRequestHeader)
+@(id:Int, oF: Form[PlayOrderForEditAndCreate], menus: List[OrderMenu], inOrderToTextCost: Map[String, (String, Int)])(implicit requestHeader: MessagesRequestHeader)
 
-@createOrEditOrderTemplate(s"Замовлення $id", routes.OrderController.updateOrder(id), oF, "Змінити", menus)
+@createOrEditOrderTemplate(s"Замовлення $id",
+    routes.OrderController.updateOrder(id),
+    oF,
+    buttonLabel = "Змінити",
+    menus,
+    inOrderToTextCost
+)

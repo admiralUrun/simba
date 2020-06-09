@@ -11,19 +11,23 @@ function addToOrder(item, title, cost) {
             addElementForDisplay(order.val().split(',').length - 1)
         }
     }
-    let total = $('#total')
-    let totalText = $('#totalText')
     let order = $('#inOrder')
     let inOrder = order.val()
     let isValueEmpty = inOrder === ''
     if (isValueEmpty) {
         order.val(item)
-        total.val(cost)
+        changeTotal(Number(cost))
     } else {
         order.val(inOrder + ', ' + item)
-        total.val(Number(total.val()) + Number(cost))
+        changeTotal(Number(cost))
     }
     addElementForDisplay(isValueEmpty, title, cost)
+}
+
+function changeTotal(cost) {
+    let total = $('#total')
+    let totalText = $('#totalText')
+    total.val(Number(total.val()) + cost)
     totalText.html(total.val() +  '₴')
 }
 
@@ -54,7 +58,7 @@ function deleteFromOrder(indexToRemove, cost) {
     totalText.html(total.val() +  '₴')
 }
 
-function changeButton(id, trueLabel, falseLabel, inputID) {
+function changeButton(trueLabel, falseLabel, inputID, cost) {
     function getNewClassForButton() {
         let classArray = button.attr('class').split(" ")
         classArray.pop()
@@ -65,12 +69,14 @@ function changeButton(id, trueLabel, falseLabel, inputID) {
         }
     }
     let input = $(`#`+ inputID)
-    let button = $(`#` + id)
+    let button = $(`#` + inputID + `-button`)
     let isChecked = (input.val() === 'true')
     if(isChecked) {
         button.text(falseLabel)
+        changeTotal(Number(-cost))
     } else {
         button.text(trueLabel)
+        changeTotal(Number(cost))
     }
     button.attr('class', getNewClassForButton())
     input.val(!isChecked)
