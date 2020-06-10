@@ -28,7 +28,7 @@ function changeTotal(cost) {
     let total = $('#total')
     let totalText = $('#totalText')
     total.val(Number(total.val()) + cost)
-    totalText.html(total.val() +  '₴')
+    totalText.html(total.val() +  ' ₴')
 }
 
 function deleteFromOrder(indexToRemove, cost) {

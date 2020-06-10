@@ -1,9 +1,11 @@
 package services
 import java.util.Date
 import java.text.SimpleDateFormat
+
 import models.{Customer, PlayOrderForEditAndCreate}
+import play.api.data.Form
 import play.api.mvc.MessagesRequestHeader
-import play.twirl.api.Html
+import play.twirl.api.{Html, JavaScript}
 
 object SimbaHTMLHelper {
   private val b ="\""
@@ -56,6 +58,19 @@ object SimbaHTMLHelper {
     c.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
     formattingDateForForm(c.getTime)
   }
+  def showError[T](keyInForm: String, form: Form[T]): Boolean = {
+    form.error(keyInForm) match {
+      case None => false
+      case Some(_) => true
+    }
+  }
+
+  def getCheckBoxValue[T](keyInForm: String, form: Form[T]): Boolean = {
+    form(keyInForm).value match {
+      case None => false
+      case Some(value) => value.toBoolean
+    }
+  }
 
   def tableHeaders(heads: List[String]): Html = {
     SHTML(heads.zipWithIndex.map{ case (header, i) =>
@@ -71,4 +86,24 @@ object SimbaHTMLHelper {
       case _ => ""
     }
   }
+
+  def createDropDown[T](title: String, content: Seq[T], generateDropItemFromContent: T => String): Html = {
+    (SHTML(
+      s"""
+      <div class= "dropdown">
+        <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            $title
+        </button>
+        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+        """) +=
+      SHTML(content.map(generateDropItemFromContent)) +=
+      SHTML("""
+         </div>
+      </div>
+        """)).toPlayHTML
+  }
+  def getStandardDropItem(title:String, jSOnclick: JavaScript): String = {
+    s"<a class=$b dropdown-item $b href= $b # $b onclick=$b ${jSOnclick.body} $b >$title</a>"
+  }
+
 }

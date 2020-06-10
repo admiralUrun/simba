@@ -4,36 +4,14 @@
 @import models.OrderMenu
 @import models.OrderMenuItem
 @(title: String, formCall: Call, oF: Form[PlayOrderForEditAndCreate], buttonLabel: String, inMenu: List[OrderMenu], isCreate: Boolean = false, inOrderToTextCost: Map[String, (String, Int)] = Map())(implicit requestHeader: MessagesRequestHeader)
-@creteAnInputText(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
-    @if(showError) {
-        @inputText(oF(keyInForm), '_label -> label, '_help -> "", '_error -> "", '_class -> layOutClass)
-    } else {
-        @inputText(oF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass, Symbol("class") -> "")
-    }
-}
-@showError(keyInForm: String) = @{
-    oF.error(keyInForm) match {
-        case None => false
-        case Some(value) => true
-    }
-}
 
-@createADropItem(title: String, value: String, cost: Int) = {
-    <a class="dropdown-item" href="#" onclick="let value = '@value'; let title = '@title';
-            addToOrder(value, title, @cost)">@title</a>
-}
-@createADropDown(menuTitle: String, inMenu: List[OrderMenuItem]) = {
+@createAMenuDropDown(menuTitle: String, inMenu: List[OrderMenuItem]) = {
     @if(inMenu.length == 1) {
         <button class="btn btn-info" type="button" onclick="addToOrder('@{inMenu.head.value}', '@{inMenu.head.name}', '@{inMenu.head.cost}')">@{inMenu.head.name}</button>
     } else {
-    <div class="dropdown">
-        <button class="btn btn-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            @menuTitle
-        </button>
-        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            @inMenu.map(i => createADropItem(i.name, i.value, i.cost))
-        </div>
-    </div>
+    @createDropDown(menuTitle, inMenu, (i: OrderMenuItem) => {
+        getStandardDropItem(i.name, JavaScript(s"addToOrder('${i.value}', '${i.name}', '${i.cost}')"))
+    })
     }
 }
 
@@ -48,7 +26,7 @@
             </ul>
         </div>
         <div class="container-fluid row">
-            @inMenu.map(menu => createADropDown(menu.title, menu.menuItems))
+            @inMenu.map(menu => createAMenuDropDown(menu.title, menu.menuItems))
         </div>
     </div>
 }
@@ -56,14 +34,6 @@
     <li class="list-group-item" id="element@index"> @textCost._1 <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder('@index', '@textCost._2')"><span aria-hidden="true">&times;</span></button></li>
 }
 
-
-@getCheckBoxVaule(keyInForm: String) = @{
-    if(isCreate) false
-    else oF(keyInForm).value match {
-        case None => false
-        case Some(value) => value.toBoolean
-    }
-}
 
 @createBooleanInput(nameInForm:String, trueLabel:String, falseLabel:String, checked:Boolean = false, col:String = "auto", jsOnclick: JavaScript) = {
     <input id="@nameInForm" name="@nameInForm" value="@checked" style="display: none">
@@ -129,15 +99,23 @@
             <input id="total" type="text" style="display: none;">
             <label>Всьго</label>
             <h5 id="totalText">0 ₴</h5>
+            <div id="payment">
+                <div id="paymentMenu">
+                    @createDropDown("Спосіб Оплати", List("Готівка", "Карткою", "Бартер"), (s: String) => {
+                        getStandardDropItem(s, JavaScript(""))
+                    })
+                </divid>
 
-            <div class="container-fluid row">
-                @createBooleanInput("paid", "Оплаченно", "Не оплаченно", getCheckBoxVaule("paid"), jsOnclick = JavaScript("changeButton(`Оплаченно`, `Не оплаченно`, `paid`, 0);"))
-                @createBooleanInput("delivered", "Доставленно", "Не доставленно", getCheckBoxVaule("delivered"), jsOnclick = JavaScript("changeButton(`Доставленно`, `Не доставленно`, `delivered`, 0);"))
             </div>
 
             <div class="container-fluid row">
-                @createBooleanInput("offlineDelivery", "За межами Доставки", "За межами Доставки", getCheckBoxVaule("paid"), jsOnclick = JavaScript("changeButton(`За межами Доставки`, `За межами Доставки`, `offlineDelivery`, 75);"))
-                @createBooleanInput("deliveryOnMonday", "Доставка у Понеділок", "Доставка у Понеділок", getCheckBoxVaule("delivered"), jsOnclick = JavaScript("changeButton(`Доставка у Понеділок`, `Доставка у Понеділок`, `deliveryOnMonday`, 100);"))
+                @createBooleanInput("paid", "Оплаченно", "Не оплаченно", getCheckBoxValue("paid" ,oF), jsOnclick = JavaScript("changeButton(`Оплаченно`, `Не оплаченно`, `paid`, 0);"))
+                @createBooleanInput("delivered", "Доставленно", "Не доставленно", getCheckBoxValue("delivered" ,oF), jsOnclick = JavaScript("changeButton(`Доставленно`, `Не доставленно`, `delivered`, 0);"))
+            </div>
+
+            <div class="container-fluid row">
+                @createBooleanInput("offlineDelivery", "За межами Доставки", "За межами Доставки", getCheckBoxValue("paid" ,oF), jsOnclick = JavaScript("changeButton(`За межами Доставки`, `За межами Доставки`, `offlineDelivery`, 75);"))
+                @createBooleanInput("deliveryOnMonday", "Доставка у Понеділок", "Доставка у Понеділок", getCheckBoxValue("delivered" ,oF), jsOnclick = JavaScript("changeButton(`Доставка у Понеділок`, `Доставка у Понеділок`, `deliveryOnMonday`, 100);"))
             </div>
 
             @createInputInOrder
