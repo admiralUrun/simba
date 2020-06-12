@@ -9,17 +9,29 @@ create table customers (
     phone2 varchar(16),
     phone2_note varchar(64),
 
-    city varchar(64),
-    -- Street address like вул. Володимирська 62
-    address varchar(128),
-    flat varchar(8),
-    entrance varchar(8),
-    floor tinyint,
-
     instagram varchar(64) unique,
 
     preferences varchar(255),
     notes text
+);
+
+drop table if exists customers_addresses;
+create table customers_addresses(
+    customer_id int,
+    address_id int,
+    primary key (customer_id, address_id)
+);
+
+drop table if exists addresses;
+create table addresses (
+    id int primary key auto_increment,
+    city varchar(64),
+    -- Street address like вул. Володимирська 62
+    address varchar(128),
+    entrance varchar(8),
+    floor tinyint,
+    flat varchar(8),
+    note_for_courier text
 );
 
 drop table if exists ingredients;
@@ -42,7 +54,6 @@ drop table if exists recipe_ingredients;
 create table recipe_ingredients (
     recipe_id int,
     ingredient_id int,
-    -- TODO: do we need both? as decimal?
     netto decimal,
     primary key (recipe_id, ingredient_id)
 );
@@ -67,6 +78,7 @@ drop table if exists orders;
 create table orders (
     id int primary key,
     customer_id int not null,
+    address_id int not null,
     order_day date not null,
     delivery_day date not null,
     deliver_from time not null,
@@ -74,8 +86,8 @@ create table orders (
 
     total int not null,
 
-    offline_delivery boolean not null,
-    delivery_on_monday boolean not null,
+    offline_delivery boolean not null, -- TODO: Rename
+    delivery_on_monday boolean not null, -- TODO: Removing is debatable
     paid boolean not null,
     delivered boolean not null,
     note text

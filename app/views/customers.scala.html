@@ -22,27 +22,19 @@
         @if(customers.nonEmpty) {
         <table class="table table-striped table-bordered">
             <thead>
-                <tr>@tableHeaders(List("ID", "Ім'я", "Прізвище", "Телефон", "Телефон 2",
-                    "Місто", "Адреса", "Instagram", "Надає перевагу", "Нотатка"))</tr>
+                <tr>@tableHeaders(List("ID", "Ім'я", "Прізвище", "Телефон", "Телефон 2", "Instagram", "Надає перевагу", "Нотатка"))</tr>
             </thead>
             <tbody>
             @customers.map { c =>
                 <tr>
                     <td><a href="@routes.CustomerController.toEditCustomerPage(c.id.head)">@c.id</a></td>
                     <td>@c.firstName</td>
-                    <td>@c.lastName.getOrElse("-")</td>
+                    <td>@getStringOrDash(c.lastName)</td>
                     <td>@formatString(Option(c.phone), c.phoneNote)</td>
                     <td>@formatString(c.phone2, c.phoneNote2)</td>
-                    <td>@c.city</td>
-                    <td>
-                        @c.address,
-                        @formatString(c.entrance, Option("Під'їзд"))
-                        @formatString(c.floor, Option("Поверх"))
-                        @formatString(c.flat, Option("Квартира"))
-                    </td>
-                    <td>@c.instagram.getOrElse("-")</td>
-                    <td>@c.preferences.getOrElse("-")</td>
-                    <td class="overflow-auto">@c.notes.getOrElse("-")</td>
+                    <td>@getStringOrDash(c.instagram)</td>
+                    <td>@getStringOrDash(c.preferences)</td>
+                    <td class="overflow-auto">@getStringOrDash(c.notes)</td>
                 </tr>
             }
             </tbody>

@@ -1,0 +1,61 @@
+@import services.SimbaHTMLHelper._
+@(c: Customer, addresses: Seq[Address])
+
+@main(c.firstName + c.lastName) {
+    <div class="col-auto mr-auto"></div>
+    <a class="col-auto btn btn-success" href="@routes.CustomerController.toEditCustomerPage(c.id.head)">Змінити</a>
+    <div id="customerData" class="col-auto">
+        <div class="row">
+            ID: <p>@c.id.head</p>
+        </div>
+        <div class="row">
+            <div class="col-auto" id="name">
+                Ім'я: <p>@c.firstName</p>
+            </div>
+            <div class="col-auto" id="lastName">
+                Прізвише: <p>@getStringOrDash(c.lastName)</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-auto">
+                Телефон:<p>@c.phone</p>
+            </div>
+            <div class="col-auto">
+                Нотатка до телефону:<p>@getStringOrDash(c.phoneNote)</p>
+            </div>
+        </div>
+        <div class="row">
+            <div id="phone2" class="col-auto">
+                Другий Телефон:<p>@getStringOrDash(c.phone2)</p>
+            </div>
+            <div class="col-auto">
+                Нотатка до другого телефону:<p>@getStringOrDash(c.phoneNote2)</p>
+            </div>
+        </div>
+        <div class="row">
+            Instagram: <p>@getStringOrDash(c.instagram)</p>
+        </div>
+        <div class="row">
+            <div>
+                Переваги: <p>@getStringOrDash(c.preferences)</p>
+            </div>
+            <div>
+                Нотатка: <p>@getStringOrDash(c.notes)</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="customerAddresses" class="col-auto">
+        <table>
+            @tableHeaders(List("Місто", "Адреса", "Під'їзд", "Поверх", "Квартира", " Нотатка для курєра"))
+            @addresses.map { a =>
+                <tb>@a.city</tb>
+                <tb>@a.address</tb>
+                <tb>@getStringOrDash(a.entrance)</tb>
+                <tb>@getStringOrDash(a.floor)</tb>
+                <tb>@getStringOrDash(a.flat)</tb>
+                <tb>@getStringOrDash(a.notes)</tb>
+            }
+        </table>
+    </div>
+}

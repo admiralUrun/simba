@@ -10,7 +10,7 @@ import javax.inject._
 class OrderModel @Inject()(dS: DoobieStore) {
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
 
-  def getAllTableRows: Map[Date, List[Order/*PlayOrderForDisplay*/]] = { // TODO fix bug with query: I can't cast select in Order
+  def getAllTableRows: Map[Date, List[Order/*PlayOrderForDisplay*/]] = {
     sql"select * from orders"
       .query[Order]
       .to[List]
@@ -71,6 +71,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
 
 case class Order(id: Option[Int],
                  customerId: Int,
+                 addressId: Int,
                  orderDay: Date, deliveryDay: Date,
                  deliverFrom: Date, deliverTo: Date,
                  total: Int,
@@ -81,6 +82,7 @@ case class Recipe(id: Option[Int], name:String)
 
 case class PlayOrderForDisplay(id: Option[Int],
                                customer: Customer,
+                               address: Address,
                                orderDay: Date, deliveryDay: Date,
                                deliverFrom: LocalTime, deliverTo: LocalTime,
                                inOrder:String,
@@ -90,6 +92,7 @@ case class PlayOrderForDisplay(id: Option[Int],
 
 case class PlayOrderForEditAndCreate(id: Option[Int],
                                      customerID: Int,
+                                     addressId: Int,
                                      orderDay: Date, deliveryDay: Date,
                                      deliverFrom: String, deliverTo: String,
                                      inOrder: String,

@@ -16,8 +16,8 @@
         s"${c.id}- ${c.firstName} ${c.lastName} (${c.phone}" + getSecondPhoneOrCloseBrace
     }
 
-    @getCustomerAddressForView(c: Customer) = @{
-        s"${c.city} ${c.address} ${formatString(c.entrance, Option("Під'їзд"))} ${formatString(c.floor, Option("Поверх"))} ${formatString(c.flat, Option("Квартира"))}"
+    @getAddressForView(a: Address) = @{
+        s"Місто: ${a.city}, Адреса: ${a.address}, Під'їзд: ${getStringOrDash(a.entrance)}, Поверх: ${getStringOrDash(a.floor)}, Квартира: ${getStringOrDash(a.flat)}"
     }
 
 
@@ -53,7 +53,7 @@
                   <tr>
                       <tb>@o.id</tb>
                       <td>@getCustomerDataForView(o.customer)</td>
-                      <td>@getCustomerAddressForView(o.customer)</td>
+                      <td>@getAddressForView(o.address)</td>
                       <tb>@formattingDateForDisplay(o.orderDay)</tb>
                       <tb>@formattingDateForDisplay(o.deliveryDay)</tb>
                       <tb>@o.inOrder</tb>

@@ -13,6 +13,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
     mapping(
       "id" -> ignored(None: Option[Int]),
       "customerID" -> number,
+      "addressID" -> number,
       "orderDay" -> date, "deliveryDay" -> date,
       "deliverFrom" -> nonEmptyText, "deliverTo" -> nonEmptyText,
       "inOrder" -> nonEmptyText,

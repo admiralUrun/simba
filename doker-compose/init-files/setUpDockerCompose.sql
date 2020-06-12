@@ -25,6 +25,25 @@ create table customers (
     notes text
 );
 
+drop table if exists customers_addresses;
+create table customers_addresses(
+    customer_id int,
+    address_id int,
+    primary key (customer_id, address_id)
+);
+
+drop table if exists addresses;
+create table addresses (
+    id int primary key auto_increment,
+    city varchar(64),
+    -- Street address like вул. Володимирська 62
+    address varchar(128),
+    entrance varchar(8),
+    floor tinyint,
+    flat varchar(8),
+    note_for_courier text
+);
+
 drop table if exists ingredients;
 create table ingredients (
     id int primary key auto_increment,
@@ -45,10 +64,7 @@ drop table if exists recipe_ingredients;
 create table recipe_ingredients (
     recipe_id int,
     ingredient_id int,
-    -- TODO: do we need both? as decimal?
     netto decimal,
-    brutto decimal,
-
     primary key (recipe_id, ingredient_id)
 );
 
@@ -56,7 +72,8 @@ drop table if exists offers;
 create table offers (
     id int primary key auto_increment,
     name varchar(128),
-    price int not null
+    price int not null,
+    menu_type varchar(128)
 );
 
 drop table if exists offer_recipes;
@@ -71,6 +88,7 @@ drop table if exists orders;
 create table orders (
     id int primary key,
     customer_id int not null,
+    address_id int not null,
     order_day date not null,
     delivery_day date not null,
     deliver_from time not null,
@@ -78,6 +96,8 @@ create table orders (
 
     total int not null,
 
+    offline_delivery boolean not null, -- TODO: Rename
+    delivery_on_monday boolean not null, -- TODO: Removing is debatable
     paid boolean not null,
     delivered boolean not null,
     note text
@@ -88,5 +108,4 @@ create table order_recipes (
     order_id int not null,
     recipe_id int not null,
     quantity int
-
 );

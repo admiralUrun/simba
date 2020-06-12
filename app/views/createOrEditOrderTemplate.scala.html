@@ -58,23 +58,6 @@
                     </div>
                     <input type="button" id="searchSubmit" value="Пошук" class="btn btn-primary offset-sm-1">
                 </div>
-                <script>
-                        $(document).ready(function () {
-                           $("#search").keyup(
-                              function() {
-                                  let searchParams = $("#search").val()
-                                  if (searchParams.length === 0)  cleanDropMenu();
-                                  else {}
-                              }
-                          );
-                          $("#searchSubmit").click(
-                              function() {
-                                  let searchParams = $("#search").val()
-                                  $.get("/searchCustomerForOrder?search=" + searchParams, function (data) { takeCustomerJSONAddToUI(data) })
-                              }
-                          );
-                        })
-                    </script>
             </form>
            <!-- <a class="colLast btn btn-success disabled" id="add" href="@routes.CustomerController.toCreateCustomerPage()">Додати</a> -->
         </div>
@@ -100,22 +83,31 @@
             <label>Всьго</label>
             <h5 id="totalText">0 ₴</h5>
             <div id="payment">
+                <input id="paymentInput" type="text" style="display: none;">
                 <div id="paymentMenu">
-                    @createDropDown("Спосіб Оплати", List("Готівка", "Карткою", "Бартер"), (s: String) => {
-                        getStandardDropItem(s, JavaScript(""))
+                    @createDropDown("Спосіб Оплати", List("Готівка", "Карткою", "Бартер"), (s: String) => { // TODO: Add to database remove hardCode
+                        val id = "paymentItem"
+                        getStandardDropItem(s, JavaScript(s"setPayment('x$s')"), id)
                     })
-                </divid>
-
+                </div>
             </div>
 
             <div class="container-fluid row">
-                @createBooleanInput("paid", "Оплаченно", "Не оплаченно", getCheckBoxValue("paid" ,oF), jsOnclick = JavaScript("changeButton(`Оплаченно`, `Не оплаченно`, `paid`, 0);"))
-                @createBooleanInput("delivered", "Доставленно", "Не доставленно", getCheckBoxValue("delivered" ,oF), jsOnclick = JavaScript("changeButton(`Доставленно`, `Не доставленно`, `delivered`, 0);"))
+                @createBooleanInput("paid", "Оплаченно", "Не оплаченно", getCheckBoxValue("paid" ,oF),
+                    jsOnclick = JavaScript("changeButton(`Оплаченно`, `Не оплаченно`, `paid`, 0);")
+                )
+                @createBooleanInput("delivered", "Доставленно", "Не доставленно", getCheckBoxValue("delivered" ,oF),
+                    jsOnclick = JavaScript("changeButton(`Доставленно`, `Не доставленно`, `delivered`, 0);")
+                )
             </div>
 
             <div class="container-fluid row">
-                @createBooleanInput("offlineDelivery", "За межами Доставки", "За межами Доставки", getCheckBoxValue("paid" ,oF), jsOnclick = JavaScript("changeButton(`За межами Доставки`, `За межами Доставки`, `offlineDelivery`, 75);"))
-                @createBooleanInput("deliveryOnMonday", "Доставка у Понеділок", "Доставка у Понеділок", getCheckBoxValue("delivered" ,oF), jsOnclick = JavaScript("changeButton(`Доставка у Понеділок`, `Доставка у Понеділок`, `deliveryOnMonday`, 100);"))
+                @createBooleanInput("offlineDelivery", "За межами Доставки", "За межами Доставки", getCheckBoxValue("paid" ,oF),
+                    jsOnclick = JavaScript("changeButton(`За межами Доставки`, `За межами Доставки`, `offlineDelivery`, 75);")
+                )
+                @createBooleanInput("deliveryOnMonday", "Доставка у Понеділок", "Доставка у Понеділок", getCheckBoxValue("delivered" ,oF),
+                    jsOnclick = JavaScript("changeButton(`Доставка у Понеділок`, `Доставка у Понеділок`, `deliveryOnMonday`, 100);")
+                )
             </div>
 
             @createInputInOrder
@@ -131,6 +123,24 @@
             <a href="@routes.OrderController.toOrderFeedPage("")" class="btn">Скасувати</a>
         </div>
     }
+    <script id="runtimeScript">
+        $(document).ready(function () {
+            $("#search").keyup(
+                function() {
+                    let searchParams = $("#search").val()
+                    if (searchParams.length === 0)  cleanDropMenu();
+                    else {}
+                });
+            $("#searchSubmit").click(
+                function() {
+                    let searchParams = $("#search").val()
+                    $.get("/searchCustomerForOrder?search=" + searchParams, function (data) { takeCustomerJSONAddToUI(data) })
+                });
+            // $("#paymentItem").click(
+            // )
+        })
+    </script>
+
     <script charset="UTF-8" src="@routes.Assets.versioned("javascript/orderScript.js")"></script>
  @* <script charset="utf-8" type="text/javascript" src="@routes.HomeController.javascriptRoutes"></script> *@
 }

@@ -1,5 +1,6 @@
 jQuery.exists = function(selector) {return ($(selector).length > 0);}
 jQuery.isDefended = function(object) {return object !== null}
+
 function addToOrder(item, title, cost) {
     function addElementForDisplay(isEmpty, text, cost) {
         function addElementForDisplay(index) {
@@ -133,4 +134,17 @@ function editCustomerInOrder() {
 function cleanDropMenu() {
     document.getElementById('searchMenu').innerHTML = ''
     $(`<span class="dropdown-header">Тут можна знайти Клієнта</span>`).appendTo($("#searchMenu"))
+}
+
+function setPayment(payment) {
+    $(`<h5>Спосіб оплати: ${payment}</h5>
+        <button id="paymentEdit" class="btn btn-success"  onclick="removePayment()">Змінити</button>`).appendTo($('payment'))
+    //$('#paymentMenu').hide()
+    $('#paymentInput').val(payment).click()
+}
+function removePayment() {
+    $('#paymentView').remove()
+    $('#paymentEdit').remove()
+    $('#paymentMenu').show()
+    $('#paymentInput').val('')
 }
