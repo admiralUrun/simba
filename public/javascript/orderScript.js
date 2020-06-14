@@ -137,9 +137,9 @@ function cleanDropMenu() {
 }
 
 function setPayment(payment) {
-    $(`<h5>Спосіб оплати: ${payment}</h5>
-        <button id="paymentEdit" class="btn btn-success"  onclick="removePayment()">Змінити</button>`).appendTo($('payment'))
-    //$('#paymentMenu').hide()
+    $(`<h5 id="paymentView">Спосіб оплати: ${payment}</h5>
+        <button id="paymentEdit" class="btn btn-success"  onclick="removePayment()">Змінити</button>`).appendTo($('#payment'))
+    $('#paymentMenu').hide()
     $('#paymentInput').val(payment).click()
 }
 function removePayment() {

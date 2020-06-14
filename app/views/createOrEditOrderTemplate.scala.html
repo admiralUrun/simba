@@ -17,7 +17,7 @@
 
 @createInputInOrder = {
     <div class="container-fluid row">
-        <input type="text" id="inOrder" name="inOrder" value="" class="col-1" style="display: none">
+        <input type="text" id="inOrder" name="inOrder" value="@getValueFromForm("inOrder", oF).getOrElse("")" class="col-1" style="display: none">
         <div class="container-fluid row">
             <ul class="list-group">
                 @if(!isCreate) {
@@ -79,15 +79,15 @@
                 <input id="deliverTo" name="deliverTo" type="text" class=" col-auto">
             </div>
 
-            <input id="total" type="text" style="display: none;">
+            <input id="total" value="@getValueFromForm("total", oF).getOrElse("")" type="text" style="display: none;">
             <label>Всьго</label>
-            <h5 id="totalText">0 ₴</h5>
+            <h5 id="totalText">@getValueFromForm("total", oF).getOrElse("0") ₴</h5>
             <div id="payment">
                 <input id="paymentInput" type="text" style="display: none;">
                 <div id="paymentMenu">
                     @createDropDown("Спосіб Оплати", List("Готівка", "Карткою", "Бартер"), (s: String) => { // TODO: Add to database remove hardCode
                         val id = "paymentItem"
-                        getStandardDropItem(s, JavaScript(s"setPayment('x$s')"), id)
+                        getStandardDropItem(s, JavaScript(s"setPayment('$s')"), id)
                     })
                 </div>
             </div>
