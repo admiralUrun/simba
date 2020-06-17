@@ -267,7 +267,7 @@ insert into customers (id, first_name, phone, instagram, notes) values ('120', '
 insert into addresses (customer_id, city, address, flat) values ('120', 'Ірпінь', 'Покровська 9', '15'); 
 insert into customers (id, first_name, last_name, phone, instagram, notes) values ('119', 'Валентина', 'Медведчук', '097 820 41 78', 'valentinamedvedchuk', ''); 
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('119', 'Київ', 'вул. Урлівська 21', '1', '4', '12'); 
-insert into customers (id, first_name, phone, phone_notes, phone2, phone_notes2, instagram) values ('118', 'Вита', '068 755 88 58', 'Юлия', '067 980 90 63',
+insert into customers (id, first_name, phone, phone_note, phone2, phone2_note, instagram) values ('118', 'Вита', '068 755 88 58', 'Юлия', '067 980 90 63',
 'Вита' , 'v_i_t_a_2806');
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('118', 'Київ', 'вул. Дегтярівська 25а к1', '1', '8', '35'); 
 insert into customers (id, first_name, last_name, phone, instagram, notes) values ('117', 'Юлия', 'Жуковская', '050 637 0188', 'ulja.zh', ''); 
@@ -817,7 +817,7 @@ insert into addresses (customer_id, city, address, entrance, floor, flat) values
 insert into customers (id, first_name, phone, notes) values ('411', 'Андрій', '063 615 61 26', 'сайт '); 
 insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat) values ('411', 'Київ', 'ЖК Варшавський мікрорайон', ' вул Родини Крістерів 20 А', ' пов 6', ' кв 32', ' під 1'); 
 insert into customers (id, first_name, phone, instagram, notes) values ('410', 'Юлія', '093 849 88 19', 'j.polischuuuk', ''); 
-insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, note_for_courier) values ('410', 'Софіївська Борщагівка', ' ЖК Щасливий', ' вул Яблунева 9 д', 'під 7', 'пов 9', ' кв 312');
+insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat) values ('410', 'Софіївська Борщагівка', ' ЖК Щасливий', ' вул Яблунева 9 д', 'під 7', 'пов 9', ' кв 312');
 insert into customers (id, first_name, phone, notes) values ('409', 'Светлана', '067 982 78 77', 'сайт '); 
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('409', 'Київ', 'вул Олени Пчілки 6', ' під 1', ' пов 18', ' кв 167'); 
 insert into customers (id, first_name, phone, instagram, notes) values ('408', 'Надя', '063 893 94 63', 'i_see_you_888', ''); 
@@ -922,8 +922,8 @@ insert into customers (id, first_name, phone, notes) values ('358', 'Оксан�
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('358', 'Софіївська Борщагівка', ' вул Шалімова 67', ' пов 9', ' кв 87', ' під 1'); 
 insert into customers (id, first_name, phone, notes) values ('357', 'Алла', '066 169 27 06', 'сайт '); 
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('357', 'Київ', 'пр-т Бажана 1м', ' під 1', ' пов 14', ' кв 112'); 
-insert into customers (id, first_name, phone, phone2, phone2_note instagram, notes) values ('356', 'Катерина', '096 501 14 01',
-'запасной', '096 734 72 43', 'kryvodubska', '');
+insert into customers (id, first_name, phone, phone2, phone2_note, instagram, notes) values ('356', 'Катерина', '096 501 14 01',
+'096 734 72 43', 'запасной', 'kryvodubska', '');
 insert into addresses (customer_id, city, residential_complex, address, entrance, floor) values ('356', 'Київ', 'Софіївська Борщагівка', ' вул Лесі Українки 19', ' під 5', ' пов 10');
 insert into customers (id, first_name, phone, notes) values ('355', 'Марія', '067 265 04 02', 'сайт '); 
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('355', 'Київ', 'вул. Ломоносова 50/2', ' під.1', ' пов. 6', ' кв. 45'); 
@@ -963,9 +963,7 @@ insert into addresses (customer_id, city, address, entrance, floor, flat) values
 insert into customers (id, first_name, phone, notes) values ('338', 'Марина', '063 214 18 89', 'сайт '); 
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('338', 'Київ', 'вул Кіприянова 4', 'під 1', ' пов 2', ' кв 18'); 
 insert into customers (id, first_name, phone, notes) values ('337', 'Вероника', '067 913 27 27', 'сайт '); 
-insert into addresses (customer_id, city, address) values ('337', 'с. Гатне', ' вул Молодіжна 69'); 
-insert into customers (id, first_name, phone, instagram, notes) values ('336', '', '', '', ''); 
-insert into addresses (customer_id, city, address) values ('336', '', 'Error with address for 336'); 
+insert into addresses (customer_id, city, address) values ('337', 'с. Гатне', ' вул Молодіжна 69');
 insert into customers (id, first_name, phone, notes) values ('335', 'Валентина', '097 637 73 55', 'фб '); 
 insert into addresses (customer_id, city, address) values ('335', 'м. Вишгород', 'Error with address for 335'); 
 insert into customers (id, first_name, phone, notes) values ('334', 'Олена', '067 579 05 53', 'сайт '); 
@@ -1070,7 +1068,7 @@ insert into addresses (customer_id, city, address) values ('284', 'Гнедин'
 insert into customers (id, first_name, phone, notes) values ('283', 'Анна', '093 772 91 85', 'сайт '); 
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('283', 'Київ', 'Малишка 17', '2', '3', 'кв 135');
 insert into customers (id, first_name, phone, phone_note, instagram, notes) values ('282', 'Илона', '097 228 68 34',  'Олег', 'anolifox', '');
-insert into addresses (customer_id, city, address, entrance, floor, flat, note_for_courier) values ('282', 'Київ', 'вул.Вишгородська 38', ' подьезд 2', ' этаж 5', ' кв 48','домофон - 48');
+insert into addresses (customer_id, city, address, entrance, floor, flat, note_for_courier) values ('282', 'Київ', 'вул.Вишгородська 38', '2', '5', ' кв 48','домофон - 48');
 insert into customers (id, first_name, phone, notes) values ('281', 'Оля', '093 932 44 30', 'сайт ');
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('281', 'Київ', 'Жилянская 118', '1', '8', 'кв 147');
 insert into customers (id, first_name, phone, notes) values ('280', 'Марина', '063 702 33 86', 'сайт '); 
@@ -1091,7 +1089,7 @@ insert into addresses (customer_id, city, address, entrance, floor, flat) values
 insert into customers (id, first_name, phone, notes) values ('273', 'Светлана', '093 770 66 87', 'сайт '); 
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('273', 'Київ', 'Закревского 17', '2', '9', 'кв 140');
 insert into customers (id, first_name, phone, notes) values ('272', 'Наташа', '095 280 55 77', 'сайт '); 
-insert into addresses (customer_id, city, address, entrance, floor, flat) values ('272', 'Вишневе', ' вул. Лесі Українки 19', 'подьезд 2', 'этаж 4', 'кв 58');
+insert into addresses (customer_id, city, address, entrance, floor, flat) values ('272', 'Вишневе', ' вул. Лесі Українки 19', '2', '4', 'кв 58');
 insert into customers (id, first_name, phone, notes) values ('271', 'Наталья', '099 934 42 33', 'сайт/телега '); 
 insert into addresses (customer_id, city, address) values ('271', '53-я Садовая дом 105', 'Error with address for 271'); 
 insert into customers (id, first_name, phone, notes) values ('270', 'Татьяна', '095 739 97 96', 'сайт '); 
@@ -1128,5 +1126,5 @@ insert into customers (id, first_name, phone, notes) values ('253', 'Юлия', 
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('253', 'Київ', 'ул. Бурмистенко 10', '3', '1', 'кв 82');
 insert into customers (id, first_name, phone, instagram, notes) values ('252', 'Юля', '096 916 73 67', 'yuliya.prykhodko', ''); 
 insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, note_for_courier) values ('252', 'Київ', 'ЖК Чайка', ' ул. Лобановского 19', '2', '10', 'кв 140', 'домофон – набрать хозяйку она откроет');
-insert into customers (id, first_name, phone, instagram, notes) values ('251', 'Александра', '093 330 41 14', 'sandra.aleksandrovna', ''); 
+insert into customers (id, first_name, phone, instagram, notes) values ('3000', 'Александра', '093 330 41 14', 'sandra.aleksandrovna', '');
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('251', 'Київ', 'Лукьяновская 9', '2', '9 ', 'кв 226');
