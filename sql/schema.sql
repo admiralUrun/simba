@@ -24,7 +24,7 @@ create table addresses (
     address varchar(128),
     -- Street address like вул. Володимирська 62
     entrance varchar(8),
-    floor tinyint,
+    floor varchar(8),
     flat varchar(8),
     note_for_courier text
 );
