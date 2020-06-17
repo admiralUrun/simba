@@ -15,9 +15,13 @@ class CustomerImporter extends Importer {
     def getAddressWithSeparation(row: Array[String], customerId: Int): Address = {
       val city = if (row(9).isEmpty) "Київ" else row(9)
       val residentialComplex = if (row(10).isEmpty) null else Option(row(10))
+      def emptyToNull(option: Option[String]): Option[String] = {
+        if (option.isDefined && option.isEmpty) null
+        else option
+      }
       Address(null, Option(customerId),
         city, residentialComplex, address = row(5),
-        Option(row(6)), Option(row(7)), Option(row(8)), null)
+        emptyToNull(Option(row(6))), emptyToNull(Option(row(7))), emptyToNull(Option(row(8))), null)
     }
     def getAddressWithOutSeparation(row: Array[String], customerId: Int): Address = {
       def parseAddress(a: Array[String]): Address = {
