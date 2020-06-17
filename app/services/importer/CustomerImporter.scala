@@ -1,84 +1,138 @@
 package services.importer
 
 import java.io.{File, PrintWriter}
+import java.util.regex.Pattern
 
 import com.github.tototoshi.csv.CSVReader
-import models.Customer
+import models.{Address, Customer}
+import play.api.db.Database
+import services.Counter
+
+import scala.annotation.tailrec
 
 class CustomerImporter extends Importer {
-//  def importCustomersFromCSV: Unit = {
-//    def importRows(): Unit = {
-//      def getCustomerFromRow(row: Array[String], i: Int): Customer = {
-//        def parseName(s: String): List[String] = {
-//          val split = s.split(" ")
-//          if (split.length == 2) List(split(0), split(1))
-//          else List(s)
-//        }
-//
-//        def parseAddress(s: String): Map[String, String] = {
-//          def getMap(city:String, address: String, flat: String, entrance:String, floor: String): Map[String, String] = {
-//            Map("city" -> city,
-//              "address" -> address,
-//              "flat" -> flat,
-//              "entrance" -> entrance,
-//              "floor" -> floor
-//            )
-//          }
-//          val a = s.split(",")
-//
-//          if(a.length == 4 ) getMap("Київ", a(0), a(1), a(2), a(3))
-//          else if(a.length == 5 ) getMap(a(0), a(1), a(2), a(3), a(4))
-//          else if(a.length == 3 ) getMap("Київ",a(0), a(1), a(2), "")
-//          else Map("address" -> s"Error on $i +/-1")
-//        }
-//
-//        def f(name: List[String], addressMap: Map[String, String]): Customer = {
-//          Customer( id = null,
-//            firstName = name.head, lastName = if (name.tail.isEmpty) null else Option(name.tail.head),
-//            phone = row(2).take(13), phoneNote = null, phone2 = null, phoneNote2 = null,
-//            city = addressMap.getOrElse("city", "Київ"),
-//            address = addressMap.get("address").head,
-//            flat = addressMap.get("flat"),
-//            entrance = addressMap.get("entrance"),
-//            floor = addressMap.get("floor"),
-//            instagram = Option(row(0)),
-//            preferences = null,
-//            notes = Option(row(7))
-//          )
-//        } // TODO RENAME!
-//        f(parseName(row(1)), parseAddress(row(3)))
-//      }
-//      val printer = new PrintWriter("customer.sql")
-//      val x = lines.zipWithIndex.map( t => getCustomerFromRow(t._1.toArray, t._2))
-//      x.foreach(c => printer.write(generateInsertForCustomer(c)))
-//    }
-//    importRows()
-//  }
-//  private val lines = CSVReader.open(new File("Новые Заказы - все клиенты.csv")).all()
-  private val customersTableProperties = Map (
+  def importCustomersCSV(): Unit = {
+    def getAddressWithSeparation(row: Array[String], customerId: Int): Address = {
+      val city = if (row(9).isEmpty) "Київ" else row(9)
+      val residentialComplex = if (row(10).isEmpty) null else Option(row(10))
+      Address(null, Option(customerId),
+        city, residentialComplex, address = row(5),
+        Option(row(6)), Option(row(7)), Option(row(8)), null)
+    }
+    def getAddressWithOutSeparation(row: Array[String], customerId: Int): Address = {
+      def parseAddress(a: Array[String]): Address = {
+        def getCity(string: String): String = if (string.isEmpty || string.contains("ЖК")) "Київ" else string
+        def getResidentialComplex(string: String): Option[String] = if (string.contains("ЖК")) Option(string) else null
+
+        if(a.length == 2) Address(null, Option(customerId), a(0), null, a(1), null, null, null, null)
+        else if(a.length == 4) Address(null, Option(customerId), "Київ", null, a(0), Option(a(1)), Option(a(2)), Option(a(3)), null)
+        else if(a.length == 5) Address(null, Option(customerId), getCity(a(0)), getResidentialComplex(a(0)), a(1), Option(a(3)), Option(a(4)), Option(a(2)), null)
+        else if(a.length == 6) Address(null, Option(customerId), getCity(a(0)), getResidentialComplex(a(0)), a(1), Option(a(3)), Option(a(4)), Option(a(2)), Option(a(5)))
+        else Address(null, Option(customerId), a(0), null, s"Error with address for $customerId", null, null, null, null)
+      }
+      parseAddress(row(3).split(','))
+    }
+
+    def importRows(lines: List[Array[String]], startWithID: Int, getAddress: (Array[String], Int) => Address): Seq[SQLCommand] = {
+      def getCustomer(row: Array[String], id: Int): Customer = {
+        def parseName(s: String): List[String] = {
+          val split = s.split(" ")
+          if (split.length == 2) List(split(0), split(1))
+          else List(s)
+        }
+
+        def getInstagram(string: String): Option[String] = {
+          if (Pattern.matches(".*\\p{InCyrillic}.*", string)) null
+          else Option(string)
+        }
+
+        val name = parseName(row(1))
+        val instagramOrNotes = getInstagram(row(0))
+        Customer(Option(id), name.head, if (name.length == 1) null else Option(name.tail.head),
+          row(2), null, null, null, instagramOrNotes, null, Option(if (instagramOrNotes == null) row(0) + " " else "" + (if(row. length >= 15) row(14) else "")) // TODO: Deal with phones !!!!
+        )
+      }
+      def getCustomerAndAddressFromRow(row: Array[String], id: Int, gettingAddress: (Array[String], Int) => Address): (Customer, Address) = {
+        (getCustomer(row, id), gettingAddress(row, id))
+      }
+      def getInsertsForCustomerAndAddresses(t: (Customer, Address)): SQLCommand = {
+        generateInsertForCustomer(t._1) + generateInsertForAddress(t._2)
+      }
+      @tailrec
+      def rowsToCommands(lines: Seq[Array[String]], i: Int, acc: Seq[SQLCommand]): Seq[SQLCommand] = lines match {
+        case r :: rs => rowsToCommands(
+          rs,
+          i + 1,
+          getInsertsForCustomerAndAddresses(getCustomerAndAddressFromRow(r, i, getAddress)) +: acc)
+        case Seq() => acc
+      }
+      rowsToCommands(lines, startWithID, Seq())
+    }
+
+    val linesWithSeparatedAddress = CSVReader.open(new File("/Users/andrewyakovenko/Downloads/First Part.csv"))
+      .all()
+      .map(_.toArray)
+    val linesWithOutSeparatedAddress = CSVReader.open(new File("/Users/andrewyakovenko/Downloads/Second Part.csv"))
+      .all()
+      .map(_.toArray)
+    val firstPart = importRows(linesWithSeparatedAddress, 1, getAddressWithSeparation)
+    val secondPart = importRows(linesWithOutSeparatedAddress, linesWithSeparatedAddress.length, getAddressWithOutSeparation)
+    val printer = new PrintWriter("customer.sql")
+    firstPart.foreach(printer.write)
+    secondPart.foreach(printer.write)
+    printer.close()
+  }
+
+  private val customersTableProperties = Map(
+    "id" -> "id",
     "firstName" -> "first_name",
-    "lastName" ->  "last_name",
+    "lastName" -> "last_name",
     "phone" -> "phone",
     "phoneNote" -> "phone_note",
     "phone2" -> "phone2",
     "phoneNote2" -> "phone2_note",
-    "city" -> "city",
-    "address" -> "address",
-    "flat" -> "flat",
-    "entrance" -> "entrance",
-    "floor" -> "floor",
     "instagram" -> "instagram",
     "preferences" -> "preferences",
-    "notes" ->  "notes"
+    "notes" -> "notes"
+  )
+  private val addressTableProperties = Map(
+    "id" -> "id", "customerID" -> "customer_id",
+    "city" -> "city",
+    "residentialComplex" -> "residential_complex",
+    "address" -> "address",
+    "entrance" -> "entrance",
+    "floor" -> "floor",
+    "flat" -> "flat",
+    "notesForCourier" -> "note_for_courier"
+
   )
 
-  def generateInsertForCustomer(customer:Customer): SQLCommand =  {
-    "insert into customers " + generateInsertingProperties(getProperties(List("id",
+  def generateInsertForCustomer(customer: Customer): SQLCommand = {
+    "insert into customers " + generateInsertingProperties(getProperties(List(
+      "id",
       "firstName", "lastName",
       "phone", "phoneNote",
       "phone2", "phoneNote2",
-      "city", "address", "flat", "entrance", "floor",
       "instagram",
       "preferences", "notes"), customer.productIterator), customersTableProperties) + generateInsertingVariables(getVariables(customer.productIterator)) + "; \n"
   }
+
+  def generateInsertForAddress(address: Address): SQLCommand = {
+   val x = "insert into addresses " + generateInsertingProperties(getProperties(List("id",
+      "customerID", "city", "residentialComplex",
+      "address", "entrance",
+      "floor", "flat",
+      "notesForCourier"), address.productIterator), addressTableProperties) + generateInsertingVariables(getVariables(address.productIterator)) + "; \n"
+    x
+  }
 }
+
+object CustomerImporter extends CustomerImporter with App {
+  importCustomersCSV()
+}
+
+
+/*
+ * TODO: Counter For Customer IDs
+ *
+ */

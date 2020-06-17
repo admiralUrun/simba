@@ -1,17 +1,23 @@
-jQuery.exists = function(selector) {return ($(selector).length > 0);}
-jQuery.isDefended = function(object) {return object !== null}
+jQuery.exists = function (selector) {
+    return ($(selector).length > 0);
+}
+jQuery.isDefended = function (object) {
+    return object !== null
+}
 
 function addToOrder(item, title, cost) {
     function addElementForDisplay(isEmpty, text, cost) {
         function addElementForDisplay(index) {
             $(`<li class="list-group-item" id="element${index}">${text} <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder(${index}, ${cost})"><span aria-hidden="true">&times;</span></button></li>`).appendTo('ul')
         }
-        if(isEmpty) {
+
+        if (isEmpty) {
             addElementForDisplay(0)
         } else {
             addElementForDisplay(order.val().split(',').length - 1)
         }
     }
+
     let order = $('#inOrder')
     let inOrder = order.val()
     let isValueEmpty = inOrder === ''
@@ -29,17 +35,18 @@ function changeTotal(cost) {
     let total = $('#total')
     let totalText = $('#totalText')
     total.val(Number(total.val()) + cost)
-    totalText.html(total.val() +  ' ₴')
+    totalText.html(total.val() + ' ₴')
 }
 
 function deleteFromOrder(indexToRemove, cost) {
     let total = $('#total')
     let totalText = $('#totalText')
+
     function getNewValueForInput(array) {
         let result = ''
         for (let i = 0; i < array.length; i++) {
-            if (i === indexToRemove) {}
-            else if (result === '') {
+            if (i === indexToRemove) {
+            } else if (result === '') {
                 result += array[i];
             } else {
                 result += ',' + array[i]
@@ -47,6 +54,7 @@ function deleteFromOrder(indexToRemove, cost) {
         }
         return result;
     }
+
     let order = $('#inOrder')
     if (order.val().indexOf(',') > 1) {
         order.val(getNewValueForInput(order.val().split(',')))
@@ -56,7 +64,7 @@ function deleteFromOrder(indexToRemove, cost) {
         order.val('')
     }
     total.val(Number(total.val()) - Number(cost))
-    totalText.html(total.val() +  '₴')
+    totalText.html(total.val() + '₴')
 }
 
 function changeButton(trueLabel, falseLabel, inputID, cost) {
@@ -64,15 +72,16 @@ function changeButton(trueLabel, falseLabel, inputID, cost) {
         let classArray = button.attr('class').split(" ")
         classArray.pop()
         if (isChecked) {
-           return classArray.join(" ") + ' btn-danger'
+            return classArray.join(" ") + ' btn-danger'
         } else {
             return classArray.join(" ") + ' btn-success'
         }
     }
-    let input = $(`#`+ inputID)
+
+    let input = $(`#` + inputID)
     let button = $(`#` + inputID + `-button`)
     let isChecked = (input.val() === 'true')
-    if(isChecked) {
+    if (isChecked) {
         button.text(falseLabel)
         changeTotal(Number(-cost))
     } else {
@@ -86,39 +95,45 @@ function changeButton(trueLabel, falseLabel, inputID, cost) {
 function takeJSONFromDateSetCustomerForOrder(customerID) {
     function setCustomerForOrder(customer) {
         function getValeOrEmptyString(s) {
-            if($.isDefended(s)) return ' ' + s;
-                else return ''
+            if ($.isDefended(s)) return ' ' + s;
+            else return ''
+        }
+
+        function addCustomerToOrderAndToUI(c) {
+            function getAFullAddress() {
+                return c.address + getValeOrEmptyString(c.entrance) + getValeOrEmptyString(c.floor) + getValeOrEmptyString(c.flat)
             }
-            function addCustomerToOrderAndToUI(c) {
-                function getAFullAddress() {
-                    return c.address + getValeOrEmptyString(c.entrance) + getValeOrEmptyString(c.floor) + getValeOrEmptyString(c.flat)
-                }
-                $(`#customersID`).val(`${c.id}`)
-                $(`<h4 id="customer">${c.firstName} ${getValeOrEmptyString(c.lastName)} Телефон:${c.phone}  Місто:${c.city} Адреса:${getAFullAddress()}</h4>
+
+            $(`#customersID`).val(`${c.id}`)
+            $(`<h4 id="customer">${c.firstName} ${getValeOrEmptyString(c.lastName)} Телефон:${c.phone}  Місто:${c.city} Адреса:${getAFullAddress()}</h4>
                     <button id="editButton" class="btn btn-success" onclick="editCustomerInOrder()">Знайти іншого</button>`) // FOR first time
-                    .appendTo($('#customerInformation'))
-            }
-            function allSearchElementsStyleDisplayNone() {
-                $("#searchDIV").hide()
-            }
-            allSearchElementsStyleDisplayNone()
-            addCustomerToOrderAndToUI(customer)
+                .appendTo($('#customerInformation'))
+        }
+
+        function allSearchElementsStyleDisplayNone() {
+            $("#searchDIV").hide()
+        }
+
+        allSearchElementsStyleDisplayNone()
+        addCustomerToOrderAndToUI(customer)
     }
+
     let json = $(`#${customerID}`).data('customerJSON')
     setCustomerForOrder(json)
-    }
+}
 
 function takeCustomerJSONAddToUI(JSONArray) {
     function addDropItem(Customer) {
         let elementExists = document.getElementById(`customer${Customer.id}`);
-        if(elementExists) {}
-        else {
+        if (elementExists) {
+        } else {
             $(`<a id="customer${Customer.id}" class="dropdown-item start" href="#" onclick="takeJSONFromDateSetCustomerForOrder(\`customer${Customer.id}\`)">${Customer.firstName} ${Customer.lastName} ${Customer.address}</a>`)
                 .appendTo($("#searchMenu")
-            )
+                )
             $(`#customer${Customer.id}`).data('customerJSON', Customer)
         }
     }
+
     JSONArray.forEach(function (c) {
         addDropItem(c)
     })
@@ -142,6 +157,7 @@ function setPayment(payment) {
     $('#paymentMenu').hide()
     $('#paymentInput').val(payment).click()
 }
+
 function removePayment() {
     $('#paymentView').remove()
     $('#paymentEdit').remove()

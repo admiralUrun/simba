@@ -25,25 +25,19 @@ create table customers (
     notes text
 );
 
-drop table if exists customers_addresses;
-create table customers_addresses(
-    customer_id int,
-    address_id int,
-    primary key (customer_id, address_id)
-);
-
 drop table if exists addresses;
 create table addresses (
     id int primary key auto_increment,
+    customer_id int,
     city varchar(64),
-    -- Street address like вул. Володимирська 62
+    residential_complex varchar(64),
     address varchar(128),
+    -- Street address like вул. Володимирська 62
     entrance varchar(8),
     floor tinyint,
     flat varchar(8),
     note_for_courier text
 );
-
 drop table if exists ingredients;
 create table ingredients (
     id int primary key auto_increment,
