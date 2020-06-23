@@ -17,32 +17,32 @@
 
 @createRow(a: Address, i: Int) = {
     <tr id="row-@{i}">
-        <tb id="city-@{i}">@a.city</tb>
-        <tb id="residentialComplex-@{i}">@getStringOrDash(a.residentialComplex)</tb>
-        <tb id="address-@{i}">@a.address</tb>
-        <tb id="entrance-@{i}">@getStringOrDash(a.entrance)</tb>
-        <tb id="floor-@{i}">@getStringOrDash(a.floor)</tb>
-        <tb id="flat-@{i}">@getStringOrDash(a.flat)</tb>
-        <tb id="notes-@{i}">@getStringOrDash(a.notesForCourier)</tb>
-        <tb id="settings">
-            <button class="button btn-info" onclick="prepareToEdit(`@i`) ">Змінити</button>
-            <button class="button btn-danger" onclick="">Видалити</button>
-            <input id="addresses[@{i}]" value="@{}" style="display: none;">
-        </tb>
+        <td id="city-@{i}">@a.city</td>
+        <td id="residentialComplex-@{i}">@getStringOrDash(a.residentialComplex)</td>
+        <td id="address-@{i}">@a.address</td>
+        <td id="entrance-@{i}">@getStringOrDash(a.entrance)</td>
+        <td id="floor-@{i}">@getStringOrDash(a.floor)</td>
+        <td id="flat-@{i}">@getStringOrDash(a.flat)</td>
+        <td id="notes-@{i}">@getStringOrDash(a.notesForCourier)</td>
+        <td id="settings">
+            <button class="btn btn-info" onclick="prepareToEdit(`@i`) ">Змінити</button>
+            <button class="btn btn-danger" onclick="">Видалити</button>
+            <input id="addresses[@{i}]" value="@{addressToString(a)}" style="display: none;">
+        </td>
     </tr>
 }
 
 @addressTable() = {
-    <table class="table table-striped table-bordered">
+    <table id="tableOne" class="table table-striped table-bordered">
         @tableHeaders(
             List("Місто", "Житловий Комплекс", "Адреса", "Під'їзд", "Поверх", "Квартира", "Нотатка для Курьєра", "Налаштуваня"),
             darkHead = true)
         <tbody id="addressTableBody">
-        @if(!isCreate) {
-            @repeatWithIndex(cF("addresses")) { (addressField, i) =>
+            @if(!isCreate) {
+                @repeatWithIndex(cF("addresses")) { (addressField, i) =>
                     @createRow(stringToAddress(addressField.value.head), i)
-            }
-        } else {}
+                }
+            } else {}
         </tbody>
     </table>
 }

@@ -5,6 +5,8 @@ import doobie._
 import doobie.implicits._
 import javax.inject._
 import cats.implicits._
+import services.SimbaHTMLHelper.stringToAddress
+import services.SimbaHTMLHelper.addressToString
 
 @Singleton
 class CustomerModel @Inject()(dS: DoobieStore) {
@@ -47,7 +49,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
     } yield c)
       .transact(xa)
       .unsafeRunSync()
-    insertAddresses(decodeAddressesString(c.addresses), customerWithID.id.head)
+    insertAddresses(decodeAddressString(c.addresses), customerWithID.id.head)
   }
 
   def findByID(id: Int): CustomerForEditAndCreate = {
@@ -57,7 +59,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .transact(xa)
       .unsafeRunSync().head
 
-    val a = sql"select (id, city, address, entrance, floor, flat, note_for_courier) from customers_addresses join addresses where customer_id = ${id}"
+    val a = sql"select * from addresses where customer_id = ${id}"
       .query[Address]
       .to[List]
       .transact(xa)
@@ -71,7 +73,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       encodeAddressesToString(a))
   }
 
-  def editCustomer(id: Int, c: CustomerForEditAndCreate): Boolean = { // TODO
+  def editCustomer(id: Int, c: CustomerForEditAndCreate): Boolean = { // TODO:
     sql"""update customers set first_name = ${c.firstName}, last_name = ${c.lastName},
          phone = ${c.phone}, phone_note = ${c.phoneNote},
          phone2 = ${c.phone2}, phone2_note = ${c.phoneNote2},
@@ -81,7 +83,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .update
       .run
       .transact(xa)
-      .unsafeRunSync() == 1 && insertAddresses(decodeAddressesString(c.addresses), c.id.head)
+      .unsafeRunSync() == 1 && insertAddresses(decodeAddressString(c.addresses), c.id.head)
   }
 
   def insertAddresses(list: List[Address], customerId: Int): Boolean = {
@@ -93,32 +95,12 @@ class CustomerModel @Inject()(dS: DoobieStore) {
     }.transact(xa).unsafeRunSync().forall(_ == 1)
   }
 
-  def decodeAddressesString(a: List[String]): List[Address] = {
-    def stringToAddress(s: String): Address = {
-      val array = s.split(",")
-      def searchInStringFor(search: String): Option[String] = {
-        val o = array.find(_.contains(search))
-        if (o.isDefined) Option(o.head.replace(search, ""))
-        else null
-      }
-
-      Address(null, null, array(0).replace("(city)", ""), searchInStringFor("(residentialComplex)"), array(1).replace("(address)", ""),
-        searchInStringFor("(entrance)"),
-        searchInStringFor("(floor)"),
-        searchInStringFor("(flat)"),
-        searchInStringFor("(notes)"))
-    }
-
+  def decodeAddressString(a: List[String]): List[Address] = {
     a.map(stringToAddress)
   }
 
   def encodeAddressesToString(l: List[Address]): List[String] = {
-    l.map { a =>
-      "(" + List("city", "residentialComplex", "address", "entrance", "floor", "flat", "notes").zip(a.productIterator.toList).filter(_._2 == null)
-        .map { t =>
-          t._2.toString + t._1
-        }.mkString(",") + ")" // (Київ(city),  Волинська10(address) ...)
-    }
+    l.map(addressToString)
   }
 
 }

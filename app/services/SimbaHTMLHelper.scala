@@ -2,7 +2,6 @@ package services
 
 import java.util.Date
 import java.text.SimpleDateFormat
-
 import models.{Address, Customer, PlayOrderForEditAndCreate}
 import play.api.data.Form
 import play.api.mvc.MessagesRequestHeader
@@ -16,7 +15,10 @@ object SimbaHTMLHelper {
     o.map(p => p + n.map(n => s"($n)").getOrElse("")).getOrElse("")
   }
 
-  def getStringOrDash(s: Option[String]): String = s.getOrElse("-")
+  def getStringOrDash(s: Option[String]): String = {
+    if (s == null) "-"
+    else s.getOrElse("-")
+  }
 
   def getFlash()(implicit request: MessagesRequestHeader): Html = {
     def getFlash(option: Option[String], alertClass: String): SHTML = {
@@ -121,17 +123,36 @@ object SimbaHTMLHelper {
   def stringToAddress(addressString: String): Address = {
     val a = addressString.split(",")
 
-    def searchInStringFor(search: String): Option[String] = {
+    def searchInString(search: String): Option[String] = {
       val o = a.find(_.contains(search))
       if (o.isDefined) Option(o.head.replace(search, ""))
       else null
     }
+    def searchInInt(search: String): Option[Int] = {
+      val o = a.find(_.contains(search))
+      if (o.isDefined) Option(o.head.replace(search, "").toInt)
+      else null
+    }
 
-    Address(null, null, a(0).replace("(city)", ""), searchInStringFor("(residentialComplex)"), a(1).replace("(address)", ""),
-      searchInStringFor("(entrance)"),
-      searchInStringFor("(floor)"),
-      searchInStringFor("(flat)"),
-      searchInStringFor("(notes)"))
+    Address(searchInInt("(id)"), searchInInt("(customerID)"), searchInString("(city)").head, searchInString("(residentialComplex)"), searchInString("(address)").head,
+      searchInString("(entrance)"),
+      searchInString("(floor)"),
+      searchInString("(flat)"),
+      searchInString("(notes)"))
+  }
+
+  def addressToString(a: Address): String = {
+    def getString(s:Any): String = {
+      s match {
+        case Some(value) => value.toString
+        case _ => s.toString
+      }
+    }
+    val s = List("(id)", "(customerID)", "(city)", "(residentialComplex)", "(address)", "(entrance)", "(floor)", "(flat)", "(notes)").zip(a.productIterator.toList).filter(t => t._2 != None && t._2 != null)
+      .map { t =>
+        getString(t._2) + t._1
+      }.mkString(",")
+    s
   }
 
   def createDropDown[T](title: String, content: Seq[T], generateDropItemFromContent: T => String): Html = {
