@@ -112,10 +112,7 @@
 
             @createInputInOrder
 
-            <div class="form-group">
-                <label for="note">Нотатка</label>
-                <textarea class="form-control" id="note" name="note" rows="3">@insertNotes(oF.value)</textarea>
-            </div>
+            @createTextArea("note", "Нотатка", inTextArea = if(oF.value.isDefined) oF.value.head.note else Option(""))
         </fieldset>
 
         <div class="actions">

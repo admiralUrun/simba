@@ -2,72 +2,116 @@
 @import services.SimbaHTMLHelper._
 
 @(title: String, formCall: Call,
-        cF: Form[Customer],
+        cF: Form[CustomerForEditAndCreate],
         buttonLabel: String,
         submitCall: Call = routes.CustomerController.toCustomersListPage(""),
-        xButton: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
+        isCreate: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
 
-    @creteAnInput(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
-        @if(showError) {
-            @inputText(cF(keyInForm), '_label -> label, '_help -> "", '_error -> "", '_class -> layOutClass)
-        } else {
-            @inputText(cF(keyInForm), '_label -> label, '_help -> "",'_class -> layOutClass, Symbol("class") -> "")
-        }
-    }
+@creteAnInput(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
+@if(showError) {
+    @inputText(cF(keyInForm), '_label -> label, '_help -> "", '_error -> "", '_class -> layOutClass)
+} else {
+    @inputText(cF(keyInForm), '_label -> label, '_help -> "", '_class -> layOutClass, Symbol("class") -> "")
+}
+}
 
-    @addressInput() = {
-        <input>
+@createRow(a: Address, i: Int) = {
+    <tr id="row-@{i}">
+        <tb id="city-@{i}">@a.city</tb>
+        <tb id="residentialComplex-@{i}">@getStringOrDash(a.residentialComplex)</tb>
+        <tb id="address-@{i}">@a.address</tb>
+        <tb id="entrance-@{i}">@getStringOrDash(a.entrance)</tb>
+        <tb id="floor-@{i}">@getStringOrDash(a.floor)</tb>
+        <tb id="flat-@{i}">@getStringOrDash(a.flat)</tb>
+        <tb id="notes-@{i}">@getStringOrDash(a.notesForCourier)</tb>
+        <tb id="settings">
+            <button class="button btn-info" onclick="prepareToEdit(`@i`) ">Змінити</button>
+            <button class="button btn-danger" onclick="">Видалити</button>
+            <input id="addresses[@{i}]" value="@{}" style="display: none;">
+        </tb>
+    </tr>
+}
 
-    }
+@addressTable() = {
+    <table class="table table-striped table-bordered">
+        @tableHeaders(
+            List("Місто", "Житловий Комплекс", "Адреса", "Під'їзд", "Поверх", "Квартира", "Нотатка для Курьєра", "Налаштуваня"),
+            darkHead = true)
+        <tbody id="addressTableBody">
+        @if(!isCreate) {
+            @repeatWithIndex(cF("addresses")) { (addressField, i) =>
+                    @createRow(stringToAddress(addressField.value.head), i)
+            }
+        } else {}
+        </tbody>
+    </table>
+}
+
+@addressInput() = {
+    <form>
+        <div class="row">
+            @createTextInputWithoutForm("city", "Місто*", "col")
+            @createTextInputWithoutForm("residentialComplex", "ЖК", "col")
+        </div>
+        <div class="row">
+            @createTextInputWithoutForm("address", "Адреса*", "col")
+        </div>
+        <div class="row">
+            @createTextInputWithoutForm("entrance", "Під'їзд", "col")
+            @createTextInputWithoutForm("floor", "Поверх", "col")
+            @createTextInputWithoutForm("flat", "Квартира", "col")
+        </div>
+        <div class="row">
+            @createTextArea("notesForCourier", "Нотатка для курьєра", layoutClass = "col")
+        </div>
+        <button class="btn btn-info" id="addressBtn" type="button" onclick="addToAddressAndCleanInputs()">
+            Додати Адресу</button>
+    </form>
+}
 
 @main(title) {
 
     @form(formCall) {
         <fieldset>
             @CSRF.formField
-            <div class="container-fluid row">
-                @creteAnInput("firstName", "Ім'я *", "col1", showError("firstName", cF))
-                @creteAnInput("lastName", "Прізвище", "offset col-auto")
+            <div class="row">
+                <div class="col-4">
+                    <div class="container-fluid row">
+                        @creteAnInput("firstName", "Ім'я *", "col1", showError("firstName", cF))
+                        @creteAnInput("lastName", "Прізвище", "offset col-auto")
+                    </div>
+
+                    <div class="container-fluid row">
+                        @creteAnInput("phone", "Телефон *", "colFirst", showError("phone", cF))
+                        @creteAnInput("phoneNote", "Нотатка Телефону", "offset col-auto")
+                    </div>
+
+                    <div class="container-fluid row">
+                        @creteAnInput("phone2", "Додатковий Телефон", "colFirst")
+                        @creteAnInput("phoneNote2", "Нотатка Дод. Телефону", "offset col-auto")
+                    </div>
+                    @creteAnInput("instagram", "Instagram")
+                </div>
+                <div class="col-7">
+                    @createTextArea("preferences", "Надає перевагу", inTextArea = if(cF.value.isDefined) cF.value.head.preferences else Option(""))
+                    @createTextArea("notes", "Нотатка", inTextArea = if(cF.value.isDefined) cF.value.head.notes else Option(""))
+                </div>
+            </div>
+            <div class="row container-fluid">
+                <div class="col-8">
+                    @addressTable()
+                </div>
+                <div class="col-4">
+                    @addressInput()
+                </div>
             </div>
 
-            <div class="container-fluid row">
-                @creteAnInput("phone", "Телефон *", "colFirst", showError("phone", cF))
-                @creteAnInput("phoneNote", "Нотатка Телефону", "offset col-auto")
-            </div>
-
-            <div class="container-fluid row">
-                @creteAnInput("phone2", "Додатковий Телефон", "colFirst")
-                @creteAnInput("phoneNote2", "Нотатка Дод. Телефону", "offset col-auto")
-            </div>
-
-            @creteAnInput("instagram", "Instagram")
-            <div class="form-group">
-                <label for="preferences">Надає перевагу</label>
-                <textarea class="form-control" id="preferences" name="preferences" rows="3">@{
-                    if (cF.value.isDefined) cF.value.head.preferences
-                    else ""
-                }</textarea>
-            </div>
-            <div class="form-group">
-                <label for="note">Нотатка</label>
-                <textarea class="form-control" id="notes" name="notes" rows="3">@insertNotes(cF.value)</textarea>
-            </div>
         </fieldset>
-
-        @addressInput()
 
         <div class="actions">
             <input type="submit" value="@buttonLabel" class="btn btn-primary"> Або
             <a href="@submitCall" class="btn">Скасувати</a>
         </div>
     }
-
-    @if(xButton) {
-        <div class="container-fluid">
-            @form(routes.HomeController.importFromCVS()){
-                @CSRF.formField
-                <input type="submit" value="Додати купу" class="btn btn-danger">
-            }
-        </div>
-    } else {}
+    <script charset="UTF-8" src="@routes.Assets.versioned("javascript/customerScript.js")"></script>
 }

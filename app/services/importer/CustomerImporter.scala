@@ -16,7 +16,7 @@ class CustomerImporter extends Importer {
       val city = if (row(9).isEmpty) "Київ" else row(9)
       val residentialComplex = if (row(10).isEmpty) null else Option(row(10))
       def emptyToNull(str: String): Option[String] = {
-        if (str == "" || str.isEmpty) null
+        if (str == " " || str.isEmpty) null
         else Option(str)
       }
       Address(null, Option(customerId),

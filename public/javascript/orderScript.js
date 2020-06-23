@@ -28,6 +28,7 @@ function addToOrder(item, title, cost) {
         order.val(inOrder + ', ' + item)
         changeTotal(Number(cost))
     }
+    console.log(order.val())
     addElementForDisplay(isValueEmpty, title, cost)
 }
 
@@ -78,8 +79,8 @@ function changeButton(trueLabel, falseLabel, inputID, cost) {
         }
     }
 
-    let input = $(`#` + inputID)
-    let button = $(`#` + inputID + `-button`)
+    let input = $(`#${inputID}`)
+    let button = $(`#${inputID}-button`)
     let isChecked = (input.val() === 'true')
     if (isChecked) {
         button.text(falseLabel)

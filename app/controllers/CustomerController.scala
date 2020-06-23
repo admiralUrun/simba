@@ -1,7 +1,7 @@
 package controllers
 
 import javax.inject._
-import models.{Customer, CustomerModel}
+import models._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.mvc._
@@ -20,26 +20,22 @@ type  JSONWrites[Customer] = OWrites[Customer]
       "phoneNote" -> optional(text),
       "phone2" -> optional(text),
       "phoneNote2" -> optional(text),
-      "city" -> nonEmptyText,
-      "address" -> nonEmptyText,
-      "flat" -> optional(text),
-      "entrance" -> optional(text),
-      "floor" -> optional(text),
       "instagram" -> optional(text),
       "preferences" -> optional(text),
-      "notes" -> optional(text)
-    )(Customer.apply)(Customer.unapply)
+      "notes" -> optional(text),
+      "addresses" -> list(text)
+    )(CustomerForEditAndCreate.apply)(CustomerForEditAndCreate.unapply)
   )
   private val customerListPage = Redirect(routes.CustomerController.toCustomersListPage(""))
 
   def toCustomersListPage(search: String): PlayAction = Action { implicit request =>
-    val rows = if(search.isEmpty) customerModel.getAllTableRows else customerModel.getAllTableRowsWhere(search)
+    val rows = if(search.isEmpty) customerModel.getAllCustomerTableRows else customerModel.getAllCustomerTableRowsWhere(search)
     Ok(views.html.customers(rows, search))
   }
 
   def getCustomersForOrderSearch(search: String): PlayAction = Action {
     implicit val residentWrites: JSONWrites[Customer] = Json.writes[Customer]
-    val json = Json.toJson(customerModel.getAllTableRowsWhere(search))
+    val json = Json.toJson(customerModel.getAllCustomerTableRowsWhere(search))
     Ok(json)
   }
 

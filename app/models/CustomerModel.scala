@@ -93,33 +93,32 @@ class CustomerModel @Inject()(dS: DoobieStore) {
     }.transact(xa).unsafeRunSync().forall(_ == 1)
   }
 
-  def decodeAddressesString(a: String): List[Address] = {
+  def decodeAddressesString(a: List[String]): List[Address] = {
     def stringToAddress(s: String): Address = {
       val array = s.split(",")
-
       def searchInStringFor(search: String): Option[String] = {
         val o = array.find(_.contains(search))
         if (o.isDefined) Option(o.head.replace(search, ""))
         else null
       }
 
-      Address(null, null, array(0).replace("(city)", ""), searchInStringFor("residentialComplex"), array(1).replace("(address)", ""),
-        searchInStringFor("entrance"),
-        searchInStringFor("floor"),
-        searchInStringFor("flat"),
-        searchInStringFor("notes"))
+      Address(null, null, array(0).replace("(city)", ""), searchInStringFor("(residentialComplex)"), array(1).replace("(address)", ""),
+        searchInStringFor("(entrance)"),
+        searchInStringFor("(floor)"),
+        searchInStringFor("(flat)"),
+        searchInStringFor("(notes)"))
     }
 
-    a.split(",").map(stringToAddress).toList
+    a.map(stringToAddress)
   }
 
-  def encodeAddressesToString(l: List[Address]): String = {
+  def encodeAddressesToString(l: List[Address]): List[String] = {
     l.map { a =>
       "(" + List("city", "residentialComplex", "address", "entrance", "floor", "flat", "notes").zip(a.productIterator.toList).filter(_._2 == null)
         .map { t =>
           t._2.toString + t._1
         }.mkString(",") + ")" // (Київ(city),  Волинська10(address) ...)
-    }.mkString(",")
+    }
   }
 
 }
@@ -137,7 +136,7 @@ case class CustomerForEditAndCreate(id: Option[Int],
                                     phone2: Option[String], phoneNote2: Option[String],
                                     instagram: Option[String],
                                     preferences: Option[String], notes: Option[String],
-                                    addresses: String)
+                                    addresses: List[String])
 
 case class Address(id: Option[Int], customerID: Option[Int],
                    city: String,

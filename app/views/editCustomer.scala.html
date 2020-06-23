@@ -1,4 +1,4 @@
-@(id:Int, cF: Form[Customer], name: String)(implicit requestHeader: MessagesRequestHeader)
+@(id:Int, cF: Form[CustomerForEditAndCreate], name: String)(implicit requestHeader: MessagesRequestHeader)
 
 @createOrEditCustomerTemplate(s"Клієнт $id: $name",
     routes.CustomerController.update(id),
