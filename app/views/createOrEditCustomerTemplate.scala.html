@@ -25,9 +25,9 @@
         <td id="flat-@{i}">@getStringOrDash(a.flat)</td>
         <td id="notes-@{i}">@getStringOrDash(a.notesForCourier)</td>
         <td id="settings">
-            <button class="btn btn-info" onclick="prepareToEdit(`@i`) ">Змінити</button>
-            <button class="btn btn-danger" onclick="">Видалити</button>
-            <input id="addresses[@{i}]" value="@{addressToString(a)}" style="display: none;">
+            <button class="btn btn-info" type="button" href="#" onclick="prepareToEdit(`@i`) ">Змінити</button>
+            <button class="btn btn-danger" type="button" href="#" onclick="">Видалити</button>
+            <input id="addresses[@{i}]" name="addresses[@{i}]" value="@{addressToString(a)}" style="display: none;">
         </td>
     </tr>
 }
@@ -71,7 +71,7 @@
 
 @main(title) {
 
-    @form(formCall) {
+    @form(formCall, Symbol("id") -> "mainForm") {
         <fieldset>
             @CSRF.formField
             <div class="row">
@@ -101,7 +101,7 @@
                 <div class="col-8">
                     @addressTable()
                 </div>
-                <div class="col-4">
+                <div id="addressInputs" class="col-4">
                     @addressInput()
                 </div>
             </div>
@@ -109,9 +109,21 @@
         </fieldset>
 
         <div class="actions">
-            <input type="submit" value="@buttonLabel" class="btn btn-primary"> Або
+            <input id="submit" type="submit" value="@buttonLabel" class="btn btn-primary"> Або
             <a href="@submitCall" class="btn">Скасувати</a>
         </div>
     }
+    <script>
+        $("#submit").click(
+            function() {
+                /**
+                * Remove div #addressInputs because it won't submit with input that not exist in Play From
+                */
+                $("#addressInputs").remove()
+                $("#mainForm").submit()
+            }
+        )
+
+    </script>
     <script charset="UTF-8" src="@routes.Assets.versioned("javascript/customerScript.js")"></script>
 }

@@ -6,7 +6,7 @@ let floor = $(`#floor`)
 let flat = $(`#flat`)
 let notesForCourier = $(`#notesForCourier`)
 
-function encoderString() {
+function encoderString(i) {
     function getEncodeValueOrEmptyString(selector, nameForEncoding, withComaAtStart) {
         if (selector.val() === '') return ""
         else {
@@ -14,7 +14,16 @@ function encoderString() {
             else return selector.val() + nameForEncoding
         }
     }
+    function checkForIds() {
+        if(i !== null) {
+            let a = getInputArrayByIndex(i).val().split(',')
+            return `${a.shift()},${a.shift()},`
+        } else {
+            return ""
+        }
+    }
     return `(` +
+        checkForIds() +
         getEncodeValueOrEmptyString(city, `(city)`, false) +
         getEncodeValueOrEmptyString(residentialComplex, `(residentialComplex)`, true) +
         getEncodeValueOrEmptyString(address, `(address)`, true) +
@@ -47,7 +56,7 @@ function addToAddressAndCleanInputs() {
                     return `<td id="${tbID}">`+ getValueOrDashIfEmpty(information) +`</td>`
                 }
                 function getInput(i, value) {
-                    return `<input id="addresses[${i}]" value="${value}" style="display: none">`
+                    return `<input id="addresses[${i}]" name="addresses[${i}]" value="${value}" style="display: none">`
                 }
                 let changeButton = `<button class="btn btn-info сol-auto" type="button" onclick="prepareToEdit('${rowIndex}')">Змінити</button>`
                 let deleteButton = `<button class="btn btn-danger сol-auto" type="button" onclick="deleteRow('${rowIndex}')">Видалити</button>`
@@ -59,7 +68,7 @@ function addToAddressAndCleanInputs() {
                     getTb(`floor-${rowIndex}`, floor.val()) +
                     getTb(`flat-${rowIndex}`, flat.val()) +
                     getTb(`notesForCourier-${rowIndex}`, notesForCourier.val()) +
-                    getTb(`settings`, changeButton + deleteButton + getInput(rowIndex, encoderString())) +
+                    getTb(`settings`, changeButton + deleteButton + getInput(rowIndex, encoderString(null))) +
                     `</tr>`)
                 let tableBody = $("table tbody")
                 tableBody.append(row)
@@ -121,7 +130,9 @@ function editRow(i) {
         $(`#flat-${i}`).text(getValueOrDashIfEmpty(flat.val()))
         $(`#notes-${i}`).text(getValueOrDashIfEmpty(notesForCourier.val()))
     }
-    getInputArrayByIndex(i).val(encoderString())
+
+    console.log(encoderString(i))
+    getInputArrayByIndex(i).val(encoderString(i))
     changeRow(i)
     cleanAllInputs()
     changeButton(`Додати`, addToAddressAndCleanInputs)
