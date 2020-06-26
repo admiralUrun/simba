@@ -33,7 +33,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .unsafeRunSync
   }
 
-  def insert(c: CustomerForEditAndCreate): Boolean = { // TODO could be pretty idiotic
+  def insert(c: CustomerForEditAndCreate): Boolean = {
     val customerWithID = (for {
       _ <-
         sql"""insert into customers
@@ -74,7 +74,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       encodeAddressesToString(a), Option(null))
   }
 
-  def editCustomer(id: Int, c: CustomerForEditAndCreate): Boolean = { // TODO:
+  def editCustomer(id: Int, c: CustomerForEditAndCreate): Boolean = {
     sql"""update customers set first_name = ${c.firstName}, last_name = ${c.lastName},
          phone = ${c.phone}, phone_note = ${c.phoneNote},
          phone2 = ${c.phone2}, phone2_note = ${c.phoneNote2},

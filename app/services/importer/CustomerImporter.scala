@@ -53,7 +53,7 @@ class CustomerImporter extends Importer {
         val name = parseName(row(1))
         val instagramOrNotes = getInstagram(row(0))
         Customer(Option(id), name.head, if (name.length == 1) null else Option(name.tail.head),
-          row(2), null, null, null, instagramOrNotes, null, Option(if (instagramOrNotes == null) row(0) + " " else "" + (if(row. length >= 15) row(14) else "")) // TODO: Deal with phones !!!!
+          row(2), null, null, null, instagramOrNotes, null, Option(if (instagramOrNotes == null) row(0) + " " else "" + (if(row. length >= 15) row(14) else ""))
         )
       }
       def getCustomerAndAddressFromRow(row: Array[String], id: Int, gettingAddress: (Array[String], Int) => Address): (Customer, Address) = {
@@ -135,8 +135,3 @@ object CustomerImporter extends CustomerImporter with App {
   importCustomersCSV()
 }
 
-
-/*
- * TODO: Counter For Customer IDs
- *
- */
