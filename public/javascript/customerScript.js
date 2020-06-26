@@ -93,6 +93,11 @@ function getValueOrDashIfEmpty(object) {
 }
 
 function deleteRow(indexToRemove) {
+    let input = getInputArrayByIndex(indexToRemove)
+    if (input.val().includes("id")) {
+        let id = input.val().split(`,`).shift().replace("(id)", "")
+        $(`<input id="addressesToDelete[${indexToRemove}]" name="addressesToDelete[${indexToRemove}]" value="${id}" style="display: none">`).appendTo($(`#mainForm`))
+    } else {}
     $(`#row-${indexToRemove}`).remove()
 }
 
@@ -137,9 +142,3 @@ function editRow(i) {
     cleanAllInputs()
     changeButton(`Додати`, addToAddressAndCleanInputs)
 }
-
-/*
-* TODO: Deal with id's
-* TODO: Think how remove address on back-end ?
-*
-* */

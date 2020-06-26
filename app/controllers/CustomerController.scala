@@ -23,7 +23,8 @@ type  JSONWrites[Customer] = OWrites[Customer]
       "instagram" -> optional(text),
       "preferences" -> optional(text),
       "notes" -> optional(text),
-      "addresses" -> list(text)
+      "addresses" -> list(text),
+      "addressesToDelete" -> optional(list(number))
     )(CustomerForEditAndCreate.apply)(CustomerForEditAndCreate.unapply)
   )
   private val customerListPage = Redirect(routes.CustomerController.toCustomersListPage(""))

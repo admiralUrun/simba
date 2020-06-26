@@ -26,7 +26,7 @@
         <td id="notes-@{i}">@getStringOrDash(a.notesForCourier)</td>
         <td id="settings">
             <button class="btn btn-info" type="button" href="#" onclick="prepareToEdit(`@i`) ">Змінити</button>
-            <button class="btn btn-danger" type="button" href="#" onclick="">Видалити</button>
+            <button class="btn btn-danger" type="button" href="#" onclick="deleteRow(`@i`)">Видалити</button>
             <input id="addresses[@{i}]" name="addresses[@{i}]" value="@{addressToString(a)}" style="display: none;">
         </td>
     </tr>
