@@ -5,11 +5,14 @@ import doobie._
 import doobie.implicits._
 import javax.inject._
 import cats.implicits._
+import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json._
 import services.SimbaHTMLHelper.stringToAddress
 import services.SimbaHTMLHelper.addressToString
 
 @Singleton
 class CustomerModel @Inject()(dS: DoobieStore) {
+  type  JSONWrites[T] = OWrites[T]
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
 
   def getAllCustomerTableRows: Seq[Customer] = {
@@ -60,18 +63,12 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .transact(xa)
       .unsafeRunSync().head
 
-    val a = sql"select * from addresses where customer_id = ${id}"
-      .query[Address]
-      .to[List]
-      .transact(xa)
-      .unsafeRunSync
-
     CustomerForEditAndCreate(
       c.id, c.firstName, c.lastName,
       c.phone, c.phoneNote,
       c.phone2, c.phoneNote2,
       c.instagram, c.preferences, c.notes,
-      encodeAddressesToString(a), Option(null))
+      encodeAddressesToString(getAllCustomersAddresses(c.id.head)), Option(null))
   }
 
   def editCustomer(id: Int, c: CustomerForEditAndCreate): Boolean = {
@@ -135,6 +132,49 @@ class CustomerModel @Inject()(dS: DoobieStore) {
     }
   }
 
+  def getAllCustomersAddresses(customerId: Int): List[Address] = {
+    sql"select * from addresses where customer_id = $customerId"
+      .query[Address]
+      .to[List]
+      .transact(xa)
+      .unsafeRunSync
+  }
+
+  def getDataForJsonToDisplayInOrder(search: String): JsValue = {
+    import play.api.libs.functional.syntax._
+    implicit val customerReads: Writes[Customer] = (
+      ( JsPath \ "id").writeNullable[Int] and
+        ( JsPath \ "firstName").write[String] and
+        ( JsPath \ "lastName").writeNullable[String] and
+        ( JsPath \ "phone").write[String] and
+        ( JsPath \ "phoneNote").writeNullable[String] and
+        ( JsPath \ "phone2").writeNullable[String] and
+        ( JsPath \ "phoneNote2").writeNullable[String] and
+        ( JsPath \ "instagram").writeNullable[String] and
+        ( JsPath \ "preferences").writeNullable[String] and
+        ( JsPath \ "notes").writeNullable[String]
+    )(unlift(Customer.unapply))
+
+    implicit val readerAddress: Writes[Address] = (
+      ( JsPath \ "id").writeNullable[Int] and
+        ( JsPath \ "customerId").writeNullable[Int] and
+        ( JsPath \ "city").write[String] and
+        ( JsPath \ "residentialComplex").writeNullable[String] and
+        ( JsPath \ "address").write[String] and
+        ( JsPath \ "entrance").writeNullable[String] and
+        ( JsPath \ "floor").writeNullable[String] and
+        ( JsPath \ "flat").writeNullable[String] and
+        ( JsPath \ "notesForCourier").writeNullable[String]
+    )(unlift(Address.unapply))
+
+    implicit val readerCustomerAddressesToJson: Writes[CustomerAddressesToJson] = (
+      (JsPath \ "customer").write[Customer] and
+        (JsPath \ "addresses").write[Seq[Address]]
+    )(unlift(CustomerAddressesToJson.unapply))
+    Json.toJson(getAllCustomerTableRowsWhere(search).map(c => CustomerAddressesToJson(c, getAllCustomersAddresses(c.id.head))))
+  }
+
+
   private def decodeAddressString(a: List[String]): List[Address] = {
     a.map(stringToAddress)
   }
@@ -169,3 +209,5 @@ case class Address(id: Option[Int], customerId: Option[Int],
                    floor: Option[String],
                    flat: Option[String],
                    notesForCourier: Option[String])
+
+case class CustomerAddressesToJson(customer: Customer, addresses: Seq[Address])
