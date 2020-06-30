@@ -1,7 +1,7 @@
 package controllers
 
 import javax.inject._
-import models.{OrderModel, PlayOrderForEditAndCreate}
+import models.{OrderModel, OrderForEditAndCreate}
 import play.api.data.Forms._
 import play.api.data.Form
 import play.api.mvc._
@@ -21,7 +21,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
       "offlineDelivery" -> boolean, "deliveryOnMonday" -> boolean,
       "paid" -> boolean, "delivered" -> boolean,
       "note" -> optional(text)
-    )(PlayOrderForEditAndCreate.apply)(PlayOrderForEditAndCreate.unapply))
+    )(OrderForEditAndCreate.apply)(OrderForEditAndCreate.unapply))
   private val orderFeedPage = Redirect(routes.OrderController.toOrderFeedPage(""))
 
   def toOrderFeedPage(search: String): PlayAction = Action { implicit request =>

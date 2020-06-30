@@ -117,13 +117,12 @@
         $("#submit").click(
             function() {
                 /**
-                * Remove div #addressInputs because it won't submit with input that not exist in Play From
+                * Remove div #addressInputs because it won't submit until inputs that Play From doesn't have exist
                 */
                 $("#addressInputs").remove()
                 $("#mainForm").submit()
             }
         )
-
     </script>
     <script charset="UTF-8" src="@routes.Assets.versioned("javascript/customerScript.js")"></script>
 }

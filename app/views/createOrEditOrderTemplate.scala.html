@@ -3,7 +3,7 @@
 @import services.SimbaHTMLHelper._
 @import models.OrderMenu
 @import models.OrderMenuItem
-@(title: String, formCall: Call, oF: Form[PlayOrderForEditAndCreate], buttonLabel: String, inMenu: List[OrderMenu], isCreate: Boolean = false, inOrderToTextCost: Map[String, (String, Int)] = Map())(implicit requestHeader: MessagesRequestHeader)
+@(title: String, formCall: Call, oF: Form[OrderForEditAndCreate], buttonLabel: String, inMenu: List[OrderMenu], isCreate: Boolean = false, inOrderToTextCost: Map[String, (String, Int)] = Map())(implicit requestHeader: MessagesRequestHeader)
 
 @createAMenuDropDown(menuTitle: String, inMenu: List[OrderMenuItem]) = {
     @if(inMenu.length == 1) {
@@ -34,6 +34,21 @@
     <li class="list-group-item" id="element@index"> @textCost._1 <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder('@index', '@textCost._2')"><span aria-hidden="true">&times;</span></button></li>
 }
 
+@getCustomerSearch() = {
+    <div id="customerInformation" class="row">
+        <form>
+            <div id="searchDIV" class="input-group col-md"  style="display: ">
+                <input id="search" name="search" type="search" class="form-control dropdown-toggle col-auto" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <div id="searchMenu" class="dropdown-menu">
+                    <span class="dropdown-header">Тут можна знайти Клієнта</span>
+                </div>
+                <input type="button" id="searchSubmit" value="Пошук" class="btn btn-primary offset-sm-1">
+            </div>
+        </form>
+            <!-- <a class="colLast btn btn-success disabled" id="add" href="@routes.CustomerController.toCreateCustomerPage()">Додати</a> -->
+    </div>
+}
+
 
 @createBooleanInput(nameInForm:String, trueLabel:String, falseLabel:String, checked:Boolean = false, col:String = "auto", jsOnclick: JavaScript) = {
     <input id="@nameInForm" name="@nameInForm" value="@checked" style="display: none">
@@ -49,25 +64,13 @@
 }
 @main(title) {
     <div class="container-fluid">
-        <div id="customerInformation" class="row">
-            <form>
-                <div id="searchDIV" class="input-group col-md"  style="display: ">
-                    <input id="search" name="search" type="search" class="form-control dropdown-toggle col-auto" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <div id="searchMenu" class="dropdown-menu">
-                        <span class="dropdown-header">Тут можна знайти Клієнта</span>
-                    </div>
-                    <input type="button" id="searchSubmit" value="Пошук" class="btn btn-primary offset-sm-1">
-                </div>
-            </form>
-           <!-- <a class="colLast btn btn-success disabled" id="add" href="@routes.CustomerController.toCreateCustomerPage()">Додати</a> -->
-        </div>
+        @getCustomerSearch()
     </div>
     @form(formCall) {
         <fieldset>
             @CSRF.formField
-            <div class="container-fluid row">
-                <input id="customersID" name="customersID" style="display: none">
-            </div>
+            <input id="customersID" name="customersID" style="display: none">
+            <input id="addressID" name="addressID" style="display: none">
 
             <input name="orderDay" type="text" value="@formattingDateForForm(new Date())" style="display: none">
             <input name="deliveryDay" type="text" value="@getNextSunday" style="display: none">
@@ -137,7 +140,5 @@
             // )
         })
     </script>
-
-    <script charset="UTF-8" src="@routes.Assets.versioned("javascript/orderScript.js")"></script>
- @* <script charset="utf-8" type="text/javascript" src="@routes.HomeController.javascriptRoutes"></script> *@
+    @* <script charset="utf-8" type="text/javascript" src="@routes.HomeController.javascriptRoutes"></script> *@
 }

@@ -18,10 +18,10 @@ create table customers (
 drop table if exists addresses;
 create table addresses (
     id int primary key auto_increment,
-    customer_id int,
-    city varchar(64),
+    customer_id int not null,
+    city varchar(64) not null ,
     residential_complex varchar(64),
-    address varchar(128),
+    address varchar(128) not null ,
     -- Street address like вул. Володимирська 62
     entrance varchar(8),
     floor varchar(8),

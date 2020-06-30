@@ -2,7 +2,7 @@ package services
 
 import java.util.Date
 import java.text.SimpleDateFormat
-import models.{Address, Customer, PlayOrderForEditAndCreate}
+import models.{Address, Customer, OrderForEditAndCreate}
 import play.api.data.Form
 import play.api.mvc.MessagesRequestHeader
 import play.twirl.api.{Html, JavaScript}
@@ -123,22 +123,22 @@ object SimbaHTMLHelper {
   def stringToAddress(addressString: String): Address = {
     val a = addressString.split(",")
 
-    def searchInString(search: String): Option[String] = {
+    def searchForString(search: String): Option[String] = {
       val o = a.find(_.contains(search))
       if (o.isDefined) Option(o.head.replace(search, ""))
-      else null
+      else None
     }
-    def searchInInt(search: String): Option[Int] = {
+    def searchForInt(search: String): Option[Int] = {
       val o = a.find(_.contains(search))
       if (o.isDefined) Option(o.head.replace(search, "").toInt)
-      else null
+      else None
     }
 
-    Address(searchInInt("(id)"), searchInInt("(customerID)"), searchInString("(city)").head, searchInString("(residentialComplex)"), searchInString("(address)").head,
-      searchInString("(entrance)"),
-      searchInString("(floor)"),
-      searchInString("(flat)"),
-      searchInString("(notes)"))
+    Address(searchForInt("(id)"), searchForInt("(customerID)"), searchForString("(city)").head, searchForString("(residentialComplex)"), searchForString("(address)").head,
+      searchForString("(entrance)"),
+      searchForString("(floor)"),
+      searchForString("(flat)"),
+      searchForString("(notes)"))
   }
 
   def addressToString(a: Address): String = {

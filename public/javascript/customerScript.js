@@ -22,16 +22,14 @@ function encoderString(i) {
             return ""
         }
     }
-    return `(` +
-        checkForIds() +
+    return checkForIds() +
         getEncodeValueOrEmptyString(city, `(city)`, false) +
         getEncodeValueOrEmptyString(residentialComplex, `(residentialComplex)`, true) +
         getEncodeValueOrEmptyString(address, `(address)`, true) +
         getEncodeValueOrEmptyString(entrance, `(entrance)`, true) +
         getEncodeValueOrEmptyString(floor, `(floor)`, true) +
         getEncodeValueOrEmptyString(flat, `(flat)`, true) +
-        getEncodeValueOrEmptyString(notesForCourier, `(notes)`, true) +
-        `)`
+        getEncodeValueOrEmptyString(notesForCourier, `(notes)`, true)
 }
 function cleanAllInputs() {
     city.val("")
@@ -47,43 +45,39 @@ function getInputArrayByIndex(i) {
 }
 
 function addToAddressAndCleanInputs() {
-    function addRowToTable() {
-        let addresses = $(`#addresses`)
-        let isAddressesEmpty = addresses.val() === ''
-        function addRowToDisplay(isEmpty) {
-            function addToDisplay(rowIndex) {
-                function getTb(tbID, information) {
-                    return `<td id="${tbID}">`+ getValueOrDashIfEmpty(information) +`</td>`
-                }
-                function getInput(i, value) {
-                    return `<input id="addresses[${i}]" name="addresses[${i}]" value="${value}" style="display: none">`
-                }
-                let changeButton = `<button class="btn btn-info сol-auto" type="button" onclick="prepareToEdit('${rowIndex}')">Змінити</button>`
-                let deleteButton = `<button class="btn btn-danger сol-auto" type="button" onclick="deleteRow('${rowIndex}')">Видалити</button>`
-                let row = $(`<tr id='row-${rowIndex}'>`+
-                    getTb(`city-${rowIndex}`, city.val()) +
-                    getTb(`residentialComplex-${rowIndex}`, residentialComplex.val()) +
-                    getTb(`address-${rowIndex}`, address.val()) +
-                    getTb(`entrance-${rowIndex}`, entrance.val()) +
-                    getTb(`floor-${rowIndex}`, floor.val()) +
-                    getTb(`flat-${rowIndex}`, flat.val()) +
-                    getTb(`notesForCourier-${rowIndex}`, notesForCourier.val()) +
-                    getTb(`settings`, changeButton + deleteButton + getInput(rowIndex, encoderString(null))) +
-                    `</tr>`)
-                let tableBody = $("table tbody")
-                tableBody.append(row)
+    let addresses = $(`#addresses`)
+    let isAddressesEmpty = addresses.val() === ''
+    function addRowToDisplay(isEmpty) {
+        function addToDisplay(rowIndex) {
+            function getTb(tbID, information) {
+                return `<td id="${tbID}">`+ getValueOrDashIfEmpty(information) +`</td>`
             }
-
-            if (isEmpty) addToDisplay(0)
-            else {
-                let count = $('#addressTableBody').children('tr').length
-                addToDisplay(count)
+            function getInput(i, value) {
+                return `<input id="addresses[${i}]" name="addresses[${i}]" value="${value}" style="display: none">`
             }
+            let changeButton = `<button class="btn btn-info сol-auto" type="button" onclick="prepareToEdit('${rowIndex}')">Змінити</button>`
+            let deleteButton = `<button class="btn btn-danger сol-auto" type="button" onclick="deleteRow('${rowIndex}')">Видалити</button>`
+            let row = $(`<tr id='row-${rowIndex}'>`+
+                getTb(`city-${rowIndex}`, city.val()) +
+                getTb(`residentialComplex-${rowIndex}`, residentialComplex.val()) +
+                getTb(`address-${rowIndex}`, address.val()) +
+                getTb(`entrance-${rowIndex}`, entrance.val()) +
+                getTb(`floor-${rowIndex}`, floor.val()) +
+                getTb(`flat-${rowIndex}`, flat.val()) +
+                getTb(`notesForCourier-${rowIndex}`, notesForCourier.val()) +
+                getTb(`settings`, changeButton + deleteButton + getInput(rowIndex, encoderString(null))) +
+                `</tr>`)
+            let tableBody = $("table tbody")
+            tableBody.append(row)
         }
-        addRowToDisplay(isAddressesEmpty)
-    }
 
-    addRowToTable()
+        if (isEmpty) addToDisplay(0)
+        else {
+            let count = $('#addressTableBody').children('tr').length
+            addToDisplay(count)
+        }
+    }
+    addRowToDisplay(isAddressesEmpty)
     cleanAllInputs()
 }
 

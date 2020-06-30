@@ -38,22 +38,36 @@ class CustomerModel @Inject()(dS: DoobieStore) {
 
   def insert(c: CustomerForEditAndCreate): Boolean = {
     val customerWithID = (for {
-      _ <-
-        sql"""insert into customers
-           (first_name, last_name,
-           phone, phone_note, phone2, phone2_note,
-           city, address, flat, entrance, floor,
+      _ <- sql"""insert into customers
+            (first_name, last_name,
+            phone, phone_note, phone2, phone2_note,
            instagram, preferences, notes)
            values (${c.firstName}, ${c.lastName},
                 ${c.phone}, ${c.phoneNote}, ${c.phone2}, ${c.phoneNote2},
                 ${c.instagram},
                 ${c.preferences}, ${c.notes})""".update.run
-      id <- sql"select lastval()".query[Int].unique
+      id <- sql"select LAST_INSERT_ID()".query[Int].unique
       c <- sql"select * from customers where id = $id".query[Customer].unique
     } yield c)
       .transact(xa)
       .unsafeRunSync()
     insertAddresses(decodeAddressString(c.addresses), customerWithID.id.head)
+  }
+
+  def insertAddresses(list: List[Address], customerId: Int): Boolean = {
+    val connectionIO = insertAddressesReturnConnectionIOListOfInt(list, customerId)
+    connectionIO
+        .transact(xa)
+        .unsafeRunSync().forall(_ == 1)
+  }
+
+  private def insertAddressesReturnConnectionIOListOfInt(list: List[Address], customerId: Int): ConnectionIO[List[Int]] = {
+    list.traverse { a =>
+      sql"""insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, note_for_courier)
+            value (${customerId}, ${a.city}, ${a.residentialComplex}, ${a.address}, ${a.entrance}, ${a.floor}, ${a.flat}, ${a.notesForCourier})"""
+        .update
+        .run
+    }
   }
 
   def findByID(id: Int): CustomerForEditAndCreate = {
@@ -71,7 +85,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       encodeAddressesToString(getAllCustomersAddresses(c.id.head)), Option(null))
   }
 
-  def editCustomer(id: Int, c: CustomerForEditAndCreate): Boolean = {
+  def editCustomer(id: Int, c: CustomerForEditAndCreate): Boolean = { // TODO FIX bug with empty list
     sql"""update customers set first_name = ${c.firstName}, last_name = ${c.lastName},
          phone = ${c.phone}, phone_note = ${c.phoneNote},
          phone2 = ${c.phone2}, phone2_note = ${c.phoneNote2},
@@ -81,25 +95,12 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .update
       .run
       .transact(xa)
-      .unsafeRunSync() == 1 && editAddresses(decodeAddressString(c.addresses), c.addressesToDelete.getOrElse(List()), c.id.head)
-  }
-
-  def insertAddresses(list: List[Address], customerId: Int): Boolean = {
-    insertAddressesReturnConfectionIOListOfInt(list, customerId).transact(xa).unsafeRunSync().forall(_ == 1)
-  }
-
-  private def insertAddressesReturnConfectionIOListOfInt(list: List[Address], customerId: Int): ConnectionIO[List[Int]] = {
-    list.traverse { a =>
-      sql"""insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, note_for_courier)
-            value (customer_id = $customerId, city = ${a.city}, residential_complex = ${a.residentialComplex}, address = ${a.address}, entrance = ${a.entrance}, floor = ${a.floor}, flat = ${a.flat}, note_for_courier = ${a.notesForCourier})"""
-        .update
-        .run
-    }
+      .unsafeRunSync() == 1 && editAddresses(decodeAddressString(c.addresses), c.addressesToDelete.getOrElse(List()), id)
   }
 
   def editAddresses(list: List[Address], listToDelete: List[Int], customerId: Int): Boolean = {
-    def insertAddressesReturnConfectionIO(list: List[Address], customerId: Int): ConnectionIO[Int] = {
-      insertAddressesReturnConfectionIOListOfInt(list, customerId).map(_.sum)
+    def insertAddressesReturnConfectionIO(list: List[Address], customerId: Int): ConnectionIO[Int] = { // TODO Change to Edit not inset
+      insertAddressesReturnConnectionIOListOfInt(list, customerId).map(_.sum)
     }
 
     def deleteAddresses(list: List[Int]): ConnectionIO[Int] = {

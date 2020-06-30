@@ -2,6 +2,7 @@ create database simba
     character set utf8;
 use simba;
 drop table if exists customers;
+drop table if exists customers;
 create table customers (
     id int primary key auto_increment,
     first_name varchar(64) not null,
@@ -12,13 +13,6 @@ create table customers (
     phone2 varchar(16),
     phone2_note varchar(64),
 
-    city varchar(64),
-    -- Street address like вул. Володимирська 62
-    address varchar(128),
-    flat varchar(8),
-    entrance varchar(8),
-    floor tinyint,
-
     instagram varchar(64) unique,
 
     preferences varchar(255),
@@ -27,17 +21,18 @@ create table customers (
 
 drop table if exists addresses;
 create table addresses (
-    id int primary key auto_increment,
-    customer_id int,
-    city varchar(64),
+    id int(128) primary key auto_increment,
+    customer_id int(128) not null,
+    city varchar(64) not null ,
     residential_complex varchar(64),
-    address varchar(128),
+    address varchar(128) not null ,
     -- Street address like вул. Володимирська 62
     entrance varchar(8),
-    floor tinyint,
+    floor varchar(8),
     flat varchar(8),
     note_for_courier text
 );
+
 drop table if exists ingredients;
 create table ingredients (
     id int primary key auto_increment,

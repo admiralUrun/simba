@@ -1,5 +1,5 @@
 @import models.OrderMenu
-@(oF: Form[PlayOrderForEditAndCreate], menus: List[OrderMenu])(implicit requestHeader: MessagesRequestHeader)
+@(oF: Form[OrderForEditAndCreate], menus: List[OrderMenu])(implicit requestHeader: MessagesRequestHeader)
 
 @createOrEditOrderTemplate("Створити нове замовлення",
     routes.OrderController.createOrder,

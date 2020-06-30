@@ -18,11 +18,11 @@ class OrderModel @Inject()(dS: DoobieStore) {
       .unsafeRunSync.groupBy(_.deliveryDay)
   }
 
-  def insert(o: PlayOrderForEditAndCreate): Boolean = {
+  def insert(o: OrderForEditAndCreate): Boolean = {
     ???
   }
 
-  def edit(o: PlayOrderForEditAndCreate): Boolean = {
+  def edit(o: OrderForEditAndCreate): Boolean = {
     ???
   }
 
@@ -80,25 +80,25 @@ case class Order(id: Option[Int],
 
 case class Recipe(id: Option[Int], name:String)
 
-case class PlayOrderForDisplay(id: Option[Int],
-                               customer: Customer,
-                               address: Address,
-                               orderDay: Date, deliveryDay: Date,
-                               deliverFrom: LocalTime, deliverTo: LocalTime,
-                               inOrder:String,
-                               total: Int,
-                               offlineDelivery: Boolean, deliveryOnMonday: Boolean,
-                               paid: Boolean, delivered: Boolean, note: Option[String])
+case class OrderForDisplay(id: Option[Int],
+                           customer: Customer,
+                           address: Address,
+                           orderDay: Date, deliveryDay: Date,
+                           deliverFrom: LocalTime, deliverTo: LocalTime,
+                           inOrder:String,
+                           total: Int,
+                           offlineDelivery: Boolean, deliveryOnMonday: Boolean,
+                           paid: Boolean, delivered: Boolean, note: Option[String])
 
-case class PlayOrderForEditAndCreate(id: Option[Int],
-                                     customerID: Int,
-                                     addressId: Int,
-                                     orderDay: Date, deliveryDay: Date,
-                                     deliverFrom: String, deliverTo: String,
-                                     inOrder: String,
-                                     total: Int,
-                                     offlineDelivery: Boolean, deliveryOnMonday: Boolean,
-                                     paid: Boolean, delivered: Boolean, note: Option[String])
+case class OrderForEditAndCreate(id: Option[Int],
+                                 customerID: Int,
+                                 addressId: Int,
+                                 orderDay: Date, deliveryDay: Date,
+                                 deliverFrom: String, deliverTo: String,
+                                 inOrder: String,
+                                 total: Int,
+                                 offlineDelivery: Boolean, deliveryOnMonday: Boolean,
+                                 paid: Boolean, delivered: Boolean, note: Option[String])
 
 case class OrderMenuItem(name: String, value: String, cost: Int)
 case class OrderMenu(title: String, menuItems: List[OrderMenuItem])
