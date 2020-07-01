@@ -16,7 +16,7 @@ object SimbaHTMLHelper {
   }
 
   def getStringOrDash(s: Option[String]): String = {
-    if (s == null) "-"
+    if (s.isEmpty) "-"
     else s.getOrElse("-")
   }
 
@@ -145,10 +145,11 @@ object SimbaHTMLHelper {
     def getString(s:Any): String = {
       s match {
         case Some(value) => value.toString
+        case None => ""
         case _ => s.toString
       }
     }
-    val s = List("(id)", "(customerID)", "(city)", "(residentialComplex)", "(address)", "(entrance)", "(floor)", "(flat)", "(notes)").zip(a.productIterator.toList).filter(t => t._2 != None && t._2 != null)
+    val s = List("(id)", "(customerID)", "(city)", "(residentialComplex)", "(address)", "(entrance)", "(floor)", "(flat)", "(notes)").zip(a.productIterator.toList).filter(_._2 != None)
       .map { t =>
         getString(t._2) + t._1
       }.mkString(",")

@@ -95,17 +95,18 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .update
       .run
       .transact(xa)
-      .unsafeRunSync() == 1 && editAddresses(decodeAddressString(c.addresses), c.addressesToDelete.getOrElse(List()), id)
+      .unsafeRunSync() == 1 &&
+      editAddresses(decodeAddressString(c.addresses), c.addressesToDelete.getOrElse(List()), id)
   }
 
   def editAddresses(list: List[Address], listToDelete: List[Int], customerId: Int): Boolean = {
-    def insertAddressesReturnConfectionIO(list: List[Address], customerId: Int): ConnectionIO[Int] = { // TODO Change to Edit not inset
+    def insertAddressesReturnConfectionIO(list: List[Address], customerId: Int): ConnectionIO[Int] = {
       insertAddressesReturnConnectionIOListOfInt(list, customerId).map(_.sum)
     }
 
     def deleteAddresses(list: List[Int]): ConnectionIO[Int] = {
       list.traverse { id =>
-        sql"""delete addresses where id = $id""".update.run
+        sql"""delete from addresses where id = $id""".update.run
       }.map(_.sum)
     }
 
@@ -117,17 +118,17 @@ class CustomerModel @Inject()(dS: DoobieStore) {
                 entrance = ${a.entrance},
                  floor = ${a.floor},
                   flat = ${a.flat},
-                  note_for_courier = ${a.notesForCourier} where id = ${a.id}, customer_id = $customerId""".update.run
+                  note_for_courier = ${a.notesForCourier} where id = ${a.id} and customer_id = $customerId""".update.run
       }.map(_.sum)
     }
 
-    val customerAddressesInDB = sql""""select * from addresses where customer_id = $customerId"""".query[Address].to[List].transact(xa).unsafeRunSync()
+    val customerAddressesInDB = sql"""select * from addresses where customer_id = $customerId""".query[Address].to[List].transact(xa).unsafeRunSync()
 
     if (customerAddressesInDB.isEmpty) insertAddresses(list, customerId)
     else {
       (deleteAddresses(listToDelete) *>
-        insertAddressesReturnConfectionIO(list.filter(p = a => a.id == null && a.customerId == null), customerId) *>
-        editAddresses(list.filter(a => a.id != null && a.customerId != null), customerId)
+        insertAddressesReturnConfectionIO(list.filter(p = a => a.id.isEmpty && a.customerId.isEmpty), customerId)  *>
+         editAddresses(list.filter(a => a.id.isDefined && a.customerId.isDefined), customerId)
         ).transact(xa)
         .unsafeRunSync() >= list.length
     }
