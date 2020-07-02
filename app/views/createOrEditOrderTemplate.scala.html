@@ -34,7 +34,7 @@
     <li class="list-group-item" id="element@index"> @textCost._1 <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder('@index', '@textCost._2')"><span aria-hidden="true">&times;</span></button></li>
 }
 
-@getCustomerSearch() = {
+@getCustomerSearch = {
     <div id="customerInformation" class="row">
         <form>
             <div id="searchDIV" class="input-group col-md"  style="display: ">
@@ -64,7 +64,7 @@
 }
 @main(title) {
     <div class="container-fluid">
-        @getCustomerSearch()
+        @getCustomerSearch
     </div>
     @form(formCall) {
         <fieldset>
