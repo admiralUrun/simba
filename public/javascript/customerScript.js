@@ -1,3 +1,7 @@
+jQuery.getValueOrDashIfStringIsEmpty = function (str) {
+    if (str === "") return `-` else return str
+}
+
 let city = $(`#city`)
 let residentialComplex = $(`#residentialComplex`)
 let address = $(`#address`)
@@ -5,6 +9,7 @@ let entrance = $(`#entrance`)
 let floor = $(`#floor`)
 let flat = $(`#flat`)
 let notesForCourier = $(`#notesForCourier`)
+let tableBody = $("table tbody")
 
 function encoderString(i) {
     function getEncodeValueOrEmptyString(selector, nameForEncoding, withComaAtStart) {
@@ -31,6 +36,7 @@ function encoderString(i) {
         getEncodeValueOrEmptyString(flat, `(flat)`, true) +
         getEncodeValueOrEmptyString(notesForCourier, `(notes)`, true)
 }
+
 function cleanAllInputs() {
     city.val("")
     residentialComplex.val("")
@@ -40,6 +46,7 @@ function cleanAllInputs() {
     flat.val("")
     notesForCourier.val("")
 }
+
 function getInputArrayByIndex(i) {
     return $(`input[id="addresses[${i}]"]`)
 }
@@ -50,24 +57,23 @@ function addToAddressAndCleanInputs() {
     function addRowToDisplay(isEmpty) {
         function addToDisplay(rowIndex) {
             function getTb(tbID, information) {
-                return `<td id="${tbID}">`+ getValueOrDashIfEmpty(information) +`</td>`
+                return `<td id="${tbID}">${$.getValueOrDashIfStringIsEmpty(information)}</td>`
             }
             function getInput(i, value) {
                 return `<input id="addresses[${i}]" name="addresses[${i}]" value="${value}" style="display: none">`
             }
             let changeButton = `<button class="btn btn-info сol-auto" type="button" onclick="prepareToEdit('${rowIndex}')">Змінити</button>`
             let deleteButton = `<button class="btn btn-danger сol-auto" type="button" onclick="deleteRow('${rowIndex}')">Видалити</button>`
-            let row = $(`<tr id='row-${rowIndex}'>`+
-                getTb(`city-${rowIndex}`, city.val()) +
-                getTb(`residentialComplex-${rowIndex}`, residentialComplex.val()) +
-                getTb(`address-${rowIndex}`, address.val()) +
-                getTb(`entrance-${rowIndex}`, entrance.val()) +
-                getTb(`floor-${rowIndex}`, floor.val()) +
-                getTb(`flat-${rowIndex}`, flat.val()) +
-                getTb(`notesForCourier-${rowIndex}`, notesForCourier.val()) +
-                getTb(`settings`, changeButton + deleteButton + getInput(rowIndex, encoderString(null))) +
-                `</tr>`)
-            let tableBody = $("table tbody")
+            let row = $(`<tr id='row-${rowIndex}'>
+                ${getTb(`city-${rowIndex}`, city.val())}
+                ${getTb(`residentialComplex-${rowIndex}`, residentialComplex.val())}
+                ${getTb(`address-${rowIndex}`, address.val())}
+                ${getTb(`entrance-${rowIndex}`, entrance.val())}
+                ${getTb(`floor-${rowIndex}`, floor.val())}
+                ${getTb(`flat-${rowIndex}`, flat.val())}
+                ${getTb(`notesForCourier-${rowIndex}`, notesForCourier.val())}
+                ${getTb(`settings`, changeButton + deleteButton + getInput(rowIndex, encoderString(null)))}
+                </tr>`)
             tableBody.append(row)
         }
 
@@ -79,11 +85,6 @@ function addToAddressAndCleanInputs() {
     }
     addRowToDisplay(isAddressesEmpty)
     cleanAllInputs()
-}
-
-function getValueOrDashIfEmpty(object) {
-    if (object === "") return `-`
-    else return object
 }
 
 function deleteRow(indexToRemove) {
@@ -121,13 +122,13 @@ function changeButton(text, action, i) {
 
 function editRow(i) {
     function changeRow(i) {
-        $(`#city-${i}`).text(getValueOrDashIfEmpty(city.val()))
-        $(`#residentialComplex-${i}`).text(getValueOrDashIfEmpty(residentialComplex.val()))
-        $(`#address-${i}`).text(getValueOrDashIfEmpty(address.val()))
-        $(`#entrance-${i}`).text(getValueOrDashIfEmpty(entrance.val()))
-        $(`#floor-${i}`).text(getValueOrDashIfEmpty(floor.val()))
-        $(`#flat-${i}`).text(getValueOrDashIfEmpty(flat.val()))
-        $(`#notes-${i}`).text(getValueOrDashIfEmpty(notesForCourier.val()))
+        $(`#city-${i}`).text($.getValueOrDashIfStringIsEmpty(city.val()))
+        $(`#residentialComplex-${i}`).text($.getValueOrDashIfStringIsEmpty(residentialComplex.val()))
+        $(`#address-${i}`).text($.getValueOrDashIfStringIsEmpty(address.val()))
+        $(`#entrance-${i}`).text($.getValueOrDashIfStringIsEmpty(entrance.val()))
+        $(`#floor-${i}`).text($.getValueOrDashIfStringIsEmpty(floor.val()))
+        $(`#flat-${i}`).text($.getValueOrDashIfStringIsEmpty(flat.val()))
+        $(`#notes-${i}`).text($.getValueOrDashIfStringIsEmpty(notesForCourier.val()))
     }
 
     console.log(encoderString(i))
