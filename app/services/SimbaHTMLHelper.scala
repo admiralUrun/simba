@@ -2,7 +2,7 @@ package services
 
 import java.util.Date
 import java.text.SimpleDateFormat
-import models.{Address}
+import models.Address
 import play.api.data.Form
 import play.api.mvc.MessagesRequestHeader
 import play.twirl.api.{Html, JavaScript}
@@ -32,25 +32,25 @@ object SimbaHTMLHelper {
   }
 
   def createInputForForm[T](form: Form[T], keyInForm: String, label: String, layoutClass: String = "", inputLimit: Int, errorMessage: String = ""): Html = {
-    def createInputForForm[T](withError: Boolean, keyInForm: String, label: String, layoutClass: String = "", inputLimit: Int, errorMessage: String ): SHTML = {
+    def createInputForForm[T](form: Form[T],withError: Boolean, keyInForm: String, label: String, layoutClass: String = "", inputLimit: Int, errorMessage: String ): SHTML = {
       if(withError) {
         getSHtmlInDiv("", layoutClass, {
           getSHtmlInDiv(layoutClass = "form-group " + layoutClass,
             content = {
-              SHTML(s"<label class=${inDQ("control-label")} for= ${inDQ(keyInForm)}> $label </label>") +
-                SHTML(s"<input id=${inDQ(keyInForm)} name=${inDQ(keyInForm)} maxlength=${inDQ(inputLimit.toString)} type=${inDQ("text")} class=${inDQ("form-control " + "is-invalid")}>") +
+              SHTML(s"<label class=${inDQ("control-label")} for=${inDQ(keyInForm)}> $label </label>") +
+                SHTML(s"<input id=${inDQ(keyInForm)} name=${inDQ(keyInForm)} value=${inDQ(getValueFromForm(keyInForm, form).getOrElse(""))}   maxlength=${inDQ(inputLimit.toString)} type=${inDQ("text")} class=${inDQ("form-control " + "is-invalid")}>") +
               getSHtmlInDiv("", "invalid-feedback", SHTML(errorMessage))
             })
         })
       } else {
         getSHtmlInDiv(layoutClass = "form-group " + layoutClass,
           content = {
-            SHTML(s"<label class=${inDQ("control-label")} for= ${inDQ(keyInForm)}> $label </label>") +
-              SHTML(s"<input id=${inDQ(keyInForm)} name=${inDQ(keyInForm)} maxlength=${inDQ(inputLimit.toString)} type=${inDQ("text")} class=${inDQ("form-control")}>")
+            SHTML(s"<label class=${inDQ("control-label")} for=${inDQ(keyInForm)}> $label </label>") +
+              SHTML(s"<input id=${inDQ(keyInForm)} name=${inDQ(keyInForm)} value=${inDQ(getValueFromForm(keyInForm, form).getOrElse(""))} maxlength=${inDQ(inputLimit.toString)} type=${inDQ("text")} class=${inDQ("form-control")}>")
           })
       }
     }
-    createInputForForm(form.error(keyInForm).isDefined, keyInForm, label, layoutClass, inputLimit, errorMessage).toPlayHTML
+    createInputForForm(form, form.error(keyInForm).isDefined, keyInForm, label, layoutClass, inputLimit, errorMessage).toPlayHTML
   }
 
   def createTextInputWithoutForm(inputId: String, label: String, layoutClass: String = "", inputLimit: Int): Html = {
