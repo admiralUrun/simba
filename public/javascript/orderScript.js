@@ -11,18 +11,21 @@ jQuery.getValeOrEmptyString = function(s) {
     if ($.isDefended(s)) return ' ' + s;
     else return ''
 }
-jQuery.selectorToHidden = function (selector) {
-    $(selector).hide()
+jQuery.hideSearchDiv = function () {
+    $("#searchDIV").hide()
 }
 jQuery.insertData = function (selector, key, value) {
     $(selector).data(key, value)
 }
 
 let customerInfoDiv = $("#customerInformation")
+let total = $('#total')
+let totalText = $('#totalText')
+let order = $('#inOrder')
 function addToOrder(item, title, cost) {
     function addElementForDisplay(isEmpty, text, cost) {
         function addElementForDisplay(index) {
-            $(`<li class="list-group-item" id="element${index}">${text} <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder(${index}, ${cost})"><span aria-hidden="true">&times;</span></button></li>`).appendTo('ul')
+            $(`<li class="list-group-item" id="element${index}">${text}<button type="button" class="close" aria-label="Close" onclick="deleteFromOrder(${index}, ${cost})"><span aria-hidden="true">&times;</span></button></li>`).appendTo('ul')
         }
 
         if (isEmpty) {
@@ -32,7 +35,6 @@ function addToOrder(item, title, cost) {
         }
     }
 
-    let order = $('#inOrder')
     let inOrder = order.val()
     let isValueEmpty = inOrder === ''
     if (isValueEmpty) {
@@ -46,16 +48,11 @@ function addToOrder(item, title, cost) {
 }
 
 function changeTotal(cost) {
-    let total = $('#total')
-    let totalText = $('#totalText')
     total.val(Number(total.val()) + cost)
     totalText.html(total.val() + ' ₴')
 }
 
 function deleteFromOrder(indexToRemove, cost) {
-    let total = $('#total')
-    let totalText = $('#totalText')
-
     function getNewValueForInput(array) {
         let result = ''
         for (let i = 0; i < array.length; i++) {
@@ -69,7 +66,6 @@ function deleteFromOrder(indexToRemove, cost) {
         return result;
     }
 
-    let order = $('#inOrder')
     if (order.val().indexOf(',') > 1) {
         order.val(getNewValueForInput(order.val().split(',')))
         $(`#element${indexToRemove}`).remove()
@@ -81,6 +77,9 @@ function deleteFromOrder(indexToRemove, cost) {
     totalText.html(total.val() + '₴')
 }
 
+/**
+ * Used inside createOrEditOrderTemplate
+ * */
 function changeButton(trueLabel, falseLabel, inputID, cost) {
     function getNewClassForButton() {
         let classArray = button.attr('class').split(" ")
@@ -108,32 +107,26 @@ function changeButton(trueLabel, falseLabel, inputID, cost) {
 
 function takeCustomerJSONAddToUI(JSONArray) {
     function addDropItem(customerAddresses) {
-        function addDropItem() {
-            function gettingDropDownItems(array) {
-                let dropDowns = array.map(function (address) {
-                    return `<a class="dropdown-item" onclick="setAddress( '${address.id}')"
-                        >${address.city} ${address.residentialComplex} ${address.address} ${address.entrance} ${address.floor} ${address.flat}</a>`
-                })
-                return dropDowns.join(`\n`)
-            }
+        function addDropItem(customerAddresses) {
             if (customerAddresses.addresses.length > 1) {
-                $(`<a id="customer${customerAddresses.customer.id}" class="dropdown-item" href="#"
-                    onclick="setCustomerCreateDropDownFormAddresses('${customerAddresses.customer.id}')"
+                $(`<a id="customer${customerAddresses.customer.id}" class="dropdown-item"
+                    onclick="setCustomerAddAddressDropdown('${customerAddresses.customer.id}')" href="#"
                     >${customerAddresses.customer.firstName} ${customerAddresses.customer.phone} ${$.getValeOrEmptyString(customerAddresses.customer.instagram)}
                     </a>`
                 ).appendTo($("#searchMenu"))
             } else if (customerAddresses.addresses.length !== 0) {
-                $(`<a id="customer${customerAddresses.customer.id}" class="dropdown-item" href="#"
-                    onclick="setCustomerAndAddress('${customerAddresses.customer.id}', '${customerAddresses.addresses[0].id}')"
+                $(`<a id="customer${customerAddresses.customer.id}" class="dropdown-item" 
+                    onclick="setCustomerAndAddress('${customerAddresses.customer.id}')" href="#"
                     >${customerAddresses.customer.firstName} ${customerAddresses.customer.phone} ${$.getValeOrEmptyString(customerAddresses.customer.instagram)}
                     </a>`
                 ).appendTo($("#searchMenu"))
             } else {}
+
             $(`#customer${customerAddresses.customer.id}`).data('customerJSON', customerAddresses)
         }
 
         if (!$.exists(`#customer${customerAddresses.customer.id}`)) {
-            addDropItem()
+            addDropItem(customerAddresses)
         } else {}
     }
 
@@ -150,8 +143,7 @@ function displayCustomer(customer) {
         }
         return `Телефони:` + customer.phone + ` ` + $.getValeOrEmptyString(customer.phoneNote) + secondPhone(customer.phone2, customer.phoneNote2)
     }
-    $(`
-          <div id="customer" class="col-auto">
+    $(`<div id="customer" class="col-auto">
             <dl class="col-auto">
                 ${descriptionListElement('Ім\'я', customer.firstName + ' ' + $.getValeOrEmptyString(customer.lastName))}
                 ${descriptionListElement('Телефони', getPhones(customer))}
@@ -161,13 +153,11 @@ function displayCustomer(customer) {
            <div class="col">
                 <button id="editCustomerButton" class="btn btn-success" onclick="editCustomerInOrder()">Знайти іншого</button>
            </div>
-           </div>
-        `).appendTo(customerInfoDiv)
+           </div>`).appendTo(customerInfoDiv)
 }
 
 function displayAddress(address, thereIsOnlyOneAddress) {
-    $(`        
-          <div id="address" class="col-auto">
+    $(`<div id="address" class="col-auto">
             <dl class="col-auto">
                 <div class="row">
                     ${descriptionListElement("Місто", address.city, true)}
@@ -181,23 +171,20 @@ function displayAddress(address, thereIsOnlyOneAddress) {
                 </div>
             ${descriptionListElement('Нотатка', address.notesForCourier)}
           </dl>
-          </div>
-        `).appendTo(customerInfoDiv)
+          </div>`).appendTo(customerInfoDiv)
 }
 
-function setCustomerCreateDropDownFormAddresses(id) {
+function setCustomerAddAddressDropdown(id) {
     function setCustomerCreateDropDownFormAddresses(customerAddresses) {
         function createDropDownForAddresses(addresses) {
-            $(`
-           <div id="addresses" class="col-auto btn-group dropright">
+            $(`<div id="addresses" class="col-auto btn-group dropright">
             <div>
                 <button type="button" class="btn btn-info start dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Адреси 
                 </button>
             <div id="customer${customerAddresses.id}Addresses" class="dropdown-menu"></div>
             </div>
-            </div>`
-            ).appendTo($('#customerInformation'))
+            </div>`).appendTo($('#customerInformation'))
             addresses.forEach( function (address) {
                 $(`<a id="address${address.id}" class="dropdown-item" onclick="setAddress(null, false, '${address.id}')">
                             ${address.city} ${$.getValeOrEmptyString(address.residentialComplex)}
@@ -205,11 +192,10 @@ function setCustomerCreateDropDownFormAddresses(id) {
                             ${$.getValeOrEmptyString(address.flat)}
                         </a>`).appendTo($(`#customer${customerAddresses.id}Addresses`))
                 $(`#address${address.id}`).data(`address`, address)
-                }
-            )
+                })
         }
 
-        $.selectorToHidden("#searchDIV")
+        $.hideSearchDiv()
         setCustomer(customerAddresses.customer)
         createDropDownForAddresses(customerAddresses.addresses)
     }
@@ -232,7 +218,7 @@ function setCustomer(customer) {
     displayCustomer(customer)
 }
 
-function setCustomerAndAddress(customerID, addressID) {
+function setCustomerAndAddress(customerID) {
     function setCustomerForOrder(customerAddress) {
         function addCustomerAddressToOrderAndToUI(customer, address) {
             setCustomer(customer)
@@ -240,7 +226,7 @@ function setCustomerAndAddress(customerID, addressID) {
         }
 
         addCustomerAddressToOrderAndToUI(customerAddress.customer, customerAddress.addresses[0])
-        $.selectorToHidden("#searchDIV")
+        $.hideSearchDiv()
     }
 
     let json = $(`#customer${customerID}`).data('customerJSON')
@@ -250,36 +236,24 @@ function setCustomerAndAddress(customerID, addressID) {
 function descriptionListElement(head, content, needDivWithCol) {
     if($.isEmpty(head) || $.isEmpty(content) || head === '' || content === '') return ''
     else {
-        if(needDivWithCol) {
-            return `
-                <div class="col">
-                <dt>
-                    ${head}
-                </dt>
-                <dd>
-                    ${content}
-                </dd>
-                </div>
-            `
-        } else {
-            return`
-                <dt>
-                    ${head}
-                </dt>
-                <dd>
-                    ${content}
-                </dd>
-            `
-        }
+        if (needDivWithCol) return `<div class="col">
+                    <dt>${head}</dt>
+                    <dd>${content}</dd>
+                </div>`
+        else return`
+                <dt>${head}</dt>
+                <dd>${content}</dd>`
     }
 }
 
 function editCustomerInOrder() {
     $(`#customersID`).val("")
+
     $(`#customer`).remove()
     $('#address').remove()
     $('#addresses').remove()
     $(`#editCustomerButton`).remove()
+
     $("#searchDIV").show()
 }
 
@@ -288,6 +262,9 @@ function cleanDropMenu() {
     $(`<span class="dropdown-header">Тут можна знайти Клієнта</span>`).appendTo($("#searchMenu"))
 }
 
+/**
+ * Used inside createOrEditOrderTemplate
+ * */
 function setPayment(payment) {
     $(`<h5 id="paymentView">Спосіб оплати: ${payment}</h5>
         <button id="paymentEdit" class="btn btn-success"  onclick="removePayment()">Змінити</button>`).appendTo($('#payment'))
@@ -298,6 +275,7 @@ function setPayment(payment) {
 function removePayment() {
     $('#paymentView').remove()
     $('#paymentEdit').remove()
+
     $('#paymentMenu').show()
     $('#paymentInput').val('')
 }
