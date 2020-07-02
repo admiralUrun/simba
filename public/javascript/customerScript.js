@@ -1,5 +1,5 @@
 jQuery.getValueOrDashIfStringIsEmpty = function (str) {
-    if (str === "") return `-` else return str
+    if (str === "") return `-`; else return str;
 }
 
 let city = $(`#city`)

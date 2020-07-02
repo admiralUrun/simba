@@ -61,15 +61,6 @@ class CustomerModel @Inject()(dS: DoobieStore) {
         .unsafeRunSync().forall(_ == 1)
   }
 
-  private def insertAddressesReturnConnectionIOListOfInt(list: List[Address], customerId: Int): ConnectionIO[List[Int]] = {
-    list.traverse { a =>
-      sql"""insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, note_for_courier)
-            value (${customerId}, ${a.city}, ${a.residentialComplex}, ${a.address}, ${a.entrance}, ${a.floor}, ${a.flat}, ${a.notesForCourier})"""
-        .update
-        .run
-    }
-  }
-
   def findByID(id: Int): CustomerForEditAndCreate = {
     val c = sql"select * from customers where id = $id"
       .query[Customer]
@@ -176,6 +167,14 @@ class CustomerModel @Inject()(dS: DoobieStore) {
     Json.toJson(getAllCustomerTableRowsWhere(search).map(c => CustomerAddressesToJson(c, getAllCustomersAddresses(c.id.head))))
   }
 
+  private def insertAddressesReturnConnectionIOListOfInt(list: List[Address], customerId: Int): ConnectionIO[List[Int]] = {
+    list.traverse { a =>
+      sql"""insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, note_for_courier)
+            value (${customerId}, ${a.city}, ${a.residentialComplex}, ${a.address}, ${a.entrance}, ${a.floor}, ${a.flat}, ${a.notesForCourier})"""
+        .update
+        .run
+    }
+  }
 
   private def decodeAddressString(a: List[String]): List[Address] = {
     a.map(stringToAddress)

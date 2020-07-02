@@ -4,7 +4,7 @@ import play.twirl.api.Html
 class SHTML(text: String) {
 
   def toPlayHTML: Html = Html(text)
-  def += (shtml: SHTML): SHTML = {
+  def + (shtml: SHTML): SHTML = {
      new SHTML (text + "\n" + shtml.getText)
   }
   private def getText: String = text

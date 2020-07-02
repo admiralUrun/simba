@@ -7,11 +7,11 @@
         submitCall: Call = routes.CustomerController.toCustomersListPage(""),
         isCreate: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
 
-@creteAnInput(keyInForm: String, label: String, layOutClass: String = "", showError: Boolean = false) = {
+@creteAnInput(keyInForm: String, label: String, limit: Int, layOutClass: String = "", showError: Boolean = false) = {
 @if(showError) {
-    @inputText(cF(keyInForm), '_label -> label, '_help -> "", '_error -> "", '_class -> layOutClass)
+    @inputText(cF(keyInForm), '_label -> label, Symbol("maxlength") -> limit, '_help -> "", '_error -> "", '_class -> layOutClass)
 } else {
-    @inputText(cF(keyInForm), '_label -> label, '_help -> "", '_class -> layOutClass, Symbol("class") -> "")
+    @inputText(cF(keyInForm), '_label -> label, Symbol("maxlength") -> limit, '_help -> "", '_class -> layOutClass, Symbol("class") -> "")
 }
 }
 
@@ -55,16 +55,16 @@
 @addressInput() = {
     <form>
         <div class="row">
-            @createTextInputWithoutForm("city", "Місто*", "col")
-            @createTextInputWithoutForm("residentialComplex", "ЖК", "col")
+            @createTextInputWithoutForm("city", "Місто*", "col", 64)
+            @createTextInputWithoutForm("residentialComplex", "ЖК", "col", 64)
         </div>
         <div class="row">
-            @createTextInputWithoutForm("address", "Адреса*", "col")
+            @createTextInputWithoutForm("address", "Адреса*", "col", 128)
         </div>
         <div class="row">
-            @createTextInputWithoutForm("entrance", "Під'їзд", "col")
-            @createTextInputWithoutForm("floor", "Поверх", "col")
-            @createTextInputWithoutForm("flat", "Квартира", "col")
+            @createTextInputWithoutForm("entrance", "Під'їзд", "col", 8)
+            @createTextInputWithoutForm("floor", "Поверх", "col", 8)
+            @createTextInputWithoutForm("flat", "Квартира", "col", 8)
         </div>
         <div class="row">
             @createTextArea("notesForCourier", "Нотатка для курьєра", layoutClass = "col")
@@ -82,20 +82,20 @@
             <div class="row">
                 <div class="col-4">
                     <div class="container-fluid row">
-                        @creteAnInput("firstName", "Ім'я *", "col1", showError("firstName", cF))
-                        @creteAnInput("lastName", "Прізвище", "offset col-auto")
+                        @createInputForForm(cF, "firstName", "Ім'я *", "colFirst", 128, "Ім'я обов'язкове")
+                        @createInputForForm(cF, "lastName", "Прізвище", "offset col-auto", 128)
                     </div>
 
                     <div class="container-fluid row">
-                        @creteAnInput("phone", "Телефон *", "colFirst", showError("phone", cF))
-                        @creteAnInput("phoneNote", "Нотатка Телефону", "offset col-auto")
+                        @createInputForForm(cF, "phone", "Телефон *", "colFirst", 16, "Телефон обов'язковий")
+                        @createInputForForm(cF, "phoneNote", "Нотатка Телефону" , "offset col-auto", 64)
                     </div>
 
                     <div class="container-fluid row">
-                        @creteAnInput("phone2", "Додатковий Телефон", "colFirst")
-                        @creteAnInput("phoneNote2", "Нотатка Дод. Телефону", "offset col-auto")
+                        @createInputForForm(cF, "phone2", "Додатковий Телефон", "colFirst", 16)
+                        @createInputForForm(cF, "phoneNote2", "Нотатка Дод. Телефону", "offset col-auto", 64)
                     </div>
-                    @creteAnInput("instagram", "Instagram")
+                    @createInputForForm(cF, "instagram", "Instagram", "", 64)
                 </div>
                 <div class="col-7">
                     @createTextArea("preferences", "Надає перевагу", inTextArea = if(cF.value.isDefined) cF.value.head.preferences else Option(""))
