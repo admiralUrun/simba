@@ -5,9 +5,9 @@
 
     @getDateRow(d: Date) = {
         <tr>
-            <tb>
+            <td>
                 <h4>@formattingDateForDisplay(d)</h4>
-            </tb>
+            </td>
         </tr>
     }
 
@@ -51,16 +51,16 @@
                 @getDateRow(t._1)
               @t._2.map{ o =>
                   <tr>
-                      <tb>@o.id</tb>
+                      <td>@o.id</td>
                       <td>@getCustomerDataForView(o.customer)</td>
                       <td>@getAddressForView(o.address)</td>
-                      <tb>@formattingDateForDisplay(o.orderDay)</tb>
-                      <tb>@formattingDateForDisplay(o.deliveryDay)</tb>
-                      <tb>@o.inOrder</tb>
-                      <tb>@o.total</tb>
-                      <tb>@formatBoolean(o.paid, "Оплаченно", "Не оплаченно")</tb>
-                      <tb>@formatBoolean(o.delivered, "Доставленно", "Не Доставленно")</tb>
-                      <tb>@o.note</tb>
+                      <td>@formattingDateForDisplay(o.orderDay)</td>
+                      <td>@formattingDateForDisplay(o.deliveryDay)</td>
+                      <td>@o.inOrder</td>
+                      <td>@o.total</td>
+                      <td>@formatBoolean(o.paid, "Оплаченно", "Не оплаченно")</td>
+                      <td>@formatBoolean(o.delivered, "Доставленно", "Не Доставленно")</td>
+                      <td>@o.note</td>
                   </tr>
               }
             }
