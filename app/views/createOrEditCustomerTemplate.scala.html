@@ -145,8 +145,9 @@
         <script>
             $("input").keypress(function(e) {
                 if (e.which === 13) {
-                let index = $(`input[type="text"]`).index(this);
-                $(`input[type="text"]`).eq(index + 1).focus();
+                let inputSelector = `input[type="text"]`;
+                let index = $(inputSelector).index(this);
+                $(inputSelector).eq(index + 1).focus();
                 e.preventDefault();
                 }
             });
