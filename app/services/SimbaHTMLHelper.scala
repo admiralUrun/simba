@@ -32,7 +32,7 @@ object SimbaHTMLHelper {
   }
 
   def createInputForForm[T](form: Form[T], keyInForm: String, label: String, layoutClass: String = "", inputLimit: Int, errorMessage: String = ""): Html = {
-    def createInputForForm[T](form: Form[T],withError: Boolean, keyInForm: String, label: String, layoutClass: String = "", inputLimit: Int, errorMessage: String ): SHTML = {
+    def createInputForForm(form: Form[T],withError: Boolean, keyInForm: String, label: String, layoutClass: String = "", inputLimit: Int, errorMessage: String ): SHTML = {
       if(withError) {
         getSHtmlInDiv("", layoutClass, {
           getSHtmlInDiv(layoutClass = "form-group " + layoutClass,

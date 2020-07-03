@@ -7,120 +7,149 @@
         submitCall: Call = routes.CustomerController.toCustomersListPage(""),
         isCreate: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
 
-@creteAnInput(keyInForm: String, label: String, limit: Int, layOutClass: String = "", showError: Boolean = false) = {
-@if(showError) {
-    @inputText(cF(keyInForm), '_label -> label, Symbol("maxlength") -> limit, '_help -> "", '_error -> "", '_class -> layOutClass)
-} else {
-    @inputText(cF(keyInForm), '_label -> label, Symbol("maxlength") -> limit, '_help -> "", '_class -> layOutClass, Symbol("class") -> "")
-}
-}
+    @creteAnInput(keyInForm: String, label: String, limit: Int, layOutClass: String = "", showError: Boolean = false) = {
+    @if(showError) {
+        @inputText(cF(keyInForm), '_label -> label, Symbol("maxlength") -> limit, '_help -> "", '_error -> "", '_class -> layOutClass)
+    } else {
+        @inputText(cF(keyInForm), '_label -> label, Symbol("maxlength") -> limit, '_help -> "", '_class -> layOutClass, Symbol("class") -> "")
+    }
+    }
 
-@createRow(a: Address, i: Int) = {
-    <tr id="row-@{i}">
-        <td id="city-@{i}">@a.city</td>
-        <td id="residentialComplex-@{i}">@getStringOrDash(a.residentialComplex)</td>
-        <td id="address-@{i}">@a.address</td>
-        <td id="entrance-@{i}">@getStringOrDash(a.entrance)</td>
-        <td id="floor-@{i}">@getStringOrDash(a.floor)</td>
-        <td id="flat-@{i}">@getStringOrDash(a.flat)</td>
-        <td id="notes-@{i}">@getStringOrDash(a.notesForCourier)</td>
-        <td id="settings">
-            <button class="btn btn-info" type="button" onclick="prepareToEdit(`@i`) ">Змінити</button>
-            <button class="btn btn-danger" type="button" onclick="deleteRow(`@i`)">Видалити</button>
-            <input id="addresses[@{i}]" name="addresses[@{i}]" value="@{addressToString(a)}" style="display: none;">
-        </td>
-    </tr>
-}
+    @createRow(a: Address, i: Int) = {
+        <tr id="row-@{
+            i
+        }">
+            <td id="city-@{
+                i
+            }">@a.city</td>
+            <td id="residentialComplex-@{
+                i
+            }">@getStringOrDash(a.residentialComplex)</td>
+            <td id="address-@{
+                i
+            }">@a.address</td>
+            <td id="entrance-@{
+                i
+            }">@getStringOrDash(a.entrance)</td>
+            <td id="floor-@{
+                i
+            }">@getStringOrDash(a.floor)</td>
+            <td id="flat-@{
+                i
+            }">@getStringOrDash(a.flat)</td>
+            <td id="notes-@{
+                i
+            }">@getStringOrDash(a.notesForCourier)</td>
+            <td id="settings">
+                <button class="btn btn-info" type="button" onclick="prepareToEdit(`@i`) ">Змінити</button>
+                <button class="btn btn-danger" type="button" onclick="deleteRow(`@i`)">Видалити</button>
+                <input id="addresses[@{
+                    i
+                }]" name="addresses[@{
+                    i
+                }]" value="@{
+                    addressToString(a)
+                }" style="display: none;">
+            </td>
+        </tr>
+    }
 
-@addressTable() = {
-    <table id="tableOne" class="table table-striped table-bordered">
-        @tableHeaders(
-            List("Місто", "Житловий Комплекс", "Адреса", "Під'їзд", "Поверх", "Квартира", "Нотатка для Курьєра", "Налаштуваня"),
-            darkHead = true)
-        <tbody id="addressTableBody">
+    @addressTable() = {
+        <table id="tableOne" class="table table-striped table-bordered">
+            @tableHeaders(
+                List("Місто", "Житловий Комплекс", "Адреса", "Під'їзд", "Поверх", "Квартира", "Нотатка для Курьєра", "Налаштуваня"),
+                darkHead = true)
+            <tbody id="addressTableBody">
             @if(!isCreate) {
                 @repeatWithIndex(cF("addresses")) { (addressField, i) =>
-                        @*
-                            repeatWithIndex is run even if list from From is Empty so we need additional check before call .head
-                        *@
-                        @if(addressField.value.isDefined) {
-                            @createRow(stringToAddress(addressField.value.head), i)
-                        } else {}
+                    @*
+                    repeatWithIndex is run even if list from From is Empty so we need additional check before call .head
+                    *@
+                    @if(addressField.value.isDefined) {
+                        @createRow(stringToAddress(addressField.value.head), i)
+                    } else {}
                 }
             } else {}
-        </tbody>
-    </table>
-}
-
-@addressInput() = {
-    <form>
-        <div class="row">
-            @createTextInputWithoutForm("city", "Місто*", "col", 64)
-            @createTextInputWithoutForm("residentialComplex", "ЖК", "col", 64)
-        </div>
-        <div class="row">
-            @createTextInputWithoutForm("address", "Адреса*", "col", 128)
-        </div>
-        <div class="row">
-            @createTextInputWithoutForm("entrance", "Під'їзд", "col", 8)
-            @createTextInputWithoutForm("floor", "Поверх", "col", 8)
-            @createTextInputWithoutForm("flat", "Квартира", "col", 8)
-        </div>
-        <div class="row">
-            @createTextArea("notesForCourier", "Нотатка для курьєра", layoutClass = "col")
-        </div>
-        <button class="btn btn-info" id="addressBtn" type="button" onclick="addToAddressAndCleanInputs()">
-            Додати Адресу</button>
-    </form>
-}
-
-@main(title) {
-
-    @form(formCall, Symbol("id") -> "mainForm") {
-        <fieldset>
-            @CSRF.formField
-            <div class="row">
-                <div class="col-4">
-                    <div class="container-fluid row">
-                        @createInputForForm(cF, "firstName", "Ім'я *", "colFirst", 128, "Ім'я обов'язкове")
-                        @createInputForForm(cF, "lastName", "Прізвище", "offset col-auto", 128)
-                    </div>
-
-                    <div class="container-fluid row">
-                        @createInputForForm(cF, "phone", "Телефон *", "colFirst", 16, "Телефон обов'язковий")
-                        @createInputForForm(cF, "phoneNote", "Нотатка Телефону" , "offset col-7", 64)
-                    </div>
-
-                    <div class="container-fluid row">
-                        @createInputForForm(cF, "phone2", "Додатковий Телефон", "colFirst", 16)
-                        @createInputForForm(cF, "phoneNote2", "Нотатка Дод. Телефону", "offset col-7", 64)
-                    </div>
-                    <div class="container-fluid row">
-                        @createInputForForm(cF, "instagram", "Instagram", "", 64)
-                    </div>
-                </div>
-                <div class="col-7">
-                    @createTextArea("preferences", "Надає перевагу", inTextArea = if(cF.value.isDefined) cF.value.head.preferences else Option(""))
-                    @createTextArea("notes", "Нотатка", inTextArea = if(cF.value.isDefined) cF.value.head.notes else Option(""))
-                </div>
-            </div>
-            <div class="row container-fluid">
-                <div class="col-8">
-                    @addressTable()
-                </div>
-                <div id="addressInputs" class="col-4">
-                    @addressInput()
-                </div>
-            </div>
-
-        </fieldset>
-
-        <div class="actions">
-            <input id="submit" type="submit" value="@buttonLabel" class="btn btn-primary"> Або
-            <a href="@submitCall" class="btn">Скасувати</a>
-        </div>
+            </tbody>
+        </table>
     }
-    <script>
+
+    @addressInput() = {
+        <form>
+            <div class="row">
+                @createTextInputWithoutForm("city", "Місто*", "col", 64)
+                @createTextInputWithoutForm("residentialComplex", "ЖК", "col", 64)
+            </div>
+            <div class="row">
+            @createTextInputWithoutForm("address", "Адреса*", "col", 128)
+            </div>
+            <div class="row">
+                @createTextInputWithoutForm("entrance", "Під'їзд", "col", 8)
+                @createTextInputWithoutForm("floor", "Поверх", "col", 8)
+                @createTextInputWithoutForm("flat", "Квартира", "col", 8)
+            </div>
+            <div class="row">
+            @createTextArea("notesForCourier", "Нотатка для курьєра", layoutClass = "col")
+            </div>
+            <button class="btn btn-info" id="addressBtn" type="button" onclick="addToAddressAndCleanInputs()">
+                Додати Адресу</button>
+        </form>
+    }
+
+    @main(title) {
+
+        @form(formCall, Symbol("id") -> "mainForm") {
+            <fieldset>
+                @CSRF.formField
+                <div class="row">
+                    <div class="col-4">
+                        <div class="container-fluid row">
+                            @createInputForForm(cF, "firstName", "Ім'я *", "colFirst", 128, "Ім'я обов'язкове")
+                            @createInputForForm(cF, "lastName", "Прізвище", "offset col-auto", 128)
+                        </div>
+
+                        <div class="container-fluid row">
+                            @createInputForForm(cF, "phone", "Телефон *", "colFirst", 16, "Телефон обов'язковий")
+                            @createInputForForm(cF, "phoneNote", "Нотатка Телефону", "offset col-7", 64)
+                        </div>
+
+                        <div class="container-fluid row">
+                            @createInputForForm(cF, "phone2", "Додатковий Телефон", "colFirst", 16)
+                            @createInputForForm(cF, "phoneNote2", "Нотатка Дод. Телефону", "offset col-7", 64)
+                        </div>
+                        <div class="container-fluid row">
+                        @createInputForForm(cF, "instagram", "Instagram", "", 64)
+                        </div>
+                    </div>
+                    <div class="col-7">
+                        @createTextArea("preferences", "Надає перевагу", inTextArea = if(cF.value.isDefined) cF.value.head.preferences else Option(""))
+                        @createTextArea("notes", "Нотатка", inTextArea = if(cF.value.isDefined) cF.value.head.notes else Option(""))
+                    </div>
+                </div>
+                <div class="row container-fluid">
+                    <div class="col-8">
+                    @addressTable()
+                    </div>
+                    <div id="addressInputs" class="col-4">
+                    @addressInput()
+                    </div>
+                </div>
+
+            </fieldset>
+
+            <div class="actions">
+                <input id="submit" type="submit" value="@buttonLabel" class="btn btn-primary"> Або
+                <a href="@submitCall" class="btn">Скасувати</a>
+            </div>
+        }
+        <script>
+            $("input").keypress(function(e) {
+                if (e.which === 13) {
+                let index = $(`input[type="text"]`).index(this);
+                $(`input[type="text"]`).eq(index + 1).focus();
+                e.preventDefault();
+                }
+            });
         $("#submit").click(
             function() {
                 /**
@@ -131,5 +160,5 @@
             }
         )
     </script>
-    <script charset="UTF-8" src="@routes.Assets.versioned("javascript/customerScript.js")"></script>
-}
+        <script charset="UTF-8" src="@routes.Assets.versioned("javascript/customerScript.js")"></script>
+    }

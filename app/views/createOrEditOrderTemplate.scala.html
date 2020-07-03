@@ -126,6 +126,13 @@
     <script charset="UTF-8" src="@routes.Assets.versioned("javascript/orderScript.js")"></script>
     <script id="runtimeScript">
         $(document).ready(function () {
+            $("input").keypress(function(e) {
+                if (e.which === 13) {
+                let index = $(`input[type="text"]`).index(this);
+                $(`input[type="text"]`).eq(index + 1).focus();
+                e.preventDefault();
+                }
+            });
             $("#search").keyup(
                 function() {
                     let searchParams = $("#search").val()
