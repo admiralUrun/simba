@@ -12,32 +12,30 @@ let notesForCourier = $(`#notesForCourier`)
 let tableBody = $("table tbody")
 
 function encoderString(i) {
-    function getEncodeValueOrEmptyString(selector, nameForEncoding, withComaAtStart) {
+    function getEncodeValueOrEmptyString(selector, nameForEncoding) {
         if (selector.val() === '') return ""
-        else {
-            if(withComaAtStart) return `, ` + selector.val() + nameForEncoding
-            else return selector.val() + nameForEncoding
-        }
+        else return selector.val() + nameForEncoding
     }
     function checkForIds() {
-        if(i !== null) {
+        if(i != null && getInputArrayByIndex(i).val().indexOf("id") >= 0) {
+            console.log(getInputArrayByIndex(i))
             let a = getInputArrayByIndex(i).val().split(',')
             return `${a.shift()},${a.shift()},`
         } else {
             return ""
         }
     }
-    return checkForIds() +
-        getEncodeValueOrEmptyString(city, `(city)`, false) +
-        getEncodeValueOrEmptyString(residentialComplex, `(residentialComplex)`, true) +
-        getEncodeValueOrEmptyString(address, `(address)`, true) +
-        getEncodeValueOrEmptyString(entrance, `(entrance)`, true) +
-        getEncodeValueOrEmptyString(floor, `(floor)`, true) +
-        getEncodeValueOrEmptyString(flat, `(flat)`, true) +
-        getEncodeValueOrEmptyString(notesForCourier, `(notes)`, true)
+    return Array(checkForIds(),
+        getEncodeValueOrEmptyString(city, `(city)`),
+        getEncodeValueOrEmptyString(residentialComplex, `(residentialComplex)`),
+        getEncodeValueOrEmptyString(address, `(address)`),
+        getEncodeValueOrEmptyString(entrance, `(entrance)`),
+        getEncodeValueOrEmptyString(floor, `(floor)`),
+        getEncodeValueOrEmptyString(flat, `(flat)`),
+        getEncodeValueOrEmptyString(notesForCourier, `(notes)`)).filter(function (v) { return v !== '' }).join(',')
 }
 
-function cleanAllInputs() {
+function cleanAllAddressInputs() {
     city.val("")
     residentialComplex.val("")
     address.val("")
@@ -71,7 +69,7 @@ function addToAddressAndCleanInputs() {
                 ${getTb(`entrance-${rowIndex}`, entrance.val())}
                 ${getTb(`floor-${rowIndex}`, floor.val())}
                 ${getTb(`flat-${rowIndex}`, flat.val())}
-                ${getTb(`notesForCourier-${rowIndex}`, notesForCourier.val())}
+                ${getTb(`notes-${rowIndex}`, notesForCourier.val())}
                 ${getTb(`settings`, changeButton + deleteButton + getInput(rowIndex, encoderString(null)))}
                 </tr>`)
             tableBody.append(row)
@@ -84,7 +82,7 @@ function addToAddressAndCleanInputs() {
         }
     }
     addRowToDisplay(isAddressesEmpty)
-    cleanAllInputs()
+    cleanAllAddressInputs()
 }
 
 function deleteRow(indexToRemove) {
@@ -94,6 +92,8 @@ function deleteRow(indexToRemove) {
         $(`<input id="addressesToDelete[${indexToRemove}]" name="addressesToDelete[${indexToRemove}]" value="${id}" style="display: none">`).appendTo($(`#mainForm`))
     } else {}
     $(`#row-${indexToRemove}`).remove()
+    cleanAllAddressInputs()
+    changeButton(`Додати`, addToAddressAndCleanInputs)
 }
 
 function prepareToEdit(i) {
@@ -117,7 +117,8 @@ function prepareToEdit(i) {
 function changeButton(text, action, i) {
     let addressButton = $(`#addressBtn`)
     addressButton.text(text)
-    addressButton.attr("onclick", `editRow('${i}')`)
+    if (i != null) addressButton.attr("onclick", `editRow('${i}')`)
+    else addressButton.attr("onclick", `addToAddressAndCleanInputs('${i}')`)
 }
 
 function editRow(i) {
@@ -134,6 +135,6 @@ function editRow(i) {
     console.log(encoderString(i))
     getInputArrayByIndex(i).val(encoderString(i))
     changeRow(i)
-    cleanAllInputs()
+    cleanAllAddressInputs()
     changeButton(`Додати`, addToAddressAndCleanInputs)
 }
