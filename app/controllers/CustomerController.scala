@@ -62,7 +62,6 @@ type PlayAction = Action[AnyContent]
         resultWithFlash(customerModel.insert(newCustomer),"Клієнта додано, мяу")
       }
     )
-
   }
 
   private def resultWithFlash(modelResult: Boolean, successFlash: String, errorFlash: String = "Щось пішло не так ;("): Result = {

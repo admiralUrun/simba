@@ -7,6 +7,7 @@ import play.api.data.Form
 import play.api.mvc.MessagesRequestHeader
 import play.twirl.api.{Html, JavaScript}
 import java.util.Calendar
+import views.html.helper._
 
 object SimbaHTMLHelper {
   private val formatter = new SimpleDateFormat("yyyy-MM-dd")
@@ -124,6 +125,18 @@ object SimbaHTMLHelper {
       case None => false
       case Some(value) => value.toBoolean
     }
+  }
+
+  def getAllArrayInputFromForm[F, A](form: Form[F], keyInForm: String, constrictor: (A, Int) => Html, addonFunctionOnFiled: String => A): Html = {
+    /**
+      repeatWithIndex will run even list is empty so we need math for "field"
+      */
+    SHTML(repeatWithIndex(form(keyInForm)) { (field, i) =>
+      field.value match {
+        case Some(value) => constrictor(addonFunctionOnFiled(value), i)
+        case None => Html("")
+      }
+    }.map(_.body)).toPlayHTML
   }
 
   def getValueFromForm[T](keyInForm: String, form: Form[T]): Option[String] = form(keyInForm).value

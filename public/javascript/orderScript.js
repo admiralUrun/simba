@@ -21,30 +21,25 @@ jQuery.insertData = function (selector, key, value) {
 let customerInfoDiv = $("#customerInformation")
 let total = $('#total')
 let totalText = $('#totalText')
-let order = $('#inOrder')
+
 function addToOrder(item, title, cost) {
-    function addElementForDisplay(isEmpty, text, cost) {
-        function addElementForDisplay(index) {
-            $(`<li class="list-group-item" id="element${index}">${text}<button type="button" class="close" aria-label="Close" onclick="deleteFromOrder(${index}, ${cost})"><span aria-hidden="true">&times;</span></button></li>`).appendTo('ul')
+    function addElementForDisplay(text, value) {
+        function addElementForDisplay(index, text, value) {
+            $(`<li class="list-group-item" id="element${index}"> 
+                ${text}
+                <input id="inOrder[${index}]" name="inOrder[${index}]" value="${value}" style="display: none">
+                <button type="button" class="close" aria-label="Close"
+                onclick="deleteFromOrder('${index}', '${cost}')"
+                <span aria-hidden="true">&times;</span></button>
+            </li>`).appendTo('ul')
         }
 
-        if (isEmpty) {
-            addElementForDisplay(0)
-        } else {
-            addElementForDisplay(order.val().split(',').length - 1)
-        }
+        let count = $('#addressTableBody').children('li').length
+        addElementForDisplay(count, text, value)
     }
 
-    let inOrder = order.val()
-    let isValueEmpty = inOrder === ''
-    if (isValueEmpty) {
-        order.val(item)
-        changeTotal(Number(cost))
-    } else {
-        order.val(inOrder + ', ' + item)
-        changeTotal(Number(cost))
-    }
-    addElementForDisplay(isValueEmpty, title, cost)
+    changeTotal(Number(cost))
+    addElementForDisplay(title, item)
 }
 
 function changeTotal(cost) {
@@ -52,27 +47,14 @@ function changeTotal(cost) {
     totalText.html(total.val() + ' ₴')
 }
 
-function deleteFromOrder(indexToRemove, cost) {
-    function getNewValueForInput(array) {
-        let result = ''
-        for (let i = 0; i < array.length; i++) {
-            if (i === indexToRemove) {
-            } else if (result === '') {
-                result += array[i];
-            } else {
-                result += ',' + array[i]
-            }
-        }
-        return result;
+function deleteFromOrder(indexToRemove, cost, isEditing) {
+    function getValueFromOrderInputByIndex(i) {
+        return $(`#inOrder[${i}]`).val()
     }
-
-    if (order.val().indexOf(',') > 1) {
-        order.val(getNewValueForInput(order.val().split(',')))
-        $(`#element${indexToRemove}`).remove()
-    } else {
-        $(`#element${indexToRemove}`).remove()
-        order.val('')
+    if(isEditing) {
+        $(`<input id="toDelete[${indexToRemove}]" name="toDelete[${indexToRemove}]" value="${getValueFromOrderInputByIndex(indexToRemove)}" type="text" style="display: none">`).appendTo($(`#mainForm`))
     }
+    $(`#element${indexToRemove}`).remove()
     total.val(Number(total.val()) - Number(cost))
     totalText.html(total.val() + '₴')
 }
@@ -213,6 +195,7 @@ function setAddress(address, thereIsOnlyOneAddress, id) {
     if($.isDefended(address)) setAddress(address, thereIsOnlyOneAddress)
     else setAddress($(`#address${id}`).data(`address`), thereIsOnlyOneAddress)
 }
+
 function setCustomer(customer) {
     $(`#customersID`).val(`${customer.id}`)
     displayCustomer(customer)

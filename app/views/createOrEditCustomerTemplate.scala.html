@@ -61,14 +61,7 @@
                 darkHead = true)
             <tbody id="addressTableBody">
             @if(!isCreate) {
-                @repeatWithIndex(cF("addresses")) { (addressField, i) =>
-                    @*
-                    repeatWithIndex is run even if list from From is Empty so we need additional check before call .head
-                    *@
-                    @if(addressField.value.isDefined) {
-                        @createRow(stringToAddress(addressField.value.head), i)
-                    } else {}
-                }
+                @getAllArrayInputFromForm(cF, "addresses", createRow, stringToAddress)
             } else {}
             </tbody>
         </table>

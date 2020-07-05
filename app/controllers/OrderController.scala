@@ -16,7 +16,8 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
       "addressID" -> number,
       "orderDay" -> date, "deliveryDay" -> date,
       "deliverFrom" -> nonEmptyText, "deliverTo" -> nonEmptyText,
-      "inOrder" -> nonEmptyText,
+      "inOrder" -> list(number),
+      "toDelete" -> optional(list(number)),
       "total" -> number,
       "offlineDelivery" -> boolean, "deliveryOnMonday" -> boolean,
       "paid" -> boolean, "delivered" -> boolean,
@@ -26,7 +27,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
 
   def toOrderFeedPage(search: String): PlayAction = Action { implicit request =>
     val orders = orderModel.getAllTableRows
-    Ok(views.html.orders(Map(), search))
+    Ok(views.html.orders(orders, search))
   }
 
   def toOrderEditPage(id:Int): PlayAction = Action { implicit request =>
