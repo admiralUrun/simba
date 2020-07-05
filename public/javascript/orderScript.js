@@ -47,13 +47,7 @@ function changeTotal(cost) {
     totalText.html(total.val() + ' ₴')
 }
 
-function deleteFromOrder(indexToRemove, cost, isEditing) {
-    function getValueFromOrderInputByIndex(i) {
-        return $(`#inOrder[${i}]`).val()
-    }
-    if(isEditing) {
-        $(`<input id="toDelete[${indexToRemove}]" name="toDelete[${indexToRemove}]" value="${getValueFromOrderInputByIndex(indexToRemove)}" type="text" style="display: none">`).appendTo($(`#mainForm`))
-    }
+function deleteFromOrder(indexToRemove, cost) {
     $(`#element${indexToRemove}`).remove()
     total.val(Number(total.val()) - Number(cost))
     totalText.html(total.val() + '₴')

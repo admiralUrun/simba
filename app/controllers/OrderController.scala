@@ -17,7 +17,6 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
       "orderDay" -> date, "deliveryDay" -> date,
       "deliverFrom" -> nonEmptyText, "deliverTo" -> nonEmptyText,
       "inOrder" -> list(number),
-      "toDelete" -> optional(list(number)),
       "total" -> number,
       "offlineDelivery" -> boolean, "deliveryOnMonday" -> boolean,
       "paid" -> boolean, "delivered" -> boolean,
@@ -31,7 +30,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   def toOrderEditPage(id:Int): PlayAction = Action { implicit request =>
-    Ok(views.html.editOrder(id, orderForm, orderModel.getMenusToolsForAddingToOrder, orderModel.getInOrderToTextWithCostMap)) // TODO fill with order
+    Ok(views.html.editOrder(id, orderForm.fill(orderModel.findById(id)), orderModel.getMenusToolsForAddingToOrder, orderModel.getInOrderToTextWithCostMap))
   }
 
   def toOrderCreatePage: PlayAction = Action { implicit request =>

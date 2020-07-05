@@ -58,6 +58,7 @@ create table offers (
     id int primary key auto_increment,
     name varchar(128),
     price int not null,
+    execution_date date,
     menu_type varchar(128)
 );
 
@@ -65,13 +66,14 @@ drop table if exists offer_recipes;
 create table offer_recipes (
     offer_id int,
     recipe_id int,
+    quantity int,
 
     primary key (offer_id, recipe_id)
 );
 
 drop table if exists orders;
 create table orders (
-    id int primary key,
+    id int primary key auto_increment,
     customer_id int not null,
     address_id int not null,
     order_day date not null,
@@ -81,11 +83,18 @@ create table orders (
 
     total int not null,
 
-    offline_delivery boolean not null, -- TODO: Rename
-    delivery_on_monday boolean not null, -- TODO: Removing is debatable
+    offline_delivery boolean not null,
+    delivery_on_monday boolean not null,
     paid boolean not null,
     delivered boolean not null,
     note text
+);
+
+drop table if exists order_offers;
+create table order_offers (
+    order_id int not null,
+    offer_id int not null,
+    primary key (order_id, offer_id)
 );
 
 drop table if exists order_recipes;

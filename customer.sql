@@ -1046,7 +1046,7 @@ insert into addresses (customer_id, city, address, entrance, floor, flat) values
 insert into customers (id, first_name, phone, notes) values ('295', 'Виктория', '093 247 86 29', 'сайт '); 
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('295', 'Київ', 'Сержа Лифаря 5', '3', '9', ' кв 102');
 insert into customers (id, first_name, last_name, phone, phone_note, notes) values ('294', 'Соня/', 'Маргарита', '067 509 65 92',
-'муж Женя', 'сайт/вайбер '); -- TODO: ЩО ? соня/...
+'муж Женя', 'сайт/вайбер ');
 insert into addresses (customer_id, city, address, entrance, floor, flat) values ('294', 'Київ', 'Днепровская набережная 23', '3', '10', ' кв 171 ');
 insert into customers (id, first_name, phone, notes) values ('293', 'Катерина
 Мазур', '093 103 66 61', 'сайт '); 

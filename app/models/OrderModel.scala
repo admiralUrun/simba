@@ -1,71 +1,163 @@
 package models
+
 import cats.effect.IO
 import doobie._
 import doobie.implicits._
+import cats.implicits._
 import java.util.Date
-import java.time.LocalTime
 import javax.inject._
 
 @Singleton
 class OrderModel @Inject()(dS: DoobieStore) {
+  private type MenuPrice = Int
+  private type MenuTitle = String
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
 
-  def getAllTableRows: Map[Date, List[Order/*PlayOrderForDisplay*/]] = {
+  def getAllTableRows: Map[Date, List[OrderForDisplay]] = {
     sql"select * from orders"
       .query[Order]
       .to[List]
       .transact(xa)
-      .unsafeRunSync.groupBy(_.deliveryDay)
+      .unsafeRunSync.map(orderToOrderForDisplay).groupBy(_.deliveryDay)
   }
 
   def insert(o: OrderForEditAndCreate): Boolean = {
-    ???
+    def insertOrder(o: OrderForEditAndCreate): Int = {
+      (for {
+        _ <-
+          sql"""insert into orders (customer_id, address_id,
+                                    order_day, delivery_day,
+                                    deliver_from, deliver_to,
+                                    total,
+                                    offline_delivery, delivery_on_monday,
+                                    paid, delivered, note)
+                                     values (${o.customerId}, ${o.addressId},
+                                              ${o.orderDay}, ${o.deliveryDay},
+                                              ${convertStringToDate(o.deliverFrom)}, ${convertStringToDate(o.deliverTo)},
+                                              ${o.total},
+                                              ${o.offlineDelivery}, ${o.offlineDelivery},
+                                              ${o.offlineDelivery}, ${o.offlineDelivery},
+                                              ${o.note}) """.update.run
+        id <- sql"select LAST_INSERT_ID()".query[Int].unique
+        o <- sql"select * from orders where id = $id".query[Order].unique
+      } yield o).transact(xa).unsafeRunSync().id.head
+    }
+
+    val orderId = insertOrder(o)
+    val resepisIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.resepisId, o.quantity))
+
+    (insertOrderResepis(orderId, resepisIdsAndQuantity) *> insertOrderOffers(orderId, o.inOrder)).transact(xa).unsafeRunSync() == o.inOrder.length * 2
+  }
+
+  def findById(id:Int): OrderForEditAndCreate = {
+    val order = sql"select * from orders where id = $id".query[Order].to[List].transact(xa).unsafeRunSync().head
+    orderToOrderForEditAndCreate(order)
   }
 
   def edit(o: OrderForEditAndCreate): Boolean = {
-    ???
+    val resepisIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.resepisId, o.quantity))
+    (sql"delete from order_recipes where order_id = ${o.id.head}".update.run *>
+      resepisIdsAndQuantity.traverse { idAndQuantity =>
+        sql"insert into order_recipes (order_id, recipe_id, quantity) values (${o.id.head}, ${idAndQuantity._1}, ${idAndQuantity._2})".update.run
+      }
+      ).transact(xa).unsafeRunSync().length >= o.inOrder.length
   }
 
-  def getMenusToolsForAddingToOrder: List[OrderMenu] = { // TODO take it from offers
-    List(
-      OrderMenu("Класичне", List(
-        OrderMenuItem("5 на 2 Класичне", "5 on 2(classic)", 1289),
-        OrderMenuItem("5 на 4 Класичне", "5 on 4(classic)", 2249),
-        OrderMenuItem("3 на 2 Класичне", "3 on 2(classic)", 849),
-        OrderMenuItem("3 на 4 Класичне", "3 on 4(classic)", 1489),
-        OrderMenuItem("Класичне 1", "1(classic)", 70),
-        OrderMenuItem("Класичне 2", "2(classic)", 70),
-        OrderMenuItem("Класичне 3", "3(classic)", 70),
-        OrderMenuItem("Класичне 4", "4(classic)", 70),
-        OrderMenuItem("Класичне 5", "5(classic)", 70))),
-      OrderMenu("Лайт", List(
-        OrderMenuItem("5 на 2 Лайт", "5 on 2(lite)", 1289),
-        OrderMenuItem("5 на 4 Лайт", "5 on 4(lite)", 2249),
-        OrderMenuItem("3 на 2 Лайт", "3 on 2(lite)", 849),
-        OrderMenuItem("3 на 4 Лайт", "3 on 4(lite)", 1489),
-        OrderMenuItem("Лайт 1", "1(lite)", 70),
-        OrderMenuItem("Лайт 2", "2(lite)", 70),
-        OrderMenuItem("Лайт 3", "3(lite)", 70),
-        OrderMenuItem("Лайт 4", "4(lite)", 70),
-        OrderMenuItem("Лайт 5", "5(lite)", 70))),
-      OrderMenu("Сніданок", List(
-        OrderMenuItem("5 на 2 Сніданок", "5 on 2(breakfast)", 849),
-        OrderMenuItem("5 на 4 Сніданок", "5 on 4(breakfast)", 1589),
-        OrderMenuItem("3 на 2 Сніданок", "3 on 2(breakfast)", 549),
-        OrderMenuItem("3 на 4 Сніданок", "3 on 4(breakfast)", 989),
-        OrderMenuItem("Сніданок 1", "1(breakfast)", 70),
-        OrderMenuItem("Сніданок 2", "2(breakfast)", 70),
-        OrderMenuItem("Сніданок 3", "3(breakfast)", 70),
-        OrderMenuItem("Сніданок 4", "4(breakfast)", 70),
-        OrderMenuItem("Сніданок 5", "5(breakfast)", 70))),
-      OrderMenu("Десерт", List(OrderMenuItem("Десерт", "desert", 249))),
-      OrderMenu("Суп", List(OrderMenuItem("Суп", "soup", 229))),
-    )
+  def getMenusToolsForAddingToOrder: List[OrderMenu] = {
+    def translateMenuType(string: String): String = {
+      val translator = Map(
+        "classic" -> "Класичне",
+        "lite" -> "Лайт",
+        "breakfast" -> "Сніданок",
+        "soup" -> "Суп",
+        "desert" -> "Десерт"
+      )
+      translator.getOrElse(string, throw UninitializedFieldError(s"Translation Error, can't translate $string"))
+    }
+
+    def offerToMenuItem(o: Offer): OrderMenuItem = {
+      OrderMenuItem(o.name, o.id.toString, o.price)
+    }
+
+    def getAllMenuToolsForAddingOrder(offers: List[Offer]): List[OrderMenu] = {
+      offers.groupBy(_.menuType).map { t =>
+        OrderMenu(translateMenuType(t._1), t._2.map(offerToMenuItem))
+      }.toList
+    }
+
+    getAllMenuToolsForAddingOrder(getAllOffersOnThisWeek)
   }
 
-  def getInOrderToTextWithCostMap: Map[String, (String, Int)] = {
-    Map()
+  def getInOrderToTextWithCostMap: Map[String, (MenuTitle, MenuPrice)] = { // TODO aks supervisor's opinion maybe there is better way to make it done
+    getAllOffersOnThisWeek.groupBy(_.id.toString).map{t =>
+      t._1 -> t._2.map(offer => (offer.name, offer.price)).head
+    }
   }
+
+  private def getAllOffersOnThisWeek: List[Offer] = {
+    sql"select * from offers where execution_date is null"
+      .query[Offer]
+      .to[List]
+      .transact(xa)
+      .unsafeRunSync()
+  }
+
+  private def orderToOrderForDisplay(o: Order): OrderForDisplay = {
+    def getCustomerById(id: Int): Customer = {
+      sql"select * from customers where id = $id".query[Customer].to[List].transact(xa).unsafeRunSync().head
+    }
+
+    def getAddressById(id: Int): Address = {
+      sql"select * from addresses where id = $id".query[Address].to[List].transact(xa).unsafeRunSync().head
+    }
+
+    OrderForDisplay(o.id, getCustomerById(o.customerId), getAddressById(o.addressId),
+      o.orderDay, o.deliveryDay, o.deliverFrom, o.deliverTo,
+      getAllOfferIdByOrderId(o.id.head).map(_.name).mkString(", "),
+      o.total,
+      o.offlineDelivery, o.deliveryOnMonday,
+      o.paid, o.delivered,
+      o.note)
+  }
+
+  private def orderToOrderForEditAndCreate(o: Order): OrderForEditAndCreate = {
+    OrderForEditAndCreate(o.id, o.customerId, o.addressId,
+      o.orderDay, o.deliveryDay, convertDateToString(o.deliverFrom), convertDateToString(o.deliverTo),
+      getAllOfferIdByOrderId(o.id.head).map(_.id),
+      o.total,
+      o.offlineDelivery, o.deliveryOnMonday,
+      o.paid, o.delivered,
+      o.note)
+  }
+
+  private def convertStringToDate(string: String): Date = ???
+
+  private def convertDateToString(date: Date): String = ???
+
+  private def insertOrderOffers(orderId: Int, resepisIdsQuantity: List[Int]): ConnectionIO[Int] = {
+    resepisIdsQuantity.traverse { offerId =>
+      sql"insert into order_offers (order_id, offer_id) values ($orderId, $offerId)".update.run
+    }.map(_.sum)
+  }
+
+  private def getAllOfferIdByOrderId(id: Int): List[Offer] = {
+    sql"select * from order_offers where order_id = $id".query[OrderOffer].to[List].transact(xa).unsafeRunSync().traverse { orderOffer =>
+      sql"select * from offers where id = ${orderOffer.offerId}".query[Offer].to[List]
+    }.transact(xa).unsafeRunSync().flatten
+  }
+
+  private def insertOrderResepis(orderId: Int, resepisIdsQuantity: List[(Int, Int)]): ConnectionIO[Int] = {
+    resepisIdsQuantity.traverse { rIdQ =>
+      sql"insert into order_recipes (order_id, recipe_id, quantity) value ($orderId, ${rIdQ._1}, ${rIdQ._2})".update.run
+    }.map(_.sum)
+  }
+
+  private def getAllOffersRecipes(ids: List[Int]): List[OfferResepies] = {
+    ids.traverse { offerId =>
+      sql"select * from offer_recipes where offer_id = $offerId".query[OfferResepies].to[List]
+    }.transact(xa).unsafeRunSync().flatten
+  }
+
 }
 
 
@@ -78,31 +170,36 @@ case class Order(id: Option[Int],
                  offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                  paid: Boolean, delivered: Boolean, note: Option[String])
 
-case class Recipe(id: Option[Int], name:String)
+case class Recipe(id: Option[Int], name: String)
 
 case class OrderForDisplay(id: Option[Int],
                            customer: Customer,
                            address: Address,
                            orderDay: Date, deliveryDay: Date,
-                           deliverFrom: LocalTime, deliverTo: LocalTime,
-                           inOrder:String,
+                           deliverFrom: Date, deliverTo: Date,
+                           inOrder: String,
                            total: Int,
                            offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                            paid: Boolean, delivered: Boolean, note: Option[String])
 
 case class OrderForEditAndCreate(id: Option[Int],
-                                 customerID: Int,
+                                 customerId: Int,
                                  addressId: Int,
                                  orderDay: Date, deliveryDay: Date,
                                  deliverFrom: String, deliverTo: String,
-                                 inOrder: String,
+                                 inOrder: List[Int],
                                  total: Int,
                                  offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                                  paid: Boolean, delivered: Boolean, note: Option[String])
 
-case class OrderMenuItem(name: String, value: String, cost: Int)
-case class OrderMenu(title: String, menuItems: List[OrderMenuItem])
+case class OrderMenuItem(titleOnDisplay: String, value: String, cost: Int)
 
-case class Offer(id: Int, name: String, price: Int, menuType: String)
+case class OrderMenu(titleOnDisplay: String, menuItems: List[OrderMenuItem])
 
-case class RecipesPrices(first: Int, second: Int, third: Int, fourth: Int, fifth: Int)
+case class Offer(id: Int, name: String, price: Int, executionDate: Option[Date], menuType: String)
+
+case class OrderResepies(orderId: Int, resepisId: Int, quantity: Int)
+
+case class OrderOffer(orderId: Int, offerId: Int)
+
+case class OfferResepies(offerId: Int, resepisId: Int, quantity: Int)
