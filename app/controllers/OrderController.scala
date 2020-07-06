@@ -37,18 +37,6 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
     Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder))
   }
 
-  def toOrderSettingsPage: PlayAction = Action { implicit request =>
-    Ok(views.html.setOffersForOrders())
-  }
-
-  def toSetOfferPage(title: String, menuTitle: String): PlayAction = Action { implicit request =>
-    Ok(views.html.setOffer(title, menuTitle))
-  }
-
-  def setOffer: PlayAction = Action { implicit request =>
-    Ok("")
-  }
-
   def updateOrder(id: Int): PlayAction = Action { implicit request =>
     orderFeedPage
   }

@@ -36,7 +36,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
                                               ${convertStringToDate(o.deliverFrom)}, ${convertStringToDate(o.deliverTo)},
                                               ${o.total},
                                               ${o.offlineDelivery}, ${o.offlineDelivery},
-                                              ${o.offlineDelivery}, ${o.offlineDelivery},
+                                              ${o.paid}, ${o.delivered},
                                               ${o.note}) """.update.run
         id <- sql"select LAST_INSERT_ID()".query[Int].unique
         o <- sql"select * from orders where id = $id".query[Order].unique
@@ -196,10 +196,6 @@ case class OrderMenuItem(titleOnDisplay: String, value: String, cost: Int)
 
 case class OrderMenu(titleOnDisplay: String, menuItems: List[OrderMenuItem])
 
-case class Offer(id: Int, name: String, price: Int, executionDate: Option[Date], menuType: String)
-
 case class OrderResepies(orderId: Int, resepisId: Int, quantity: Int)
 
 case class OrderOffer(orderId: Int, offerId: Int)
-
-case class OfferResepies(offerId: Int, resepisId: Int, quantity: Int)
