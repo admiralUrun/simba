@@ -19,3 +19,4 @@ case class Offer(id: Int, name: String, price: Int, executionDate: Option[Date],
 case class OfferResepies(offerId: Int, resepisId: Int, quantity: Int)
 
 case class OfferForCreate(name: String, file: File)
+case class OfferPreferences(names: List[String], prices: List[Int], menuType: String)

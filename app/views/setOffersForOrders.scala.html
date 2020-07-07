@@ -1,7 +1,0 @@
-@()(implicit requestHeader: MessagesRequestHeader)
-
-@main("Налаштування Замовлень") {
-    <div class="row container-fluid"><a href="@routes.OfferController.toSetOfferPage("Класичне", "classic")">Класичне</a></div>
-    <div class="row container-fluid"><a href="@routes.OfferController.toSetOfferPage("Лайт", "lite")">Лайт</a></div>
-    <div class="row container-fluid"><a href="@routes.OfferController.toSetOfferPage("Сніданок", "breakfast")">Сніданки</a></div>
-}
