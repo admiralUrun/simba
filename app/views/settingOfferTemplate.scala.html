@@ -1,0 +1,30 @@
+@import views.html.helper._
+@import services.SimbaHTMLHelper._
+
+@(title: String, oF: Form[OfferPreferences], menuType: String)
+
+@megreHtmlInputsList(f: Html, s:Html) = @{
+    f.body.split(',').zip(s.body.split(',')).toList
+}
+
+@ceatePreferenceTools(inputs: List[(String, String)]) = {
+    @inputs.map{ inputs =>
+      <div>
+
+      </div>
+      @* TODO: Fill with preference View *@
+    }
+}
+
+@getInputsFromListPlayForm(keyInForm: String) = {
+    @repeatWithIndex(oF(keyInForm)) { (field, index) =>
+        <input id="@{keyInForm}[@index]" name="@{keyInForm}[@index]" value="@{field.value.head}">,
+    }
+}
+
+@main(title) {
+    @form(???) {
+        @ceatePreferenceTools(megreHtmlInputsList(getInputsFromListPlayForm(""), getInputsFromListPlayForm("")))
+        <input id="menuType" name="menuType" value="@menuType" style="display: none">
+    }
+}
