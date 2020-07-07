@@ -1,0 +1,36 @@
+@import views.html.helper._
+@import services.SimbaHTMLHelper._
+
+@(title: String, oF: Form[OfferPreferences], menuType: String)
+
+@megreHtmlInputsList(f: Html, s:Html) = @{
+    f.body.split(',').zip(s.body.split(',')).toList
+}
+
+@ceatePreferenceTools(inputs: List[(String, String)]) = {
+    @inputs.map{ inputs =>
+      <div class="">
+          <div class="form-group">
+              <label class="control-label">Назва</label>
+              @inputs._1
+          </div>
+          <div class="form-group">
+              <label class="control-label">Ціна</label>
+              @inputs._2
+          </div>
+      </div>
+    }
+}
+
+@getInputsFromListPlayFormForMerge(keyInForm: String) = {
+    @repeatWithIndex(oF(keyInForm)) { (field, index) =>
+        <input class="form-control" id="@{keyInForm}[@index]" name="@{keyInForm}[@index]" value="@{field.value.head}">,
+    }
+}
+
+@main(title) {
+    @form(routes.OfferController.editOfferPreference()) {
+        @ceatePreferenceTools(megreHtmlInputsList(getInputsFromListPlayFormForMerge(""), getInputsFromListPlayFormForMerge("")))
+        <input id="menuType" name="menuType" value="@menuType" style="display: none">
+    }
+}

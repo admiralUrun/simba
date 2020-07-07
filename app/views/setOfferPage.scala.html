@@ -1,0 +1,13 @@
+@import views.html.helper._
+@import services.SimbaHTMLHelper._
+
+
+@(title: String, menuType: String)(implicit requestHeader: MessagesRequestHeader)
+
+@main(title) {
+    @form(routes.OfferController.setOffer(menuType)) {
+        @CSRF.formField
+        <input name="resepies" type="file">
+        <input type="submit" value="Завантажити">
+    }
+}

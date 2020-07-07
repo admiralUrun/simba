@@ -1,0 +1,9 @@
+@import views.html.helper._
+@import services.SimbaHTMLHelper._
+
+@(title: String, menuType: String, menuTypeOnUA: String)
+
+@main(title) {
+    <a class="btn btn-info" href="@routes.OfferController.toSetOfferPage(s"Встановити $menuTypeOnUA", menuType)">Встановити</a>
+    <a class="btn btn-primary" href="@routes.OfferController.toOfferPreferencePage(s"Зміна $menuTypeOnUA", menuType)">Налаштування</a>
+}

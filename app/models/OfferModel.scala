@@ -12,6 +12,21 @@ import scala.reflect.io.File
 @Singleton
 class OfferModel @Inject()(dS: DoobieStore) {
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
+
+  def getOfferPreferencesByMuneTupe(menuType: String): OfferPreferences = {
+    val offers = sql"select * from offers where execution_date is null and  menu_type = $menuType"
+      .query[Offer]
+      .to[List]
+      .transact(xa)
+      .unsafeRunSync()
+
+    OfferPreferences(offers.map(_.name), offers.map(_.price), menuType)
+  }
+
+  def setOfferPreferences(offerPreferences: OfferPreferences): Boolean = {
+    ???
+  }
+
 }
 
 case class Offer(id: Int, name: String, price: Int, executionDate: Option[Date], menuType: String)

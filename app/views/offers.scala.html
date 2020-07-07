@@ -1,0 +1,16 @@
+@import views.html.helper._
+@import services.SimbaHTMLHelper._
+
+@()(implicit request: MessagesRequestHeader)
+
+
+    @main("Пропозиції") {
+        @getFlash()
+        <div>
+            <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Класичного Меню", "classic")">Класичні</a>
+            <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Лайт Меню", "lite")">Лайт</a>
+            <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Сніданок Меню", "breakfast")">Сніданки</a>
+            <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Суп Меню", "soup")">Супи</a>
+            <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Десерт Меню", "desert")">Десерти</a>
+        </div>
+    }
