@@ -24,18 +24,27 @@ class OfferModel @Inject()(dS: DoobieStore) {
   }
 
   def setOfferPreferences(offerPreferences: OfferPreferences): Boolean = {
+
     ???
   }
 
   def setOffer(offerForCreate: OfferForCreate): Boolean = {
+    val allFilesInPackage = offerForCreate.file.listFiles().toList
+    val numberOfResepis =  allFilesInPackage.length
+    if (numberOfResepis <= 0) false
+    else {
 
-
-    true
+      ???
+    }
+    /*
+      TODO: Create Offers depend on menuType
+      TODO: Offers at number of .csv + all menu Offers if muType is classic, lite or breakfast
+    */
   }
 
 }
 
-case class Offer(id: Int, name: String, price: Int, executionDate: Option[Date], menuType: String)
+case class Offer(id: Option[Int], name: String, price: Int, executionDate: Option[Date], menuType: String)
 
 case class OfferResepies(offerId: Int, resepisId: Int, quantity: Int)
 

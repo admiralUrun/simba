@@ -123,7 +123,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
   private def orderToOrderForEditAndCreate(o: Order): OrderForEditAndCreate = {
     OrderForEditAndCreate(o.id, o.customerId, o.addressId,
       o.orderDay, o.deliveryDay, convertDateToString(o.deliverFrom), convertDateToString(o.deliverTo),
-      getAllOfferIdByOrderId(o.id.head).map(_.id),
+      getAllOfferIdByOrderId(o.id.head).map(_.id.head),
       o.total,
       o.offlineDelivery, o.deliveryOnMonday,
       o.paid, o.delivered,
