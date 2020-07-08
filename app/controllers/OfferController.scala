@@ -4,12 +4,14 @@ import javax.inject.{Inject, Singleton}
 import models._
 import play.api.data.Forms._
 import play.api.data.Form
+import play.api.libs.Files
 import play.api.mvc._
 import scala.reflect.io.File
 
 @Singleton
 class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
   type PlayAction = Action[AnyContent]
+  type PlayActionWithFile = Action[MultipartFormData[Files.TemporaryFile]]
   private val preferenceOfferForm = Form(
     mapping(
       "names" -> list(nonEmptyText),
@@ -42,8 +44,13 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
     Ok(views.html.setOfferPage(title, menuType))
   }
 
-  def setOffer(menuType: String): PlayAction = Action { implicit request =>
-    Ok(s"${ menuType  }")
+  def setOffer(title: String, menuType: String): PlayActionWithFile = Action(parse.multipartFormData) { implicit request =>
+    request.body
+      .file("resepies")
+        .map{ resepis =>
+          val file = resepis.ref.path.toFile
+          resultWithFlash(offerModel.setOffer(OfferForCreate(menuType, file)), "Пропозицію встановлино, мяу")
+        }.getOrElse(Redirect(routes.OfferController.toSetOfferPage(title, menuType)).flashing("error" -> "З файлом щось не так"))
   }
 
   def toOfferPreferencePage(title: String, menuType: String): PlayAction = Action {

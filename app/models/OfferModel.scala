@@ -7,7 +7,7 @@ import doobie._
 import doobie.implicits._
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
-import scala.reflect.io.File
+import java.io.File
 
 @Singleton
 class OfferModel @Inject()(dS: DoobieStore) {
@@ -27,11 +27,17 @@ class OfferModel @Inject()(dS: DoobieStore) {
     ???
   }
 
+  def setOffer(offerForCreate: OfferForCreate): Boolean = {
+
+
+    true
+  }
+
 }
 
 case class Offer(id: Int, name: String, price: Int, executionDate: Option[Date], menuType: String)
 
 case class OfferResepies(offerId: Int, resepisId: Int, quantity: Int)
 
-case class OfferForCreate(name: String, file: File)
+case class OfferForCreate(menuType: String, file: File)
 case class OfferPreferences(names: List[String], prices: List[Int], menuType: String)

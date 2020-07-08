@@ -25,7 +25,7 @@ GET         /offer/:title/:menuType                 controllers.OfferController.
 GET         /setOffer/:title/:menuType              controllers.OfferController.toSetOfferPage(title: String, menuType: String)
 GET         /offerPreferance/:title/:menuType       controllers.OfferController.toOfferPreferencePage(title: String, menuType: String)
 POST        /updatePreferences                      controllers.OfferController.editOfferPreference
-POST        /setOffer/:menuType                     controllers.OfferController.setOffer(menuType: String)
+POST        /setOffer/:title/:menuType                     controllers.OfferController.setOffer(title:String, menuType: String)
 #TODO think on name for POST
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                           controllers.Assets.versioned(path="/public", file: Asset)

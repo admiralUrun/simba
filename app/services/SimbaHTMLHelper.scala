@@ -29,7 +29,7 @@ object SimbaHTMLHelper {
       else SHTML("")
     }
 
-    (getFlash(request.flash.get("success"), "success") + getFlash(request.flash.get("error"), "error")).toPlayHTML
+    (getFlash(request.flash.get("success"), "success") + getFlash(request.flash.get("error"), "danger")).toPlayHTML
   }
 
   def createInputForForm[T](form: Form[T], keyInForm: String, label: String, layoutClass: String = "", inputLimit: Int, errorMessage: String = ""): Html = {
