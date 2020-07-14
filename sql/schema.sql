@@ -35,14 +35,18 @@ create table ingredients (
     description varchar(256) not null,
     -- SI unit, g, mg, l, etc.
     unit varchar(4) not null,
-    art_by int unique
+    art_by int unique,
     -- art_by mean article Belarus
+    edited bit
+    -- see if still has old name or was edited
 );
 
 drop table if exists recipes;
 create table recipes (
     id int primary key auto_increment,
-    name varchar(256) not null
+    name varchar(256) not null,
+    edited bit
+    -- see if still has old name or was edited
 );
 
 drop table if exists recipe_ingredients;

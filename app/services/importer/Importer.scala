@@ -8,8 +8,9 @@ class Importer {
   type SQLCommand = String
   val endOfSQLCommand = "; \n"
   def startOfSQLCommand(tableName: String) = s"insert into $tableName"
-  def getListInBraces(list: List[String], withSQLBraces: Boolean = false): SQLFragment = {
-    def getString(v: String): String = if (withSQLBraces) s"'$v'" else s"$v"
+
+  def getListInBraces(list: List[String], withVarcharBraces: Boolean = false): SQLFragment = {
+    def getString(v: String): String = if (withVarcharBraces) s"'$v'" else s"$v"
     @tailrec
     def listToString(list: List[String], acc: String, last: Boolean = false): String =  list match {
       case List() => acc
@@ -24,8 +25,11 @@ class Importer {
     if(list.isEmpty) "()"
     else "(" + listToString(list, "") + ")"
   }
+
   def generateInsertingProperties(p: List[String], mapProperties: Map[String, String]): SQLFragment = getListInBraces(p.map(mapProperties(_)))
-  def generateInsertingVariables(v: List[String]): SQLFragment = " values " + getListInBraces(v, withSQLBraces = true)
+
+  def generateInsertingVariables(v: List[String]): SQLFragment = " values " + getListInBraces(v, withVarcharBraces = true)
+
   def getAllFilesInDirectory(directory: File): List[File] = {
     directory.listFiles(_.isFile).filter(_.getName.endsWith(".csv")).toList
   }
