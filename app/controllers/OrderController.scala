@@ -34,7 +34,10 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   def toOrderCreatePage: PlayAction = Action { implicit request =>
-    Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder))
+    Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder, None))
+  }
+  def toOrderCreatePageWithCustomerId(id: Int): PlayAction = Action { implicit request =>
+    Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder, Option(id)))
   }
 
   def updateOrder(id: Int): PlayAction = Action { implicit request =>

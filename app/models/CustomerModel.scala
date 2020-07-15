@@ -7,6 +7,7 @@ import javax.inject._
 import cats.implicits._
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 import services.SimbaHTMLHelper.stringToAddress
 import services.SimbaHTMLHelper.addressToString
 
@@ -14,6 +15,35 @@ import services.SimbaHTMLHelper.addressToString
 class CustomerModel @Inject()(dS: DoobieStore) {
   type  JSONWrites[T] = OWrites[T]
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
+ private implicit val customerReads: Writes[Customer] = (
+    ( JsPath \ "id").writeNullable[Int] and
+      ( JsPath \ "firstName").write[String] and
+      ( JsPath \ "lastName").writeNullable[String] and
+      ( JsPath \ "phone").write[String] and
+      ( JsPath \ "phoneNote").writeNullable[String] and
+      ( JsPath \ "phone2").writeNullable[String] and
+      ( JsPath \ "phoneNote2").writeNullable[String] and
+      ( JsPath \ "instagram").writeNullable[String] and
+      ( JsPath \ "preferences").writeNullable[String] and
+      ( JsPath \ "notes").writeNullable[String]
+    )(unlift(Customer.unapply))
+
+  private implicit val readerAddress: Writes[Address] = (
+    ( JsPath \ "id").writeNullable[Int] and
+      ( JsPath \ "customerId").writeNullable[Int] and
+      ( JsPath \ "city").write[String] and
+      ( JsPath \ "residentialComplex").writeNullable[String] and
+      ( JsPath \ "address").write[String] and
+      ( JsPath \ "entrance").writeNullable[String] and
+      ( JsPath \ "floor").writeNullable[String] and
+      ( JsPath \ "flat").writeNullable[String] and
+      ( JsPath \ "notesForCourier").writeNullable[String]
+    )(unlift(Address.unapply))
+
+  private implicit val readerCustomerAddressesToJson: Writes[CustomerAddressesToJson] = (
+    (JsPath \ "customer").write[Customer] and
+      (JsPath \ "addresses").write[Seq[Address]]
+    )(unlift(CustomerAddressesToJson.unapply))
 
   def getAllCustomerTableRows: Seq[Customer] = {
     sql"select * from customers"
@@ -36,8 +66,8 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .unsafeRunSync
   }
 
-  def insert(c: CustomerForEditAndCreate): Boolean = {
-    val customerWithID = (for {
+  def insert(c: CustomerForEditAndCreate): (Boolean, Int) = {
+    val customerID = (for {
       _ <- sql"""insert into customers
             (first_name, last_name,
             phone, phone_note, phone2, phone2_note,
@@ -47,11 +77,10 @@ class CustomerModel @Inject()(dS: DoobieStore) {
                 ${c.instagram},
                 ${c.preferences}, ${c.notes})""".update.run
       id <- sql"select LAST_INSERT_ID()".query[Int].unique
-      c <- sql"select * from customers where id = $id".query[Customer].unique
-    } yield c)
+    } yield id)
       .transact(xa)
       .unsafeRunSync()
-    insertAddresses(decodeAddressString(c.addresses), customerWithID.id.head)
+    (insertAddresses(decodeAddressString(c.addresses), customerID), customerID)
   }
 
   def insertAddresses(list: List[Address], customerId: Int): Boolean = {
@@ -62,11 +91,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
   }
 
   def findByID(id: Int): CustomerForEditAndCreate = {
-    val c = sql"select * from customers where id = $id"
-      .query[Customer]
-      .option
-      .transact(xa)
-      .unsafeRunSync().head
+    val c = getCustomerById(id)
 
     CustomerForEditAndCreate(
       c.id, c.firstName, c.lastName,
@@ -76,7 +101,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       encodeAddressesToString(getAllCustomersAddresses(c.id.head)), Option(null))
   }
 
-  def editCustomer(id: Int, c: CustomerForEditAndCreate): Boolean = { // TODO FIX bug with empty list
+  def editCustomer(id: Int, c: CustomerForEditAndCreate): Boolean = {
     sql"""update customers set first_name = ${c.firstName}, last_name = ${c.lastName},
          phone = ${c.phone}, phone_note = ${c.phoneNote},
          phone2 = ${c.phone2}, phone2_note = ${c.phoneNote2},
@@ -133,39 +158,14 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .unsafeRunSync
   }
 
-  def getDataForJsonToDisplayInOrder(search: String): JsValue = {
-    import play.api.libs.functional.syntax._
-    implicit val customerReads: Writes[Customer] = (
-      ( JsPath \ "id").writeNullable[Int] and
-        ( JsPath \ "firstName").write[String] and
-        ( JsPath \ "lastName").writeNullable[String] and
-        ( JsPath \ "phone").write[String] and
-        ( JsPath \ "phoneNote").writeNullable[String] and
-        ( JsPath \ "phone2").writeNullable[String] and
-        ( JsPath \ "phoneNote2").writeNullable[String] and
-        ( JsPath \ "instagram").writeNullable[String] and
-        ( JsPath \ "preferences").writeNullable[String] and
-        ( JsPath \ "notes").writeNullable[String]
-    )(unlift(Customer.unapply))
-
-    implicit val readerAddress: Writes[Address] = (
-      ( JsPath \ "id").writeNullable[Int] and
-        ( JsPath \ "customerId").writeNullable[Int] and
-        ( JsPath \ "city").write[String] and
-        ( JsPath \ "residentialComplex").writeNullable[String] and
-        ( JsPath \ "address").write[String] and
-        ( JsPath \ "entrance").writeNullable[String] and
-        ( JsPath \ "floor").writeNullable[String] and
-        ( JsPath \ "flat").writeNullable[String] and
-        ( JsPath \ "notesForCourier").writeNullable[String]
-    )(unlift(Address.unapply))
-
-    implicit val readerCustomerAddressesToJson: Writes[CustomerAddressesToJson] = (
-      (JsPath \ "customer").write[Customer] and
-        (JsPath \ "addresses").write[Seq[Address]]
-    )(unlift(CustomerAddressesToJson.unapply))
-    Json.toJson(getAllCustomerTableRowsWhere(search).map(c => CustomerAddressesToJson(c, getAllCustomersAddresses(c.id.head))))
+  def getDataForJsonToDisplayInOrderByID(id: Int): JsValue = {
+    val c = getCustomerById(id)
+    Json.toJson(CustomerAddressesToJson(c, getAllCustomersAddresses(id)))
   }
+
+  def getDataForJsonToDisplayInOrder(search: String): JsValue = Json.toJson(getAllCustomerTableRowsWhere(search).map{ c =>
+    CustomerAddressesToJson(c, getAllCustomersAddresses(c.id.head))
+  })
 
   private def insertAddressesReturnConnectionIOListOfInt(list: List[Address], customerId: Int): ConnectionIO[List[Int]] = {
     list.traverse { a =>
@@ -174,6 +174,14 @@ class CustomerModel @Inject()(dS: DoobieStore) {
         .update
         .run
     }
+  }
+
+  private def getCustomerById(id: Int): Customer = {
+    sql"select * from customers where id = $id"
+      .query[Customer]
+      .option
+      .transact(xa)
+      .unsafeRunSync().head
   }
 
   private def decodeAddressString(a: List[String]): List[Address] = {

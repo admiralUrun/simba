@@ -4,7 +4,7 @@
 @(title: String, formCall: Call,
         cF: Form[CustomerForEditAndCreate],
         buttonLabel: String,
-        submitCall: Call = routes.CustomerController.toCustomersListPage(""),
+        cancelCall: Call = routes.CustomerController.toCustomersListPage(""),
         isCreate: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
 
     @creteAnInput(keyInForm: String, label: String, limit: Int, layOutClass: String = "", showError: Boolean = false) = {
@@ -132,7 +132,7 @@
 
             <div class="actions">
                 <input id="submit" type="submit" value="@buttonLabel" class="btn btn-primary"> Або
-                <a href="@submitCall" class="btn">Скасувати</a>
+                <a href="@cancelCall" class="btn">Скасувати</a>
             </div>
         }
         <script>

@@ -86,14 +86,14 @@ function takeCustomerJSONAddToUI(JSONArray) {
         function addDropItem(customerAddresses) {
             if (customerAddresses.addresses.length > 1) {
                 $(`<a id="customer${customerAddresses.customer.id}" class="dropdown-item"
-                    onclick="setCustomerAddAddressDropdown('${customerAddresses.customer.id}')" href="#"
-                    >${customerAddresses.customer.firstName} ${customerAddresses.customer.phone} ${$.getValeOrEmptyString(customerAddresses.customer.instagram)}
+                    onclick="setCustomerAddAddressDropdown('${customerAddresses.customer.id}')" href="#">
+                        ${customerAddresses.customer.firstName} ${customerAddresses.customer.phone} ${$.getValeOrEmptyString(customerAddresses.customer.instagram)}
                     </a>`
                 ).appendTo($("#searchMenu"))
             } else if (customerAddresses.addresses.length !== 0) {
                 $(`<a id="customer${customerAddresses.customer.id}" class="dropdown-item" 
-                    onclick="setCustomerAndAddress('${customerAddresses.customer.id}')" href="#"
-                    >${customerAddresses.customer.firstName} ${customerAddresses.customer.phone} ${$.getValeOrEmptyString(customerAddresses.customer.instagram)}
+                    onclick="setCustomerAndAddress('${customerAddresses.customer.id}')" href="#">
+                        ${customerAddresses.customer.firstName} ${customerAddresses.customer.phone} ${$.getValeOrEmptyString(customerAddresses.customer.instagram)}
                     </a>`
                 ).appendTo($("#searchMenu"))
             } else {}
@@ -132,7 +132,7 @@ function displayCustomer(customer) {
            </div>`).appendTo(customerInfoDiv)
 }
 
-function displayAddress(address, thereIsOnlyOneAddress) {
+function displayAddress(address) {
     $(`<div id="address" class="col-auto">
             <dl class="col-auto">
                 <div class="row">
@@ -150,7 +150,7 @@ function displayAddress(address, thereIsOnlyOneAddress) {
           </div>`).appendTo(customerInfoDiv)
 }
 
-function setCustomerAddAddressDropdown(id) {
+function setCustomerAddAddressDropdown(id, customerAddresses) {
     function setCustomerCreateDropDownFormAddresses(customerAddresses) {
         function createDropDownForAddresses(addresses) {
             $(`<div id="addresses" class="col-auto btn-group dropright">
@@ -162,7 +162,7 @@ function setCustomerAddAddressDropdown(id) {
             </div>
             </div>`).appendTo($('#customerInformation'))
             addresses.forEach( function (address) {
-                $(`<a id="address${address.id}" class="dropdown-item" onclick="setAddress(null, false, '${address.id}')">
+                $(`<a id="address${address.id}" class="dropdown-item" onclick="setAddress(null, '${address.id}')">
                             ${address.city} ${$.getValeOrEmptyString(address.residentialComplex)}
                             ${address.address}
                             ${$.getValeOrEmptyString(address.flat)}
@@ -176,18 +176,19 @@ function setCustomerAddAddressDropdown(id) {
         createDropDownForAddresses(customerAddresses.addresses)
     }
 
-    setCustomerCreateDropDownFormAddresses($(`#customer${id}`).data(`customerJSON`))
+    if(customerAddresses)  setCustomerCreateDropDownFormAddresses(customerAddresses)
+    else setCustomerCreateDropDownFormAddresses($(`#customer${id}`).data(`customerJSON`))
 }
 
-function setAddress(address, thereIsOnlyOneAddress, id) {
-    function setAddress(address, thereIsOnlyOneAddress) {
+function setAddress(address, id) {
+    function setAddress(address) {
         $(`#address`).remove()
         $(`#addressID`).val(`${address.id}`)
-        displayAddress(address, thereIsOnlyOneAddress)
+        displayAddress(address)
     }
 
-    if($.isDefended(address)) setAddress(address, thereIsOnlyOneAddress)
-    else setAddress($(`#address${id}`).data(`address`), thereIsOnlyOneAddress)
+    if($.isDefended(address)) setAddress(address)
+    else setAddress($(`#address${id}`).data(`address`))
 }
 
 function setCustomer(customer) {
@@ -195,19 +196,19 @@ function setCustomer(customer) {
     displayCustomer(customer)
 }
 
-function setCustomerAndAddress(customerID) {
+function setCustomerAndAddress(customerID, customerAddress) {
     function setCustomerForOrder(customerAddress) {
         function addCustomerAddressToOrderAndToUI(customer, address) {
             setCustomer(customer)
-            setAddress(address, true)
+            setAddress(address, address.id)
         }
 
         addCustomerAddressToOrderAndToUI(customerAddress.customer, customerAddress.addresses[0])
         $.hideSearchDiv()
     }
 
-    let json = $(`#customer${customerID}`).data('customerJSON')
-    setCustomerForOrder(json)
+    if(customerAddress) setCustomerForOrder(customerAddress)
+    else setCustomerForOrder($(`#customer${customerID}`).data('customerJSON'))
 }
 
 function descriptionListElement(head, content, needDivWithCol) {

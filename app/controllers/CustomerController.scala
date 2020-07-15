@@ -25,7 +25,9 @@ type PlayAction = Action[AnyContent]
       "addressesToDelete" -> optional(list(number))
     )(CustomerForEditAndCreate.apply)(CustomerForEditAndCreate.unapply)
   )
-  private val customerListPage = Redirect(routes.CustomerController.toCustomersListPage(""))
+  private val toCustomerListPage: Call = routes.CustomerController.toCustomersListPage("")
+  private val toOrderCreatePage: Call = routes.OrderController.toOrderCreatePage()
+  private val customerListPage: Result = Redirect(toCustomerListPage)
 
   def toCustomersListPage(search: String): PlayAction = Action { implicit request =>
     val rows = if(search.isEmpty) customerModel.getAllCustomerTableRows else customerModel.getAllCustomerTableRowsWhere(search)
@@ -33,12 +35,19 @@ type PlayAction = Action[AnyContent]
   }
 
   def getCustomersForOrderSearch(search: String): PlayAction = Action {
-    val json = customerModel.getDataForJsonToDisplayInOrder(search)
-    Ok(json)
+    Ok(customerModel.getDataForJsonToDisplayInOrder(search))
+  }
+
+  def getCustomersForOrder(id: Int): PlayAction = Action {
+    Ok(customerModel.getDataForJsonToDisplayInOrderByID(id))
   }
 
   def toCreateCustomerPage: PlayAction = Action { implicit request =>
-    Ok(views.html.createCustomer(customerForm))
+    Ok(views.html.createCustomer(customerForm, routes.CustomerController.createCustomer(), toCustomerListPage))
+  }
+
+  def toCreateCustomerPageForOrder: PlayAction = Action { implicit request =>
+    Ok(views.html.createCustomer(customerForm, routes.CustomerController.createCustomerThenToOrder(), toOrderCreatePage))
   }
 
   def toEditCustomerPage(id: Int): PlayAction = Action { implicit request =>
@@ -50,22 +59,31 @@ type PlayAction = Action[AnyContent]
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.editCustomer(id, formWithErrors, formWithErrors.data("firstName"))),
       customer => {
-        resultWithFlash(customerModel.editCustomer(id, customer),"Клієнта змінено, мяу")
+        resultWithFlash(customerListPage, customerModel.editCustomer(id, customer),"Клієнта змінено, мяу")
       }
     )
   }
 
   def createCustomer: PlayAction = Action { implicit request =>
     customerForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.createCustomer(formWithErrors)),
+      formWithErrors => BadRequest(views.html.createCustomer(formWithErrors, routes.CustomerController.createCustomer(), toCustomerListPage)),
       newCustomer => {
-        resultWithFlash(customerModel.insert(newCustomer),"Клієнта додано, мяу")
+        resultWithFlash(customerListPage, customerModel.insert(newCustomer)._1,"Клієнта додано, мяу")
+      }
+    )
+  }
+  def createCustomerThenToOrder: PlayAction = Action { implicit request =>
+    customerForm.bindFromRequest.fold(
+      formWithErrors => BadRequest(views.html.createCustomer(formWithErrors, routes.CustomerController.createCustomerThenToOrder(), toOrderCreatePage)),
+      newCustomer => {
+        val modelResponse: (Boolean, Int) = customerModel.insert(newCustomer)
+        resultWithFlash(Redirect(routes.OrderController.toOrderCreatePageWithCustomerId(modelResponse._2)), modelResponse._1,"Клієнта додано, мяу")
       }
     )
   }
 
-  private def resultWithFlash(modelResult: Boolean, successFlash: String, errorFlash: String = "Щось пішло не так ;("): Result = {
-    if(modelResult) customerListPage.flashing("success" -> successFlash)
-    else customerListPage.flashing("error" -> errorFlash)
+  private def resultWithFlash(result: Result, modelResponse: Boolean, successFlash: String, errorFlash: String = "Щось пішло не так ;("): Result = {
+    if(modelResponse) result.flashing("success" -> successFlash)
+    else result.flashing("error" -> errorFlash)
   }
 }

@@ -3,7 +3,15 @@
 @import services.SimbaHTMLHelper._
 @import models.OrderMenu
 @import models.OrderMenuItem
-@(title: String, formCall: Call, oF: Form[OrderForEditAndCreate], buttonLabel: String, inMenu: List[OrderMenu], isCreate: Boolean = false, inOrderToTextCost: Map[String, (String, Int)] = Map())(implicit requestHeader: MessagesRequestHeader)
+@(title: String,
+        formCall: Call,
+        oF: Form[OrderForEditAndCreate],
+        buttonLabel: String,
+        inMenu: List[OrderMenu],
+        isCreate: Boolean = false,
+        inOrderToTextCost: Map[String, (String, Int)] =  Map(),
+        possibleIdAfterAddingCustomer: Option[Int] = None
+)(implicit requestHeader: MessagesRequestHeader)
 
 @createAMenuDropDown(menuTitle: String, inMenu: List[OrderMenuItem]) = {
     @if(inMenu.length == 1) {
@@ -39,18 +47,28 @@
 }
 
 @getCustomerSearch = {
-    <div id="customerInformation" class="row container-fluid">
-        <form>
-            <div id="searchDIV" class="input-group col-md"  style="display: ">
-                <input id="search" name="search" type="search" class="form-control dropdown-toggle col-auto" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                <div id="searchMenu" class="dropdown-menu">
-                    <span class="dropdown-header">Тут можна знайти Клієнта</span>
+    @if(isCreate) {
+        <div id="customerInformation" class="row container-fluid">
+            <div id="searchDIV" class="row container-fluid">
+                <form class="colFirst">
+                    <div class="input-group"  style="display: ">
+                        <input id="search" name="search" type="search" class="form-control dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <div id="searchMenu" class="dropdown-menu">
+                            <span class="dropdown-header">Тут можна знайти Клієнта</span>
+                        </div>
+                        <input type="button" id="searchSubmit" value="Пошук" class="btn btn-primary offset-sm-1">
+                    </div>
+                </form>
+                <div class="col"></div>
+                <div class="colLast">
+                    <a class="colLast btn btn-success" id="add" href="@routes.CustomerController.toCreateCustomerPageForOrder()">Додати</a>
                 </div>
-                <input type="button" id="searchSubmit" value="Пошук" class="btn btn-primary offset-sm-1">
             </div>
-        </form>
-            <!-- <a class="colLast btn btn-success disabled" id="add" href="@routes.CustomerController.toCreateCustomerPage()">Додати</a> -->
-    </div>
+            </div>
+        </div>
+    } else {
+
+    }
 }
 
 
@@ -130,6 +148,14 @@
     <script charset="UTF-8" src="@routes.Assets.versioned("javascript/orderScript.js")"></script>
     <script id="runtimeScript">
         $(document).ready(function () {
+            if (@possibleIdAfterAddingCustomer.isDefined) {
+                $.get("/searchCustomerForOrderById/" + @possibleIdAfterAddingCustomer, function (data) {
+                    /**
+                     * Won't use -1
+                    * */
+                    setCustomerAddAddressDropdown(-1, data)
+                })
+            }
             $("input").keypress(function(e) {
                 if (e.which === 13) {
                 let inputSelector = `input[type="text"]`;
@@ -142,7 +168,6 @@
                 function() {
                     let searchParams = $("#search").val()
                     if (searchParams.length === 0)  cleanDropMenu();
-                    else {}
                 });
             $("#searchSubmit").click(
                 function() {

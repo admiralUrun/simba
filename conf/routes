@@ -9,13 +9,17 @@ POST        /importCustomers                        controllers.HomeController.i
 
 GET         /customers                              controllers.CustomerController.toCustomersListPage(search)
 GET         /addCustomer                            controllers.CustomerController.toCreateCustomerPage()
+GET         /addCustomerForOrder                    controllers.CustomerController.toCreateCustomerPageForOrder
 GET         /editCustomer/:id                       controllers.CustomerController.toEditCustomerPage(id: Int)
 POST        /newCustomer                            controllers.CustomerController.createCustomer()
+POST        /newCustomeToOrder                      controllers.CustomerController.createCustomerThenToOrder()
 POST        /updateCustomer/:id                     controllers.CustomerController.update(id: Int)
 GET         /searchCustomerForOrder                 controllers.CustomerController.getCustomersForOrderSearch(search)
+GET         /searchCustomerForOrderById/:id         controllers.CustomerController.getCustomersForOrder(id: Int)
 
 GET         /orders                                 controllers.OrderController.toOrderFeedPage(search)
 GET         /createOrder                            controllers.OrderController.toOrderCreatePage
+GET         /createOrderWithCustomer/:id            controllers.OrderController.toOrderCreatePageWithCustomerId(id: Int)
 GET         /editOrder/:id                          controllers.OrderController.toOrderEditPage(id: Int)
 POST        /newOrder                               controllers.OrderController.createOrder
 POST        /updateOrder/:id                        controllers.OrderController.updateOrder(id: Int)

@@ -1,9 +1,11 @@
 @import models.OrderMenu
-@(oF: Form[OrderForEditAndCreate], menus: List[OrderMenu])(implicit requestHeader: MessagesRequestHeader)
+@(oF: Form[OrderForEditAndCreate], menus: List[OrderMenu], id: Option[Int])(implicit requestHeader: MessagesRequestHeader)
 
 @createOrEditOrderTemplate("Створити нове замовлення",
     routes.OrderController.createOrder,
     oF,
     "Створити",
     menus,
-    isCreate = true)
+    isCreate = true,
+    possibleIdAfterAddingCustomer = id
+)
