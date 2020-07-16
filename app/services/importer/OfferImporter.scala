@@ -1,6 +1,5 @@
 package services.importer
 
-import com.github.tototoshi.csv.CSVReader
 import java.io.{File, FileOutputStream, PrintWriter}
 import scala.annotation.tailrec
 import cats.effect.IO
@@ -10,6 +9,7 @@ class OfferImporter extends Importer {
   private val recipeProperties = Map(
     "id" -> "id",
     "name" -> "name",
+    "menuType" -> "type",
     "edited" -> "edited"
   )
   private val ingredientsProperties = Map(
@@ -24,12 +24,21 @@ class OfferImporter extends Importer {
     "ingredientId" -> "ingredient_id",
     "netto" -> "netto"
   )
-
-  def getImportEffectForAllGivenCSVs(CSVs: List[File], recipes: File, ingredients: File, recipeIngredients: File): IO[Unit] = {
+  def getImportEffectForAllGivenCSVs(files: List[File], recipes: File, ingredients: File, recipeIngredients: File, startId: Int, menuType: String, reader: File => Lines): IO[Unit] = {
     @tailrec
-    def getImportEffectForAllGivenCSVs(CSVs: List[File], recipes: File, ingredients: File, recipeIngredients: File, newId: Int, acc: IO[Unit]): IO[Unit] = {
-      def importAllFromCSV(csv: File, recipes: File, ingredients: File, recipeIngredients: File, recipeId: Int): IO[Unit] = {
-        val lines = CSVReader.open(csv).all().toArray
+    def getImportEffectForAllGivenCSVs(files: List[File], recipes: File, ingredients: File, recipeIngredients: File, newId: Int, reader: File => Lines, acc: IO[Unit]): IO[Unit] = {
+      def importAllFromCSV(file: File, recipes: File, ingredients: File, recipeIngredients: File, recipeId: Int, reader: File => Lines): IO[Unit] = {
+        val lines = reader(file)
+
+        def getAllSQLCommands[T](lines: Lines, generator: T => SQLCommand, getTFromLine: Array[String] => T , i: Int, until: Int): List[SQLCommand] = {
+          @tailrec
+          def getAllSQLCommands(generator: T => SQLCommand, i: Int, until: Int, acc: List[SQLCommand]): List[SQLCommand] = {
+            if (i >= until) acc
+            else getAllSQLCommands(generator, i + 1, until, generator(getTFromLine(lines(i).toArray)) +: acc)
+          }
+
+          getAllSQLCommands(generator, i, until, List("\n"))
+        }
 
         def writerLinesIntoGivenPintWriter(printWriter: PrintWriter, lines: List[SQLCommand]): Unit = {
             lines.foreach(l => printWriter.write(l))
@@ -37,10 +46,10 @@ class OfferImporter extends Importer {
         }
 
         def importRecipe(recipesId: Int): List[SQLCommand] = {
-          def getRecipe(id: Int, name: String): RecipeForImporter = RecipeForImporter(id, name, 0)
+          def getRecipe(id: Int, name: String): RecipeForImporter = RecipeForImporter(id, name, menuType, 0)
           List(
             startOfSQLCommand("recipes")
-              + generateInsertingProperties(List("id", "name", "edited"), recipeProperties)
+              + generateInsertingProperties(List("id", "name", "menuType", "edited"), recipeProperties)
               + generateInsertingVariables(getRecipe(recipesId, lines(1).head).productIterator.map(_.toString).toList)
               + endOfSQLCommand,
             "\n"
@@ -48,15 +57,6 @@ class OfferImporter extends Importer {
         }
 
         def importIngredients: List[SQLCommand] = {
-          def getAllSQLCommands(generator: IngredientForImporter => SQLCommand, i: Int, until: Int): List[SQLCommand] = {
-            @tailrec
-            def getAllSQLCommands(generator: IngredientForImporter => SQLCommand, i: Int, until: Int, acc: List[SQLCommand]): List[SQLCommand] = {
-              if (i >= until) acc
-              else getAllSQLCommands(generator, i + 1, until, generator(getIngredientFromLine(lines(i).toArray)) +: acc)
-            }
-
-            getAllSQLCommands(generator, i, until, List("\n"))
-          }
 
           def getIngredientFromLine(a: Array[String]): IngredientForImporter = {
             IngredientForImporter(a(1).toInt, a(2), a(3), a(1).toInt, 0)
@@ -69,7 +69,7 @@ class OfferImporter extends Importer {
               endOfSQLCommand
           }
 
-          getAllSQLCommands(generateInsertForIngredients, 4, lines.length - 1)
+          getAllSQLCommands(lines, generateInsertForIngredients, getIngredientFromLine, 4, lines.length - 1)
         }
 
         def importRecipeIngredients(recipesId: Int): List[SQLCommand] = {
@@ -77,7 +77,7 @@ class OfferImporter extends Importer {
             RecipeIngredientsForImporter(recipesId, a(1).toInt, a(4).replace(',', '.'))
           }
 
-          def generateRecipeIngredientsForIngredients(recipeIngredients: RecipeIngredientsForImporter, recipe: String): SQLCommand = {
+          def generateRecipeIngredientsForIngredients(recipeIngredients: RecipeIngredientsForImporter): SQLCommand = {
             startOfSQLCommand("recipe_ingredients") +
               generateInsertingProperties(
                 getProperties(List("recipeId", "ingredientId", "netto", "brutto"), recipeIngredients.productIterator), recipeIngredientsProperties) +
@@ -85,18 +85,7 @@ class OfferImporter extends Importer {
               endOfSQLCommand
           }
 
-          def getAllSQLCommands(generator: (RecipeIngredientsForImporter, String) => SQLCommand, i: Int, until: Int): List[SQLCommand] = {
-            @tailrec
-            def getAllSQLCommands(generator: (RecipeIngredientsForImporter, String) => SQLCommand, i: Int, until: Int, acc: List[SQLCommand]): List[SQLCommand] = {
-              if (i >= until)
-                acc
-              else getAllSQLCommands(generator, i + 1, until, generator(getRecipeIngredientsFromLine(lines(i).toArray), lines(1).head) +: acc)
-            }
-
-            getAllSQLCommands(generator, i, until, List("\n"))
-          }
-
-          getAllSQLCommands(generateRecipeIngredientsForIngredients, 4, lines.length - 1)
+          getAllSQLCommands(lines, generateRecipeIngredientsForIngredients, getRecipeIngredientsFromLine, 4, lines.length - 1)
         }
 
         IO{
@@ -105,12 +94,12 @@ class OfferImporter extends Importer {
           writerLinesIntoGivenPintWriter(new PrintWriter(new FileOutputStream(recipeIngredients, true)), importRecipeIngredients(recipeId))
         }
       }
-      CSVs match {
-        case h :: t => getImportEffectForAllGivenCSVs(t, recipes, ingredients, recipeIngredients, newId + 1, acc *> importAllFromCSV(h, recipes, ingredients, recipeIngredients, newId + 1))
+      files match {
+        case h :: t => getImportEffectForAllGivenCSVs(t, recipes, ingredients, recipeIngredients, newId + 1, reader, acc *> importAllFromCSV(h, recipes, ingredients, recipeIngredients, newId, reader))
         case List() => acc
       }
     }
-    getImportEffectForAllGivenCSVs(CSVs, recipes, ingredients, recipeIngredients, 1, IO())
+    getImportEffectForAllGivenCSVs(files, recipes, ingredients, recipeIngredients, startId, reader, IO(println("Done")))
   }
 
 }
@@ -118,13 +107,31 @@ class OfferImporter extends Importer {
 
 
 object OfferImporter extends OfferImporter with App {
-  val recipes = new File("/Users/andrewyakovenko/Programming/On gitHub/simba/sql/recipes.sql")
-  val ingredients = new File("/Users/andrewyakovenko/Programming/On gitHub/simba/sql/ingredients.sql")
-  val recipeIngredients = new File("/Users/andrewyakovenko/Programming/On gitHub/simba/sql/recipe-ingredients.sql")
-  val importEffect = getImportEffectForAllGivenCSVs(getAllFilesInDirectory(???), recipes, ingredients, recipeIngredients)
+  val recipes = new File("sql/recipes.sql")
+  val ingredients = new File("sql/ingredients.sql")
+  val recipeIngredients = new File("sql/recipe-ingredients.sql")
+
+  val classics = getAllXLSXsInDirectory(new File("/Users/andrewyakovenko/Downloads/Классик"))
+  val breakfasts = getAllXLSXsInDirectory(new File("/Users/andrewyakovenko/Downloads/сніданок"))
+  val lites = getAllXLSXsInDirectory(new File("/Users/andrewyakovenko/Downloads/лайт"))
+  val deserts = getAllXLSXsInDirectory(new File("/Users/andrewyakovenko/Downloads/десерт"))
+  val soups = getAllXLSXsInDirectory(new File("/Users/andrewyakovenko/Downloads/суп"))
+
+  val importEffect: IO[Unit] = {
+    impotEffectFrom(classics, "classic", 1) *>
+      impotEffectFrom(breakfasts, "breakfast", classics.length + 1) *>
+      impotEffectFrom(lites, "lite", classics.length + breakfasts.length + 1) *>
+      impotEffectFrom(deserts, "desert", classics.length + breakfasts.length + lites.length + 1) *>
+      impotEffectFrom(soups, "soup", classics.length + breakfasts.length + lites.length + deserts.length + 1)
+  }
+  def impotEffectFrom(files: List[File], menuType: String, startId: Int): IO[Unit] = {
+    getImportEffectForAllGivenCSVs(files, recipes, ingredients, recipeIngredients, startId, menuType, xlsxToLines)
+  }
+
+
   importEffect.unsafeRunSync()
 }
 
-case class RecipeForImporter(id: Int, name: String, edited: Int)
+case class RecipeForImporter(id: Int, name: String, menuType: String,  edited: Int)
 case class IngredientForImporter(id: Int, description: String, unit: String, artBy: Int, edited: Int)
 case class RecipeIngredientsForImporter(recipeId: Int, ingredientId: Int, netto: String)

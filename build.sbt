@@ -16,7 +16,9 @@ libraryDependencies ++= Seq(jdbc, ehcache, ws, specs2 % Test, guice,
   "org.tpolecat" %% "doobie-h2" % "0.8.8",
   "mysql" % "mysql-connector-java" % "5.1.12",
   "org.webjars" % "bootstrap" % "4.4.1",
-  "com.github.tototoshi" %% "scala-csv" % "1.3.6"
+  "com.github.tototoshi" %% "scala-csv" % "1.3.6",
+  "org.apache.poi" % "poi" % "3.17",
+  "org.apache.poi" % "poi-ooxml" % "3.17"
 )
 
 unmanagedResourceDirectories in Test <+= baseDirectory(_ / "target/web/public/test")

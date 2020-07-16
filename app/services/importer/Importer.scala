@@ -1,11 +1,14 @@
 package services.importer
 import scala.annotation.tailrec
 import java.io.File
-
+import org.apache.poi.ss.usermodel.{DataFormatter, WorkbookFactory}
+import collection.JavaConversions._
 
 class Importer {
   type SQLFragment = String
   type SQLCommand = String
+  type Line = List[String]
+  type Lines = Array[Line]
   val endOfSQLCommand = "; \n"
   def startOfSQLCommand(tableName: String) = s"insert into $tableName"
 
@@ -30,8 +33,21 @@ class Importer {
 
   def generateInsertingVariables(v: List[String]): SQLFragment = " values " + getListInBraces(v, withVarcharBraces = true)
 
-  def getAllFilesInDirectory(directory: File): List[File] = {
+  def getAllCVSsInDirectory(directory: File): List[File] = {
     directory.listFiles(_.isFile).filter(_.getName.endsWith(".csv")).toList
+  }
+
+  def getAllXLSXsInDirectory(directory: File): List[File] = {
+    directory.listFiles(_.isFile).filter(_.getName.endsWith(".xlsx")).toList
+  }
+
+  def xlsxToLines(xlsx: File): Lines = {
+    val workbook = WorkbookFactory.create(xlsx)
+    val sheet = workbook.getSheetAt(0)
+    val formatter = new DataFormatter()
+    sheet.map{ row =>
+      row.cellIterator().map(cell => formatter.formatCellValue(cell)).toList
+    }.toArray
   }
 
   def getVariables(iterator: Iterator[Any]): List[String]= iterator.toList.filter(_ != null).map {

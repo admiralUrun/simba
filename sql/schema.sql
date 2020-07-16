@@ -31,7 +31,7 @@ create table addresses (
 
 drop table if exists ingredients;
 create table ingredients (
-    id int primary key auto_increment,
+    id int primary key,
     description varchar(256) not null,
     -- SI unit, g, mg, l, etc.
     unit varchar(4) not null,
@@ -43,8 +43,9 @@ create table ingredients (
 
 drop table if exists recipes;
 create table recipes (
-    id int primary key auto_increment,
+    id int primary key,
     name varchar(256) not null,
+    type varchar(50),
     edited bit
     -- see if still has old name or was edited
 );
