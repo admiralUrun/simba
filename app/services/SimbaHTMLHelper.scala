@@ -21,6 +21,18 @@ object SimbaHTMLHelper {
     else s.getOrElse("-")
   }
 
+  def translateMenuType(menuType: String): String = {
+    val translator = Map(
+      "classic" -> "Класичне",
+      "lite" -> "Лайт",
+      "breakfast" -> "Сніданок",
+      "soup" -> "Суп",
+      "desert" -> "Десерт",
+      "promo" -> "Промо"
+    )
+    translator.getOrElse(menuType, throw new RuntimeException(s"Error can't translate $menuType"))
+  }
+
   def getFlash()(implicit request: MessagesRequestHeader): Html = {
     def getFlash(option: Option[String], alertClass: String): SHTML = {
       if (option.nonEmpty) option.map { message =>

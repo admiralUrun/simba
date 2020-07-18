@@ -6,9 +6,11 @@
 
 @main(title) {
     @getFlash()
-    @form(routes.OfferController.setOffer(title, menuType),  Symbol("enctype") -> "multipart/form-data") {
+    @form(routes.OfferController.setOffer(title, menuType)) {
         @CSRF.formField
-        <input class="" name="resepies" type="file">
+
+
+
         <input class="btn btn-primary" type="submit" value="Завантажити">
     }
 }
