@@ -5,19 +5,8 @@
 @main("Клієнти") {
     @getFlash()
 
-    <div class="container-fluid">
-        <div class="row">
-            @form(routes.CustomerController.toCustomersListPage(""), Symbol("class") -> "colFirst") {
-                <div class="input-group col-md">
-                    <input name="search" type="text" class="form-control col-md" value="@search" list="searchList">
-                    <input type="submit" id="searchSubmit" value="Пошук" class="btn btn-primary offset-sm-1">
-                </div>
-            }
-            <div class="col"></div>
-            <a class="colLast btn btn-success" id="add" href="@routes.CustomerController.toCreateCustomerPage()">Додати</a>
-        </div>
-    </div>
 
+    @getStandardSearchDiv(Option(routes.CustomerController.toCustomersListPage("")), None, Option(routes.CustomerController.toCreateCustomerPage()), withSideJS = false)
     <div id="table">
         @if(customers.nonEmpty) {
         <table class="table table-striped table-bordered">

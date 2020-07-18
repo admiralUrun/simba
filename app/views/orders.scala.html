@@ -28,16 +28,7 @@
 
     @getFlash()
 
-    <div class="container-fluid">
-        <div class="row">
-            @form(routes.OrderController.toOrderFeedPage(""), Symbol("class") -> "colFirst") {
-                <input name="search" type="search" value="@search">
-                <input type="submit" id="searchSubmit" value="Пошук" class="btn btn-primary">
-            }
-            <div class="col"></div>
-            <a class="colLast btn btn-success" id="add" href="@routes.OrderController.toOrderCreatePage()">Додати</a>
-        </div>
-    </div>
+    @getStandardSearchDiv(Option(routes.OrderController.toOrderFeedPage("")), None, Option(routes.OrderController.toOrderCreatePage()), withSideJS = false)
 
     @getDateRow(new Date())
     <div id="table">

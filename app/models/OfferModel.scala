@@ -13,14 +13,14 @@ import java.io.File
 class OfferModel @Inject()(dS: DoobieStore) {
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
 
-  def getOfferPreferencesByMuneTupe(menuType: String): OfferPreferences = {
+  def getOfferPreferencesByMenuTupe(menuType: String): OfferPreferences = {
     val offers = sql"select * from offers where execution_date is null and  menu_type = $menuType"
       .query[Offer]
       .to[List]
       .transact(xa)
       .unsafeRunSync()
 
-    OfferPreferences(offers.map(_.name), offers.map(_.price), menuType)
+    OfferPreferences(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), menuType)
   }
 
   def setOfferPreferences(offerPreferences: OfferPreferences): Boolean = {
@@ -39,4 +39,4 @@ case class Offer(id: Option[Int], name: String, price: Int, executionDate: Optio
 case class OfferResepies(offerId: Int, resepisId: Int, quantity: Int)
 
 case class OfferForCreate(menuType: String, recipeIds: List[Int])
-case class OfferPreferences(ids: List[Int], prices: List[Int], menuType: String)
+case class OfferPreferences(ids: List[Int], names: List[String],  prices: List[Int], menuType: String)

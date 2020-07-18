@@ -2,11 +2,13 @@ package services
 
 import java.util.Date
 import java.text.SimpleDateFormat
+
 import models.Address
 import play.api.data.Form
-import play.api.mvc.MessagesRequestHeader
+import play.api.mvc.{Call, MessagesRequestHeader}
 import play.twirl.api.{Html, JavaScript}
 import java.util.Calendar
+
 import views.html.helper._
 
 object SimbaHTMLHelper {
@@ -45,14 +47,14 @@ object SimbaHTMLHelper {
   }
 
   def createInputForForm[T](form: Form[T], keyInForm: String, label: String, layoutClass: String = "", inputLimit: Int, errorMessage: String = ""): Html = {
-    def createInputForForm(form: Form[T],withError: Boolean, keyInForm: String, label: String, layoutClass: String = "", inputLimit: Int, errorMessage: String ): SHTML = {
-      if(withError) {
+    def createInputForForm(form: Form[T], withError: Boolean, keyInForm: String, label: String, layoutClass: String = "", inputLimit: Int, errorMessage: String): SHTML = {
+      if (withError) {
         getSHtmlInDiv("", layoutClass, {
           getSHtmlInDiv(layoutClass = "form-group " + layoutClass,
             content = {
               SHTML(s"<label class=${inDQ("control-label")} for=${inDQ(keyInForm)}> $label </label>") +
                 SHTML(s"<input id=${inDQ(keyInForm)} name=${inDQ(keyInForm)} value=${inDQ(getValueFromForm(keyInForm, form).getOrElse(""))}   maxlength=${inDQ(inputLimit.toString)} type=${inDQ("text")} class=${inDQ("form-control " + "is-invalid")}>") +
-              getSHtmlInDiv("", "invalid-feedback", SHTML(errorMessage))
+                getSHtmlInDiv("", "invalid-feedback", SHTML(errorMessage))
             })
         })
       } else {
@@ -63,6 +65,7 @@ object SimbaHTMLHelper {
           })
       }
     }
+
     createInputForForm(form, form.error(keyInForm).isDefined, keyInForm, label, layoutClass, inputLimit, errorMessage).toPlayHTML
   }
 
@@ -75,15 +78,15 @@ object SimbaHTMLHelper {
   }
 
   def createTextArea(idName: String, label: String, layoutClass: String = "", rowsInTextArea: Int = 3, inTextArea: Option[String] = Option("")): Html = {
-      getSHtmlInDiv(layoutClass = "form-group " + layoutClass,
-        content = {
-          SHTML(s"<label for=${inDQ(idName)}>$label</label>") +
-            SHTML(
-              s"""<textarea class=${inDQ("form-control")}
+    getSHtmlInDiv(layoutClass = "form-group " + layoutClass,
+      content = {
+        SHTML(s"<label for=${inDQ(idName)}>$label</label>") +
+          SHTML(
+            s"""<textarea class=${inDQ("form-control")}
               id=${inDQ(idName)} name=${inDQ(idName)}
               rows=${inDQ(rowsInTextArea.toString)}
              >${inTextArea.getOrElse("")}</textarea>""")
-        }).toPlayHTML
+      }).toPlayHTML
   }
 
   def formattingDateForDisplay(d: Date): String = {
@@ -141,8 +144,8 @@ object SimbaHTMLHelper {
 
   def getAllArrayInputFromForm[F, A](form: Form[F], keyInForm: String, constrictor: (A, Int) => Html, addonFunctionOnFiled: String => A): Html = {
     /**
-      repeatWithIndex will run even list is empty so we need math for "field"
-      */
+     * repeatWithIndex will run even list is empty so we need math for "field"
+     */
     SHTML(repeatWithIndex(form(keyInForm)) { (field, i) =>
       field.value match {
         case Some(value) => constrictor(addonFunctionOnFiled(value), i)
@@ -169,6 +172,7 @@ object SimbaHTMLHelper {
       if (o.isDefined) Option(o.head.replace(search, ""))
       else None
     }
+
     def searchForInt(search: String): Option[Int] = {
       val o = a.find(_.contains(search))
       if (o.isDefined) Option(o.head.replace(search, "").toInt)
@@ -183,13 +187,14 @@ object SimbaHTMLHelper {
   }
 
   def addressToString(a: Address): String = {
-    def getString(s:Any): String = {
+    def getString(s: Any): String = {
       s match {
         case Some(value) => value.toString
         case None => ""
         case _ => s.toString
       }
     }
+
     val s = List("(id)", "(customerID)", "(city)", "(residentialComplex)", "(address)", "(entrance)", "(floor)", "(flat)", "(notes)").zip(a.productIterator.toList).filter(_._2 != None)
       .map { t =>
         getString(t._2) + t._1
@@ -200,7 +205,7 @@ object SimbaHTMLHelper {
   def createDropDown[T](title: String, content: Seq[T], generateDropItemFromContent: T => String): Html = {
     getSHtmlInDiv(layoutClass = "dropdown", content = {
       SHTML(s"<button class=${inDQ(" btn btn-secondary dropdown-toggle")} type=${inDQ("button")} data-toggle=${inDQ("dropdown")} aria-haspopup=${inDQ("true")} aria-expanded=${inDQ("false")}>$title</button>") +
-      getSHtmlInDiv(layoutClass = "dropdown-menu", content = SHTML(content.map(generateDropItemFromContent)), additionalSettings = "aria-labelledby=\"dropdownMenuButton\"")
+        getSHtmlInDiv(layoutClass = "dropdown-menu", content = SHTML(content.map(generateDropItemFromContent)), additionalSettings = "aria-labelledby=\"dropdownMenuButton\"")
     }).toPlayHTML
   }
 
@@ -208,16 +213,41 @@ object SimbaHTMLHelper {
     s"<a id=${inDQ(htmlID)} class=${inDQ("dropdown-item")} href=${inDQ("#")} onclick=${inDQ(jSOnclick.body)} >$title</a>"
   }
 
+  def getStandardSearchDiv(formCall: Option[Call], dropdownHead: Option[String], sideButtonHref: Option[Call], withSideJS: Boolean): Html = {
+    val formMethod = if(formCall.isDefined) formCall.head.method else ""
+    val formAction = if(formCall.isDefined) formCall.head.url else ""
+    val additionButtonAction = if (sideButtonHref.isDefined) sideButtonHref.head.url else ""
+
+    val dropdownDiv = if(dropdownHead.isDefined) getSHtmlInDiv("searchMenu", "dropdown-menu", SHTML(s"<span class=${inDQ("dropdown-header")}>${dropdownHead.getOrElse("")}</span>")) else SHTML("")
+    val mainContent: SHTML = {
+      SHTML(s"<form action=${inDQ(formAction)} method=${inDQ(formMethod)} class=${inDQ("colFirst")}>") +
+        getSHtmlInDiv(layoutClass = "input-group", content = {
+          SHTML(s"<input id=${inDQ("search")} name=${inDQ("search")} type=${inDQ("search")} class=${inDQ("form-control dropdown-toggle")} data-toggle=${inDQ("dropdown")} aria-haspopup=${inDQ("true")} aria-expanded=${inDQ("false")}>") +
+          dropdownDiv +
+            SHTML(s"<input type=${if (withSideJS) inDQ("button") else inDQ("submit")} id=${inDQ("searchSubmit")} value=${inDQ("Пошук")} class=${inDQ("btn btn-primary offset-sm-1")}>")}
+        ) +
+      SHTML("</form>") +
+      getSHtmlInDiv(layoutClass = "col" ,content = SHTML("")) +
+      getSHtmlInDiv(layoutClass = "colLast", content = SHTML(s"<a class= ${inDQ(" colLast btn btn-success")} href=${inDQ(additionButtonAction)} >Додати</a>"))
+    }
+
+    getSHtmlInDiv("searchDIV", "row container-fluid", mainContent).toPlayHTML
+  }
+
+  /**
+   * Have to use with s"..." because Play will fall with Compilation error of ( ')' expected but string literal found. )
+   * Even if Idea Compiler doesn't see any problem
+   * */
   private def inDQ(string: String): String = {
     val doubleQuote = "\""
     doubleQuote + string + doubleQuote
   }
 
   /**
-   * additionalSettings is for anything that not common use HTML attributes but without need to write one more method
-   *  should be like getSHtmlInDiv(???, ???, ???, "aria-labelledby="dropdownMenuButton"")
-   * */
-  private def getSHtmlInDiv(id: String= "", layoutClass: String ="", content: SHTML, additionalSettings: String = ""): SHTML = {
+   * additionalSettings are for anything that not common use HTML attributes but without need to write one more method
+   * should be like getSHtmlInDiv("7", "btn btn-primary", SHTML(...), "aria-labelledby="dropdownMenuButton"")
+   **/
+  private def getSHtmlInDiv(id: String = "", layoutClass: String = "", content: SHTML, additionalSettings: String = ""): SHTML = {
     SHTML(s"<div id=${inDQ(id)} class= ${inDQ(layoutClass)} $additionalSettings>") + content + SHTML("</div>")
   }
 

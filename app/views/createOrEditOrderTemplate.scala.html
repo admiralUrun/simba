@@ -49,22 +49,7 @@
 @getCustomerSearch = {
     @if(isCreate) {
         <div id="customerInformation" class="row container-fluid">
-            <div id="searchDIV" class="row container-fluid">
-                <form class="colFirst">
-                    <div class="input-group"  style="display: ">
-                        <input id="search" name="search" type="search" class="form-control dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <div id="searchMenu" class="dropdown-menu">
-                            <span class="dropdown-header">Тут можна знайти Клієнта</span>
-                        </div>
-                        <input type="button" id="searchSubmit" value="Пошук" class="btn btn-primary offset-sm-1">
-                    </div>
-                </form>
-                <div class="col"></div>
-                <div class="colLast">
-                    <a class="colLast btn btn-success" id="add" href="@routes.CustomerController.toCreateCustomerPageForOrder()">Додати</a>
-                </div>
-            </div>
-            </div>
+            @getStandardSearchDiv(None, Option("Тут можна знайти Клієнта"), Option(routes.CustomerController.toCreateCustomerPageForOrder()), withSideJS = true)
         </div>
     } else {
 
@@ -149,7 +134,7 @@
     <script id="runtimeScript">
         $(document).ready(function () {
             if (@possibleIdAfterAddingCustomer.isDefined) {
-                $.get("/searchCustomerForOrderById/" + @possibleIdAfterAddingCustomer, function (data) {
+                $.get("/searchCustomerForOrderById/" + @possibleIdAfterAddingCustomer.getOrElse(0), function (data) {
                     /**
                      * Won't use -1
                     * */

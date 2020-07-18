@@ -336,14 +336,15 @@ insert into ingredients(id, description, unit, art_by, edited) values ('9809983'
 insert into ingredients(id, description, unit, art_by, edited) values ('52611', 'Сыр мягкий "Кремчиз" с м.д.ж. в с.в. 70%, Cooking, 2250 г.', 'кг', '52611', 0);
 insert into ingredients(id, description, unit, art_by, edited) values ('52892', 'Базилик суш', 'кг', '52892', 0);
 insert into ingredients(id, description, unit, art_by, edited) values ('51036', 'Цветная капуста  быстрозамороженная 1 уп/1кг тм DUJARDIN', 'кг', '51036', 0);
-insert into ingredients(id, description, unit, art_by, edited) values ('5483', 'Концентрат для рыбного супа (Dashinomoto) 1пач./1 кг., Китай', 'кг', '5483', 0);insert into ingredients(id, description, unit, art_by, edited) values ('50927', 'Кабачок цукини', 'кг', '50927', 0);
+insert into ingredients(id, description, unit, art_by, edited) values ('5483', 'Концентрат для рыбного супа (Dashinomoto) 1пач./1 кг., Китай', 'кг', '5483', 0);
 insert into ingredients(id, description, unit, art_by, edited) values ('52527', 'КРЕВЕТКИ ваннамей с/м б/г 21/25 25-35% 1 кг, NAIK, Индия', 'кг', '52527', 0);
 
 insert into ingredients(id, description, unit, art_by, edited) values ('50605', 'Кунжут семена ЧЕРНЫЕ неочищенные обжаренные, Россия, 1 кг', 'кг', '50605', 0);
 insert into ingredients(id, description, unit, art_by, edited) values ('50792', 'Морской коктейль SI замороженный (6 компонентов), 1 кг, Таиланд', 'кг', '50792', 0);
 
 insert into ingredients(id, description, unit, art_by, edited) values ('9809405', 'Ростки бобов мунг в рассоле 410/220г', 'кг', '9809405', 0);
-insert into ingredients(id, description, unit, art_by, edited) values ('5125', 'Макаронные изделия: Лапша Fettuccine №12, 1 уп/500 г', 'кг', '5125', 0);insert into ingredients(id, description, unit, art_by, edited) values ('50954', 'Сельдерей стебель', 'кг', '50954', 0);
+insert into ingredients(id, description, unit, art_by, edited) values ('5125', 'Макаронные изделия: Лапша Fettuccine №12, 1 уп/500 г', 'кг', '5125', 0);
+insert into ingredients(id, description, unit, art_by, edited) values ('50954', 'Сельдерей стебель', 'кг', '50954', 0);
 insert into ingredients(id, description, unit, art_by, edited) values ('52672', 'Изделие кулинарное из мяса утки "Конфи утиный окорочек" жареное зам.', 'кг', '52672', 0);
 
 

@@ -12,6 +12,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
   private val offerForm = Form(
     mapping(
       "ids" -> list(number),
+      "names" -> list(nonEmptyText),
       "pricesForTwo" -> list(number),
       "menuType" -> nonEmptyText
     )(OfferPreferences.apply)(OfferPreferences.unapply)
@@ -38,7 +39,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
   def toOfferPreferencePage(title: String, menuType: String): PlayAction = Action {
     Ok(views.html.pereferanceOfferTemplate(
       title,
-      offerForm.fill(offerModel.getOfferPreferencesByMuneTupe(menuType)),
+      offerForm.fill(offerModel.getOfferPreferencesByMenuTupe(menuType)),
       menuType)
     )
   }
