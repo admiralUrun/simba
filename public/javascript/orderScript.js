@@ -29,7 +29,7 @@ function addToOrder(item, title, cost) {
                 ${text}
                 <input id="inOrder[${index}]" name="inOrder[${index}]" value="${value}" style="display: none">
                 <button type="button" class="close" aria-label="Close"
-                onclick="deleteFromOrder('${index}', '${cost}')"
+                onclick="deleteFromOrder('${index}', '${cost}')">
                 <span aria-hidden="true">&times;</span></button>
             </li>`).appendTo('ul')
         }

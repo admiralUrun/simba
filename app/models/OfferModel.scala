@@ -7,7 +7,7 @@ import doobie._
 import doobie.implicits._
 import cats.implicits._
 import javax.inject.{Inject, Singleton}
-import java.io.File
+import play.api.libs.json.JsValue
 
 @Singleton
 class OfferModel @Inject()(dS: DoobieStore) {
@@ -20,11 +20,14 @@ class OfferModel @Inject()(dS: DoobieStore) {
       .transact(xa)
       .unsafeRunSync()
 
-    OfferPreferences(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), menuType)
+    OfferPreferences(Option(offers.map(_.id.head)), offers.map(_.name), offers.map(_.price), menuType)
   }
 
   def setOfferPreferences(offerPreferences: OfferPreferences): Boolean = {
+    ???
+  }
 
+  def getRecipesByName(name: String): JsValue = {
     ???
   }
 
@@ -39,4 +42,4 @@ case class Offer(id: Option[Int], name: String, price: Int, executionDate: Optio
 case class OfferResepies(offerId: Int, resepisId: Int, quantity: Int)
 
 case class OfferForCreate(menuType: String, recipeIds: List[Int])
-case class OfferPreferences(ids: List[Int], names: List[String],  prices: List[Int], menuType: String)
+case class OfferPreferences(ids: Option[List[Int]], names: List[String],  prices: List[Int], menuType: String)

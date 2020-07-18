@@ -2,14 +2,63 @@
 @import services.SimbaHTMLHelper._
 
 
-@(title: String, menuType: String)(implicit requestHeader: MessagesRequestHeader)
+@(title: String, menuType: String, oF: Form[OfferPreferences], submitLabel: String, isCreate: Boolean)(implicit requestHeader: MessagesRequestHeader)
+
+@getSearchForRecipes = {
+    <div id="searchDIV">
+        <form class="form-inline md-form mr-auto mb-4">
+            <input class="form-control mr-sm-2" type="text" placeholder="Пошук" aria-label="Search">
+            <button class="btn btn-primary btn-rounded btn-sm my-0" type="submit">Пошук</button>
+        </form>
+    </div>
+}
+
+@megreHtmlInputsList(ids: Html, names: Html, prices: Html) = @{
+    ids.body.split(',').zip(names.body.split(',').zip(prices.body.split(','))).map(t => (t._2._1, t._2._2, t._1)).toList
+}
+
+@createEditTools(inputs: List[(String, String, String)]) = {
+    @inputs.map { inputs =>
+    <div class="">
+        @inputs._1
+    <div class="form-group">
+        <label class="control-label">Назва</label>
+        @inputs._2
+    </div>
+    <div class="form-group">
+        <label class="control-label">Ціна</label>
+        @inputs._3
+    </div>
+    </div>
+}
+}
+
+@getInputsFromListPlayFormForMerge(keyInForm: String, IsDisplayed: Boolean = true) = {
+@repeatWithIndex(oF(keyInForm)) { (field, index) =>
+    <input class="form-control" id="@{keyInForm}[@index]" name="@{keyInForm}[@index]" value="@{field.value.head}" style="display: @{
+        if(IsDisplayed) "" else "none"
+    }">,
+}
+}
 
 @main(title) {
-    @getFlash()
+    @getSearchForRecipes
     @form(routes.OfferController.setOffer(title, menuType)) {
         @CSRF.formField
+        <div id="inOffer">
+            @if(!isCreate) {
+                @createEditTools(megreHtmlInputsList(
+                    getInputsFromListPlayFormForMerge("ids"),
+                    getInputsFromListPlayFormForMerge("names"),
+                    getInputsFromListPlayFormForMerge("prices")))
+            }
+        </div>
 
-
-        <input class="btn btn-primary" type="submit" value="Завантажити">
+        <input class="btn btn-primary" type="submit" value="@submitLabel">
     }
+    <script id="runTimeScript">
+            $(document).ready(function () {
+            })
+    </script>
+    <script src="@routes.Assets.versioned("javascript/offerScript.js")"></script>
 }

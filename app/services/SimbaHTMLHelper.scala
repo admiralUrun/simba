@@ -2,13 +2,11 @@ package services
 
 import java.util.Date
 import java.text.SimpleDateFormat
-
 import models.Address
 import play.api.data.Form
 import play.api.mvc.{Call, MessagesRequestHeader}
 import play.twirl.api.{Html, JavaScript}
 import java.util.Calendar
-
 import views.html.helper._
 
 object SimbaHTMLHelper {
@@ -214,21 +212,21 @@ object SimbaHTMLHelper {
   }
 
   def getStandardSearchDiv(formCall: Option[Call], dropdownHead: Option[String], sideButtonHref: Option[Call], withSideJS: Boolean): Html = {
-    val formMethod = if(formCall.isDefined) formCall.head.method else ""
-    val formAction = if(formCall.isDefined) formCall.head.url else ""
-    val additionButtonAction = if (sideButtonHref.isDefined) sideButtonHref.head.url else ""
+    val formMethod = if (formCall.isDefined) formCall.head.method else ""
+    val formAction = if (formCall.isDefined) formCall.head.url else ""
+    val sideButtonAction = if (sideButtonHref.isDefined) sideButtonHref.head.url else ""
 
-    val dropdownDiv = if(dropdownHead.isDefined) getSHtmlInDiv("searchMenu", "dropdown-menu", SHTML(s"<span class=${inDQ("dropdown-header")}>${dropdownHead.getOrElse("")}</span>")) else SHTML("")
+    val dropdownDiv = if (dropdownHead.isDefined) getSHtmlInDiv("searchMenu", "dropdown-menu", SHTML(s"<span class=${inDQ("dropdown-header")}>${dropdownHead.getOrElse("")}</span>")) else SHTML("")
     val mainContent: SHTML = {
-      SHTML(s"<form action=${inDQ(formAction)} method=${inDQ(formMethod)} class=${inDQ("colFirst")}>") +
+      SHTML(s"<form action=${inDQ(formAction)} method=${inDQ(formMethod)} class=${inDQ("colFirst form-inline md-form mr-auto mb-4")}>") +
         getSHtmlInDiv(layoutClass = "input-group", content = {
-          SHTML(s"<input id=${inDQ("search")} name=${inDQ("search")} type=${inDQ("search")} class=${inDQ("form-control dropdown-toggle")} data-toggle=${inDQ("dropdown")} aria-haspopup=${inDQ("true")} aria-expanded=${inDQ("false")}>") +
-          dropdownDiv +
-            SHTML(s"<input type=${if (withSideJS) inDQ("button") else inDQ("submit")} id=${inDQ("searchSubmit")} value=${inDQ("Пошук")} class=${inDQ("btn btn-primary offset-sm-1")}>")}
-        ) +
-      SHTML("</form>") +
-      getSHtmlInDiv(layoutClass = "col" ,content = SHTML("")) +
-      getSHtmlInDiv(layoutClass = "colLast", content = SHTML(s"<a class= ${inDQ(" colLast btn btn-success")} href=${inDQ(additionButtonAction)} >Додати</a>"))
+          SHTML(s"<input id=${inDQ("search")} name=${inDQ("search")} type=${inDQ("search")} class=${inDQ("form-control mr-sm-4 dropdown-toggle")} data-toggle=${inDQ("dropdown")} aria-haspopup=${inDQ("true")} aria-expanded=${inDQ("false")}>") +
+            dropdownDiv +
+            SHTML(s"<input type=${if (withSideJS) inDQ("button") else inDQ("submit")} id=${inDQ("searchSubmit")} value=${inDQ("Пошук")} class=${inDQ("btn btn-primary btn-rounded btn-sm my-0")}>")
+        }) +
+        SHTML("</form>") +
+        getSHtmlInDiv(layoutClass = "col", content = SHTML("")) +
+        getSHtmlInDiv(layoutClass = "colLast", content = SHTML(s"<a class= ${inDQ(" colLast btn btn-success")} href=${inDQ(sideButtonAction)} >Додати</a>"))
     }
 
     getSHtmlInDiv("searchDIV", "row container-fluid", mainContent).toPlayHTML
@@ -237,7 +235,7 @@ object SimbaHTMLHelper {
   /**
    * Have to use with s"..." because Play will fall with Compilation error of ( ')' expected but string literal found. )
    * Even if Idea Compiler doesn't see any problem
-   * */
+   **/
   private def inDQ(string: String): String = {
     val doubleQuote = "\""
     doubleQuote + string + doubleQuote

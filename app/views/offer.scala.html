@@ -4,6 +4,6 @@
 @(title: String, menuType: String)
 
 @main(title) {
-    <a class="btn btn-info" href="@routes.OfferController.toSetOfferPage(s"Встановити ${translateMenuType(menuType)}", menuType)">Встановити</a>
+    <a class="btn btn-info" href="@routes.OfferController.toCreateOfferPage(s"Встановити ${translateMenuType(menuType)}", menuType)">Встановити</a>
     <a class="btn btn-primary" href="@routes.OfferController.toOfferPreferencePage(s"Зміна ${translateMenuType(menuType)}", menuType)">Налаштування</a>
 }

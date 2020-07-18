@@ -11,9 +11,9 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
   type PlayAction = Action[AnyContent]
   private val offerForm = Form(
     mapping(
-      "ids" -> list(number),
+      "ids" -> optional(list(number)),
       "names" -> list(nonEmptyText),
-      "pricesForTwo" -> list(number),
+      "prices" -> list(number),
       "menuType" -> nonEmptyText
     )(OfferPreferences.apply)(OfferPreferences.unapply)
   )
@@ -28,25 +28,30 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
       Ok(views.html.offer(title, menuType))
   }
 
-  def toSetOfferPage(title: String, menuType: String): PlayAction = Action { implicit request =>
-    Ok(views.html.setOfferPage(title, menuType))
+  def toCreateOfferPage(title: String, menuType: String): PlayAction = Action { implicit request =>
+    Ok(views.html.createOffer(title, menuType, offerForm))
   }
 
   def setOffer(title: String, menuType: String): PlayAction = Action { implicit request =>
     Ok("Working on")
   }
 
-  def toOfferPreferencePage(title: String, menuType: String): PlayAction = Action {
-    Ok(views.html.pereferanceOfferTemplate(
+  def toOfferPreferencePage(title: String, menuType: String): PlayAction = Action { implicit  request =>
+    Ok(views.html.editOffer(
       title,
-      offerForm.fill(offerModel.getOfferPreferencesByMenuTupe(menuType)),
-      menuType)
+      menuType,
+      offerForm.fill(offerModel.getOfferPreferencesByMenuTupe(menuType)))
     )
+  }
+
+  def getRecipesForOfferSearch(name: String): PlayAction = Action {
+    //offerModel.getRecipesByName(name)
+    Ok("")
   }
 
   def editOfferPreference(): PlayAction = Action { implicit request =>
     offerForm.bindFromRequest.fold(
-      formWithError => BadRequest(views.html.pereferanceOfferTemplate("Налаштування Пропозиції", formWithError, formWithError.data("menuType"))),
+      formWithError => BadRequest(views.html.editOffer("Налаштування Пропозиції", formWithError.data("menuType"), formWithError)),
       offerPreferences => {
         resultWithFlash(offerModel.setOfferPreferences(offerPreferences), "Пропозицію Зміненно")
       }
