@@ -15,7 +15,7 @@ import services.SimbaHTMLHelper.addressToString
 class CustomerModel @Inject()(dS: DoobieStore) {
   type  JSONWrites[T] = OWrites[T]
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
- private implicit val customerReads: Writes[Customer] = (
+ private implicit val customerWriter: Writes[Customer] = (
     ( JsPath \ "id").writeNullable[Int] and
       ( JsPath \ "firstName").write[String] and
       ( JsPath \ "lastName").writeNullable[String] and
@@ -28,7 +28,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       ( JsPath \ "notes").writeNullable[String]
     )(unlift(Customer.unapply))
 
-  private implicit val readerAddress: Writes[Address] = (
+  private implicit val addressWriter: Writes[Address] = (
     ( JsPath \ "id").writeNullable[Int] and
       ( JsPath \ "customerId").writeNullable[Int] and
       ( JsPath \ "city").write[String] and
@@ -40,7 +40,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       ( JsPath \ "notesForCourier").writeNullable[String]
     )(unlift(Address.unapply))
 
-  private implicit val readerCustomerAddressesToJson: Writes[CustomerAddressesToJson] = (
+  private implicit val customerAddressesToJsonWriter: Writes[CustomerAddressesToJson] = (
     (JsPath \ "customer").write[Customer] and
       (JsPath \ "addresses").write[Seq[Address]]
     )(unlift(CustomerAddressesToJson.unapply))

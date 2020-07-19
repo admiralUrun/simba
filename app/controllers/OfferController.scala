@@ -11,9 +11,9 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
   type PlayAction = Action[AnyContent]
   private val offerForm = Form(
     mapping(
-      "ids" -> optional(list(number)),
-      "names" -> list(nonEmptyText),
-      "prices" -> list(number),
+      "id" -> optional(list(number)),
+      "name" -> list(nonEmptyText),
+      "price" -> list(number),
       "menuType" -> nonEmptyText
     )(OfferPreferences.apply)(OfferPreferences.unapply)
   )
@@ -45,8 +45,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
   }
 
   def getRecipesForOfferSearch(name: String): PlayAction = Action {
-    //offerModel.getRecipesByName(name)
-    Ok("")
+    Ok(offerModel.getRecipesByName(name))
   }
 
   def editOfferPreference(): PlayAction = Action { implicit request =>

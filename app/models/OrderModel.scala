@@ -170,8 +170,6 @@ case class Order(id: Option[Int],
                  offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                  paid: Boolean, delivered: Boolean, note: Option[String])
 
-case class Recipe(id: Option[Int], name: String)
-
 case class OrderForDisplay(id: Option[Int],
                            customer: Customer,
                            address: Address,
