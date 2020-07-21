@@ -19,17 +19,17 @@ class OfferModel @Inject()(dS: DoobieStore) {
       (JsPath \ "menuType").write[String] and
       (JsPath \ "edited").write[Boolean]
   )(unlift(Recipe.unapply))
-  def getOfferPreferencesByMenuTupe(menuType: String): OfferPreferences = {
+  def getOfferPreferencesByMenuType(menuType: String): EditOffer = {
     val offers = sql"select * from offers where execution_date is null and  menu_type = $menuType"
       .query[Offer]
       .to[List]
       .transact(xa)
       .unsafeRunSync()
 
-    OfferPreferences(Option(offers.map(_.id.head)), offers.map(_.name), offers.map(_.price), menuType)
+    EditOffer(Option(offers.map(_.id.head)), offers.map(_.name), offers.map(_.price), menuType)
   }
 
-  def setOfferPreferences(offerPreferences: OfferPreferences): Boolean = {
+  def setOfferPreferences(offerPreferences: EditOffer): Boolean = {
     ???
   }
 
@@ -38,8 +38,66 @@ class OfferModel @Inject()(dS: DoobieStore) {
     Json.toJson(recipes)
   }
 
-  def setOffer(offerForCreate: OfferForCreate): Boolean = {
-    ???
+  def setOffer(sO: SettingOffer): Boolean = {
+    def validationError(menuType: String, howManyIds: Int): Boolean = Map(
+        "promo" -> (howManyIds == 3),
+        "soup" -> (howManyIds > 1),
+        "desert" -> (howManyIds > 1),
+        "classic" -> (howManyIds == 5),
+        "lite" -> (howManyIds == 5),
+        "breakfast" -> (howManyIds == 5)
+      )(menuType)
+    def insertOffer(name: String, menuType: String, recipes: List[Recipe], quantityOfRecipes: Int): IO[Unit] = {
+      val offerId = {
+        sql"insert into offers (name, price, execution_date, menu_type) values ($name, 0, null, $menuType)".update.run *>
+        sql"select LAST_INSERT_ID()".query[Int].unique
+      }
+      val effect = offerId.map{ id =>
+        recipes.traverse( r =>
+          sql"insert into offer_recipes (offer_id, recipe_id, quantity) values ($id, ${r.id}, $quantityOfRecipes)".update.run
+        ).transact(xa).unsafeRunAsyncAndForget()
+      }
+      effect.transact(xa)
+    }
+    def primeMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[List[Unit]] = {
+      (insertOffer("5 на 4", menuType, recipes, 4) *>
+        insertOffer("5 на 2", menuType, recipes, 2) *>
+        insertOffer("3 на 4", menuType, recipes.take(3), 4) *>
+        insertOffer("3 на 2", menuType, recipes.take(3), 2) *>
+        recipes.zipWithIndex.traverse { case (r, i) =>
+          insertOffer(s"$menuType ${i + 1} на 2", menuType, List(r), 2)
+        } *>
+        recipes.zipWithIndex.traverse { case (r, i) =>
+          insertOffer(s"$menuType ${i + 1} на 4", menuType, List(r), 4)
+        })
+    }
+    def sideMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[List[Unit]] = {
+      recipes.traverse{ r =>
+        insertOffer(s"${r.name}", menuType, List(r), 2)
+      }
+    }
+    def promoMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[Unit] = {
+      (insertOffer("Промо на 2", menuType, recipes, 2) *>
+      insertOffer(" Промо на 4", menuType, recipes, 4))
+    }
+
+    val menuType = sO.menuType
+
+    if(!validationError(menuType, sO.recipeIds.length)) false
+    else {
+      val recipes = sO.recipeIds.traverse{ id =>
+        sql"select * from recipes where id = $id".query[Recipe].unique
+      }
+      recipes.map{ recipes =>
+        if(menuType == "soup" || menuType == "desert") sideMenuTypeInsets(menuType, recipes).unsafeRunAsyncAndForget()
+        else if (menuType == "promo") promoMenuTypeInsets(menuType, recipes).unsafeRunAsyncAndForget()
+        else primeMenuTypeInsets(menuType, recipes).unsafeRunAsyncAndForget()
+      }.transact(xa).unsafeRunSync()
+      /**
+       *  Returning true for a version with out unsafeRun in Controller
+       * */
+      true
+    }
   }
 
 }
@@ -50,5 +108,5 @@ case class Recipe(id: Option[Int], name: String, menuType: String, edited: Boole
 
 case class OfferResepies(offerId: Int, resepisId: Int, quantity: Int)
 
-case class OfferForCreate(menuType: String, recipeIds: List[Int])
-case class OfferPreferences(ids: Option[List[Int]], names: List[String],  prices: List[Int], menuType: String)
+case class SettingOffer(menuType: String, recipeIds: List[Int])
+case class EditOffer(ids: Option[List[Int]], names: List[String], prices: List[Int], menuType: String)

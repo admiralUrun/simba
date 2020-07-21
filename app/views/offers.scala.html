@@ -7,6 +7,9 @@
     @main("Пропозиції") {
         @getFlash()
         <div>
+            @*
+                Any Changes in Tittles here should be repeated in OfferController as well
+            *@
             <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Класичного Меню", "classic")">Класичні</a>
             <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Лайт Меню", "lite")">Лайт</a>
             <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Сніданок Меню", "breakfast")">Сніданки</a>

@@ -100,10 +100,9 @@ function takeCustomerJSONAddToUI(JSONArray) {
 
             $(`#customer${customerAddresses.customer.id}`).data('customerJSON', customerAddresses)
         }
-
         if (!$.exists(`#customer${customerAddresses.customer.id}`)) {
             addDropItem(customerAddresses)
-        } else {}
+        }
     }
 
     JSONArray.forEach(function (c) {

@@ -33,6 +33,18 @@ object SimbaHTMLHelper {
     translator.getOrElse(menuType, throw new RuntimeException(s"Error can't translate $menuType"))
   }
 
+  def menuTypeToTittleForOfferCreatePage(menuType: String): String = {
+    val menuTypeToTitle = Map (
+      "classic" -> "Встановлення Класичного Меню",
+      "lite" -> "Встановлення Лайт Меню",
+      "breakfast" -> "Встановлення Сніданок Меню",
+      "soup" -> "Встановлення Суп Меню",
+      "desert" -> "Встановлення Десерт Меню",
+      "promo" -> "Встановлення Промо Меню"
+    )
+    menuTypeToTitle(menuType)
+  }
+
   def getFlash()(implicit request: MessagesRequestHeader): Html = {
     def getFlash(option: Option[String], alertClass: String): SHTML = {
       if (option.nonEmpty) option.map { message =>
@@ -215,8 +227,8 @@ object SimbaHTMLHelper {
     val formMethod = if (formCall.isDefined) formCall.head.method else ""
     val formAction = if (formCall.isDefined) formCall.head.url else ""
     val sideButtonAction = if (sideButtonHref.isDefined) sideButtonHref.head.url else ""
-
     val dropdownDiv = if (dropdownHead.isDefined) getSHtmlInDiv("searchMenu", "dropdown-menu", SHTML(s"<span class=${inDQ("dropdown-header")}>${dropdownHead.getOrElse("")}</span>")) else SHTML("")
+
     val mainContent: SHTML = {
       SHTML(s"<form action=${inDQ(formAction)} method=${inDQ(formMethod)} class=${inDQ("colFirst form-inline md-form mr-auto mb-4")}>") +
         getSHtmlInDiv(layoutClass = "input-group", content = {

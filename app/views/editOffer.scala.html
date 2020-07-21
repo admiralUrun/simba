@@ -1,3 +1,33 @@
-@(title: String, menuType: String, oF: Form[OfferPreferences])(implicit requestHeader: MessagesRequestHeader)
+@import views.html.helper._
+@import services.SimbaHTMLHelper._
 
-@createOrEditOfferTemplate(title, menuType, oF, "Змінити", isCreate = false)
+@(title: String, menuType: String, oF: Form[EditOffer])(implicit requestHeader: MessagesRequestHeader)
+
+
+@megreHtmlInputsList(ids: Html, names: Html, prices: Html) = @{
+    ids.body.split(',').zip(names.body.split(',').zip(prices.body.split(','))).map(t => (t._2._1, t._2._2, t._1)).toList
+}
+
+@createEditTools(inputs: List[(String, String, String)]) = {
+@inputs.zipWithIndex.map { case (inputs, i) =>
+<div id="offerView@i" class="">
+    @inputs._1
+<div class="form-group">
+    <label class="control-label">Назва</label>
+    @inputs._2
+</div>
+<div class="form-group">
+    <label class="control-label">Ціна</label>
+    @inputs._3
+</div>
+</div>
+}
+}
+
+@getInputsFromListPlayFormForMerge(keyInForm: String, IsDisplayed: Boolean = true) = {
+@repeatWithIndex(oF(keyInForm)) { (field, index) =>
+    <input class="form-control" id="@{keyInForm}[@index]" name="@{keyInForm}[@index]" value="@{field.value.head}" style="display: @{
+        if(IsDisplayed) "" else "none"
+    }">,
+}
+}

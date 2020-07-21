@@ -1,9 +1,11 @@
 @import views.html.helper._
 @import services.SimbaHTMLHelper._
 
-@(title: String, menuType: String)
+@(title: String, menuType: String)(implicit messagesRequestHeader: MessagesRequestHeader)
 
 @main(title) {
-    <a class="btn btn-info" href="@routes.OfferController.toCreateOfferPage(s"Встановити ${translateMenuType(menuType)}", menuType)">Встановити</a>
+    @getFlash()
+    @getNextSunday
+    <a class="btn btn-info" href="@routes.OfferController.toCreateOfferPage(menuType)">Встановити</a>
     <a class="btn btn-primary" href="@routes.OfferController.toOfferPreferencePage(s"Зміна ${translateMenuType(menuType)}", menuType)">Налаштування</a>
 }
