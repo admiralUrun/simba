@@ -4,8 +4,6 @@ jQuery.exists = function (selector) {
 
 function addToDisplay(id) {
     function addToDisplay(recipe) {
-        let inputs = document.querySelectorAll("#formIDHere input[name='recipesId[]']").length;
-        console.log(inputs)
         $(`<li id="offerView${recipe.id}">
             ${recipe.name}
             <input name="recipesId[]" value="${recipe.id}"  style="display:none;">
@@ -22,7 +20,7 @@ function deleteFromOffer(indexToDelete) {
 }
 
 function addToDropDown(recipe) {
-    if(!$.exists(`recipe${recipe.id}`)) {
+    if(!$.exists(`#recipe${recipe.id}`)) {
         let item = $(`<a id="recipe${recipe.id}" class="dropdown-item" onclick="addToDisplay('recipe${recipe.id}')">${recipe.name}</a>`)
         item.data("data", recipe)
         item.appendTo($("#searchMenu"))
@@ -35,7 +33,6 @@ function cleanDropMenu() {
 }
 
 function takeRecipesJSONAddToDropDown(jsonArray) {
-    console.log(jsonArray)
     jsonArray.forEach(function (recipe) {
             addToDropDown(recipe)
         }
