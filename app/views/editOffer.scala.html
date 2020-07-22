@@ -9,25 +9,34 @@
 }
 
 @createEditTools(inputs: List[(String, String, String)]) = {
-@inputs.zipWithIndex.map { case (inputs, i) =>
-<div id="offerView@i" class="">
-    @inputs._1
-<div class="form-group">
-    <label class="control-label">Назва</label>
-    @inputs._2
-</div>
-<div class="form-group">
-    <label class="control-label">Ціна</label>
-    @inputs._3
-</div>
-</div>
-}
+    @inputs.dropRight(1).zipWithIndex.map { case (inputs, i) =>
+        <div id="offerView@i" class="col-md-2 list-group-item">
+            @{Html(inputs._3)}
+            <div id="nameDIV" class="form-group">
+                <label for="name[@{i}]" class="control-label">Назва</label>
+                @{Html(inputs._1)}
+            </div>
+
+            <div id="priceDIV" class="form-group">
+                <label for="price[@{i}]" class="control-label">Ціна</label>
+                @{Html(inputs._2)}
+            </div>
+        </div>
+    }
 }
 
-@getInputsFromListPlayFormForMerge(keyInForm: String, IsDisplayed: Boolean = true) = {
-@repeatWithIndex(oF(keyInForm)) { (field, index) =>
-    <input class="form-control" id="@{keyInForm}[@index]" name="@{keyInForm}[@index]" value="@{field.value.head}" style="display: @{
-        if(IsDisplayed) "" else "none"
+@getInputsFromListInPlayForm(keyInForm: String, isDisplayed: Boolean = true) = {
+    @repeatWithIndex(oF(keyInForm)) { (field, index) =>
+    <input class="form-control" id="@{keyInForm}[@index]" name="@{keyInForm}[]" value="@{field.value.head}" style="display: @{
+        if(isDisplayed) "" else "none"
     }">,
+    }
 }
-}
+
+    @main(title) {
+        @form(routes.OfferController.editOffer) {
+            <input name="menuType" value="@menuType" style="display: none;">
+            @createEditTools(megreHtmlInputsList(getInputsFromListInPlayForm("id", isDisplayed = false), getInputsFromListInPlayForm("name"), getInputsFromListInPlayForm("price")))
+            <input class="btn btn-primary" type="submit" value="Змінити">
+        }
+    }

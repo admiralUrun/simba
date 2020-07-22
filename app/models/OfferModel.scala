@@ -1,7 +1,6 @@
 package models
 
 import java.util.Date
-
 import cats.effect.IO
 import doobie._
 import doobie.implicits._
@@ -9,6 +8,7 @@ import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import services.SimbaHTMLHelper.translateMenuType
 
 @Singleton
 class OfferModel @Inject()(dS: DoobieStore) {
@@ -47,6 +47,7 @@ class OfferModel @Inject()(dS: DoobieStore) {
         "lite" -> (howManyIds == 5),
         "breakfast" -> (howManyIds == 5)
       )(menuType)
+
     def insertOffer(name: String, menuType: String, recipes: List[Recipe], quantityOfRecipes: Int): IO[Unit] = {
       val offerId = {
         sql"insert into offers (name, price, execution_date, menu_type) values ($name, 0, null, $menuType)".update.run *>
@@ -59,26 +60,27 @@ class OfferModel @Inject()(dS: DoobieStore) {
       }
       effect.transact(xa)
     }
+
     def primeMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[List[Unit]] = {
-      (insertOffer("5 на 4", menuType, recipes, 4) *>
-        insertOffer("5 на 2", menuType, recipes, 2) *>
-        insertOffer("3 на 4", menuType, recipes.take(3), 4) *>
-        insertOffer("3 на 2", menuType, recipes.take(3), 2) *>
+      insertOffer(s"5 на 4 ${translateMenuType(menuType)}", menuType, recipes, 4) *>
+        insertOffer(s"5 на 2 ${translateMenuType(menuType)}", menuType, recipes, 2) *>
+        insertOffer(s"3 на 4 ${translateMenuType(menuType)}", menuType, recipes.take(3), 4) *>
+        insertOffer(s"3 на 2 ${translateMenuType(menuType)}", menuType, recipes.take(3), 2) *>
         recipes.zipWithIndex.traverse { case (r, i) =>
-          insertOffer(s"$menuType ${i + 1} на 2", menuType, List(r), 2)
-        } *>
-        recipes.zipWithIndex.traverse { case (r, i) =>
-          insertOffer(s"$menuType ${i + 1} на 4", menuType, List(r), 4)
-        })
+          insertOffer(s"${translateMenuType(menuType)} ${i + 1} на 4", menuType, List(r), 4) *>
+          insertOffer(s"${translateMenuType(menuType)} ${i + 1} на 2", menuType, List(r), 2)
+        }
     }
+
     def sideMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[List[Unit]] = {
       recipes.traverse{ r =>
         insertOffer(s"${r.name}", menuType, List(r), 2)
       }
     }
+
     def promoMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[Unit] = {
-      (insertOffer("Промо на 2", menuType, recipes, 2) *>
-      insertOffer(" Промо на 4", menuType, recipes, 4))
+      insertOffer("Промо на 2", menuType, recipes, 2) *>
+      insertOffer(" Промо на 4", menuType, recipes, 4)
     }
 
     val menuType = sO.menuType
