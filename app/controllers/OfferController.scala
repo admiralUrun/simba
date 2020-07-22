@@ -17,7 +17,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
   )
   private val editOfferForm = Form(
     mapping(
-      "id" -> optional(list(number)),
+      "id" -> list(number),
       "name" -> list(nonEmptyText),
       "price" -> list(number),
       "menuType" -> nonEmptyText

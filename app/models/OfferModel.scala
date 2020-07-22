@@ -26,11 +26,17 @@ class OfferModel @Inject()(dS: DoobieStore) {
       .transact(xa)
       .unsafeRunSync()
 
-    EditOffer(Option(offers.map(_.id.head)), offers.map(_.name), offers.map(_.price), menuType)
+    EditOffer(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), menuType)
   }
 
-  def setOfferPreferences(offerPreferences: EditOffer): Boolean = {
-    ???
+  def setOfferPreferences(editOffer: EditOffer): Boolean = {
+    if(editOffer.ids.length != editOffer.prices.length || editOffer.ids.length != editOffer.names.length) false
+    else {
+      editOffer.ids.zip(editOffer.names.zip(editOffer.prices)).traverse { case (id, (name, price)) =>
+        sql"update offers set name =$name, price= $price where id= $id".update.run
+      }.transact(xa).unsafeRunAsyncAndForget()
+      true
+    }
   }
 
   def getRecipesByName(name: String): JsValue = {
@@ -111,4 +117,4 @@ case class Recipe(id: Option[Int], name: String, menuType: String, edited: Boole
 case class OfferResepies(offerId: Int, resepisId: Int, quantity: Int)
 
 case class SettingOffer(menuType: String, recipeIds: List[Int])
-case class EditOffer(ids: Option[List[Int]], names: List[String], prices: List[Int], menuType: String)
+case class EditOffer(ids: List[Int], names: List[String], prices: List[Int], menuType: String)
