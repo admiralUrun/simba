@@ -27,14 +27,15 @@ function addToOrder(item, title, cost) {
         function addElementForDisplay(index, text, value) {
             $(`<li class="list-group-item" id="element${index}"> 
                 ${text}
-                <input id="inOrder[${index}]" name="inOrder[${index}]" value="${value}" style="display: none">
+                <input id="inOrder[]" name="inOrder[]" value="${value}" style="display: none">
                 <button type="button" class="close" aria-label="Close"
                 onclick="deleteFromOrder('${index}', '${cost}')">
                 <span aria-hidden="true">&times;</span></button>
             </li>`).appendTo('ul')
         }
 
-        let count = $('#addressTableBody').children('li').length
+        let count = $('#orderList').children('li').length
+        console.log(count)
         addElementForDisplay(count, text, value)
     }
 

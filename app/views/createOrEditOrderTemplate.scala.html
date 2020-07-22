@@ -29,7 +29,7 @@
         <div class="container-fluid row">
             <input type="text" id="inOrder" name="inOrder" value="@getValueFromForm("inOrder", oF).getOrElse("")" class="col-1" style="display: none">
             <div class="container-fluid row">
-                <ul class="list-group">
+                <ul id="orderList" class="list-group">
                 @if(!isCreate) {
                     @getAllArrayInputFromForm(oF, "inOrder", addToDisplay, (s: String) => {
                         inOrderToTextCost(s)
@@ -46,13 +46,7 @@
     @addToDisplay(textCost: (String, Int), index: Int) = {
         <li class="list-group-item" id="element@index">
             @textCost._1
-            <input id="inOrder[@{
-                index
-            }]" name="inOrder[@{
-                index
-            }]" value="@{
-                textCost._1
-            }" style="display: none">
+            <input id="inOrder[]" name="inOrder[]" value="@{textCost._1}" style="display: none">
             <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder('@index', '@textCost._2')"><span aria-hidden="true">&times;</span></button>
         </li>
     }

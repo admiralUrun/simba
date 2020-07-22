@@ -47,8 +47,8 @@ class OfferModel @Inject()(dS: DoobieStore) {
   def setOffer(sO: SettingOffer): Boolean = {
     def validationError(menuType: String, howManyIds: Int): Boolean = Map(
         "promo" -> (howManyIds == 3),
-        "soup" -> (howManyIds > 1),
-        "desert" -> (howManyIds > 1),
+        "soup" -> (howManyIds >= 1),
+        "desert" -> (howManyIds >= 1),
         "classic" -> (howManyIds == 5),
         "lite" -> (howManyIds == 5),
         "breakfast" -> (howManyIds == 5)
