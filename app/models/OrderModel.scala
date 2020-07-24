@@ -11,6 +11,7 @@ import javax.inject._
 class OrderModel @Inject()(dS: DoobieStore) {
   private type MenuPrice = Int
   private type MenuTitle = String
+  private type Minutes = Int
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
 
   def getAllTableRows: Map[Date, List[OrderForDisplay]] = {
@@ -33,7 +34,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
                                     paid, delivered, note)
                                      values (${o.customerId}, ${o.addressId},
                                               ${o.orderDay}, ${o.deliveryDay},
-                                              ${convertStringToDate(o.deliverFrom)}, ${convertStringToDate(o.deliverTo)},
+                                              ${convertStringToMinutes(o.deliverFrom)}, ${convertStringToMinutes(o.deliverTo)},
                                               ${o.total},
                                               ${o.offlineDelivery}, ${o.offlineDelivery},
                                               ${o.paid}, ${o.delivered},
@@ -46,7 +47,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
     val orderId = insertOrder(o)
     val resepisIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.resepisId, o.quantity))
 
-    (insertOrderResepis(orderId, resepisIdsAndQuantity) *> insertOrderOffers(orderId, o.inOrder)).transact(xa).unsafeRunSync() == o.inOrder.length * 2
+    (insertOrderRecipis(orderId, resepisIdsAndQuantity) *> insertOrderOffers(orderId, o.inOrder)).transact(xa).unsafeRunSync() == o.inOrder.length * 2
   }
 
   def findById(id:Int): OrderForEditAndCreate = {
@@ -112,7 +113,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
     }
 
     OrderForDisplay(o.id, getCustomerById(o.customerId), getAddressById(o.addressId),
-      o.orderDay, o.deliveryDay, o.deliverFrom, o.deliverTo,
+      o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
       getAllOfferIdByOrderId(o.id.head).map(_.name).mkString(", "),
       o.total,
       o.offlineDelivery, o.deliveryOnMonday,
@@ -122,7 +123,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
 
   private def orderToOrderForEditAndCreate(o: Order): OrderForEditAndCreate = {
     OrderForEditAndCreate(o.id, o.customerId, o.addressId,
-      o.orderDay, o.deliveryDay, convertDateToString(o.deliverFrom), convertDateToString(o.deliverTo),
+      o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
       getAllOfferIdByOrderId(o.id.head).map(_.id.head),
       o.total,
       o.offlineDelivery, o.deliveryOnMonday,
@@ -130,12 +131,18 @@ class OrderModel @Inject()(dS: DoobieStore) {
       o.note)
   }
 
-  private def convertStringToDate(string: String): Date = ???
+  private def convertStringToMinutes(timeInput: String): Minutes = { // Maybe throw exception if String didn't split by ':'
+    val timeArray = timeInput.split(':')
+    timeArray(0).toInt * 60 + timeArray(1).toInt
+  }
 
-  private def convertDateToString(date: Date): String = ???
+  private def convertMinutesToString(m: Minutes): String = {
+    def replaceWithDoubleZero(int: Int): String = if(int == 0) "00" else int.toString
+    replaceWithDoubleZero(m / 60) + ":" + replaceWithDoubleZero(m % 60)
+  }
 
-  private def insertOrderOffers(orderId: Int, resepisIdsQuantity: List[Int]): ConnectionIO[Int] = {
-    resepisIdsQuantity.traverse { offerId =>
+  private def insertOrderOffers(orderId: Int, offersInOrder: List[Int]): ConnectionIO[Int] = {
+    offersInOrder.traverse { offerId =>
       sql"insert into order_offers (order_id, offer_id) values ($orderId, $offerId)".update.run
     }.map(_.sum)
   }
@@ -146,8 +153,8 @@ class OrderModel @Inject()(dS: DoobieStore) {
     }.transact(xa).unsafeRunSync().flatten
   }
 
-  private def insertOrderResepis(orderId: Int, resepisIdsQuantity: List[(Int, Int)]): ConnectionIO[Int] = {
-    resepisIdsQuantity.traverse { rIdQ =>
+  private def insertOrderRecipis(orderId: Int, recipisIdsQuantity: List[(Int, Int)]): ConnectionIO[Int] = {
+    recipisIdsQuantity.traverse { rIdQ =>
       sql"insert into order_recipes (order_id, recipe_id, quantity) value ($orderId, ${rIdQ._1}, ${rIdQ._2})".update.run
     }.map(_.sum)
   }
@@ -165,7 +172,7 @@ case class Order(id: Option[Int],
                  customerId: Int,
                  addressId: Int,
                  orderDay: Date, deliveryDay: Date,
-                 deliverFrom: Date, deliverTo: Date,
+                 deliverFrom: Int, deliverTo: Int,
                  total: Int,
                  offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                  paid: Boolean, delivered: Boolean, note: Option[String])
@@ -174,7 +181,7 @@ case class OrderForDisplay(id: Option[Int],
                            customer: Customer,
                            address: Address,
                            orderDay: Date, deliveryDay: Date,
-                           deliverFrom: Date, deliverTo: Date,
+                           deliverFrom: String, deliverTo: String,
                            inOrder: String,
                            total: Int,
                            offlineDelivery: Boolean, deliveryOnMonday: Boolean,
