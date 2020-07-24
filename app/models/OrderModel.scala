@@ -45,18 +45,18 @@ class OrderModel @Inject()(dS: DoobieStore) {
     }
 
     val orderId = insertOrder(o)
-    val resepisIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.resepisId, o.quantity))
+    val resepisIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.recipesId, o.quantity))
 
     (insertOrderRecipis(orderId, resepisIdsAndQuantity) *> insertOrderOffers(orderId, o.inOrder)).transact(xa).unsafeRunSync() == o.inOrder.length * 2
   }
 
   def findById(id:Int): OrderForEditAndCreate = {
-    val order = sql"select * from orders where id = $id".query[Order].to[List].transact(xa).unsafeRunSync().head
+    val order = sql"select * from orders where id = $id".query[Order].unique.transact(xa).unsafeRunSync()
     orderToOrderForEditAndCreate(order)
   }
 
   def edit(o: OrderForEditAndCreate): Boolean = {
-    val resepisIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.resepisId, o.quantity))
+    val resepisIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.recipesId, o.quantity))
     (sql"delete from order_recipes where order_id = ${o.id.head}".update.run *>
       resepisIdsAndQuantity.traverse { idAndQuantity =>
         sql"insert into order_recipes (order_id, recipe_id, quantity) values (${o.id.head}, ${idAndQuantity._1}, ${idAndQuantity._2})".update.run
@@ -159,9 +159,9 @@ class OrderModel @Inject()(dS: DoobieStore) {
     }.map(_.sum)
   }
 
-  private def getAllOffersRecipes(ids: List[Int]): List[OfferResepies] = {
+  private def getAllOffersRecipes(ids: List[Int]): List[OfferRecipes] = {
     ids.traverse { offerId =>
-      sql"select * from offer_recipes where offer_id = $offerId".query[OfferResepies].to[List]
+      sql"select * from offer_recipes where offer_id = $offerId".query[OfferRecipes].to[List]
     }.transact(xa).unsafeRunSync().flatten
   }
 

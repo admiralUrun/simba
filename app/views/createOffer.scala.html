@@ -1,7 +1,8 @@
 @import views.html.helper._
 @import services.SimbaHTMLHelper._
+@import java.util.Date
 
-@(menuType: String, oF: Form[SettingOffer])(implicit requestHeader: MessagesRequestHeader)
+@(menuType: String, executionDate: Date, oF: Form[SettingOffer])(implicit requestHeader: MessagesRequestHeader)
 
 @getSearchForRecipes = {
     <div id="searchDIV">
@@ -24,10 +25,10 @@
     @form(routes.OfferController.setOffer(menuType)) {
         @CSRF.formField
         <input name="menuType" value="@menuType" style="display: none">
+        <input name="executionDate" value="@executionDate" style="display: none">
         <ul id="inOffer"></ul>
         <input class="btn btn-primary" type="submit" value="Встановити">
     }
-
 
     <script id="runTimeScript">
             $(document).ready(function () {

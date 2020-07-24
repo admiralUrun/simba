@@ -129,13 +129,29 @@ object SimbaHTMLHelper {
 
   def formattingDateForForm(d: Date): String = formatter.format(d)
 
-  def getNextSunday: String = {
+  def  getNextSundayFromCornetWeek: String = {
     val c = Calendar.getInstance
     c.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
     formattingDateForForm(c.getTime)
   }
 
-  def getNextMonday: String = {
+  def getNextSundayFromGivenDate(date: Date): String = {
+    val c = Calendar.getInstance()
+    c.setTime(date)
+    c.set(Calendar.DAY_OF_WEEK,Calendar.SUNDAY)
+    c.add(Calendar.DATE, 7)
+    formattingDateForForm(c.getTime)
+  }
+
+  def getLastSundayFromGivenDate(date: Date): String = {
+    val c = Calendar.getInstance
+    c.setTime(date)
+    c.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+    c.add(Calendar.DATE, -7)
+    formattingDateForForm(c.getTime)
+  }
+
+  def getNextMondayFromCornetWeek: String = {
     val c = Calendar.getInstance
     c.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
     formattingDateForForm(c.getTime)

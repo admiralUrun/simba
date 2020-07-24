@@ -5,6 +5,7 @@ import models._
 import play.api.data.Forms._
 import play.api.data.Form
 import play.api.mvc._
+import services.SimbaHTMLHelper.{getNextSundayFromGivenDate, getLastSundayFromGivenDate}
 
 @Singleton
 class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
@@ -12,6 +13,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
   private val setOfferForm = Form(
     mapping(
       "menuType" -> nonEmptyText,
+      "executionDate" -> date,
       "recipesId" -> list(number).verifying(_.nonEmpty)
     )(SettingOffer.apply)(SettingOffer.unapply)
   )
@@ -20,30 +22,64 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
       "id" -> list(number),
       "name" -> list(nonEmptyText),
       "price" -> list(number),
+      "date" -> date,
       "menuType" -> nonEmptyText
     )(EditOffer.apply)(EditOffer.unapply)
   )
+  private val passDateForm = Form(
+    mapping(
+      "date" -> date
+    )(PassingDate.apply)(PassingDate.unapply)
+  )
 
   private val offersPage = Redirect(routes.OfferController.toOffersPage())
+  private val errorRedirect = Redirect(routes.HomeController.index()).flashing("error" -> "Не треба тут сувати мені відредарований HTML!")
 
   def toOffersPage: PlayAction = Action { implicit request =>
     Ok(views.html.offers())
   }
 
+  def toOfferPageWithNextWeek: PlayAction = Action { implicit request =>
+    passDateForm.bindFromRequest.fold(
+      _ => errorRedirect,
+      Data => Ok(views.html.offers(getNextSundayFromGivenDate(Data.date)))
+    )
+  }
+  def toOfferPageWithLastWeek: PlayAction = Action { implicit request =>
+    passDateForm.bindFromRequest.fold(
+      _ => errorRedirect,
+      Data => Ok(views.html.offers(getLastSundayFromGivenDate(Data.date)))
+    )
+  }
+
   def toOfferPage(title: String, menuType: String): PlayAction = Action { implicit request =>
-    Ok(views.html.offer(title, menuType))
+    passDateForm.bindFromRequest.fold(
+      _ => errorRedirect,
+      Date => Ok(views.html.offer(title, Date.date, menuType))
+    )
   }
 
   def toCreateOfferPage(menuType: String): PlayAction = Action { implicit request =>
-    Ok(views.html.createOffer(menuType, setOfferForm))
+    passDateForm.bindFromRequest.fold(
+      _ => errorRedirect,
+      Date => Ok(views.html.createOffer(menuType, Date.date, setOfferForm))
+    )
   }
 
   def toOfferPreferencePage(title: String, menuType: String): PlayAction = Action { implicit  request =>
-    Ok(views.html.editOffer(
-      title,
-      menuType,
-      editOfferForm.fill(offerModel.getOfferPreferencesByMenuType(menuType)))
+    passDateForm.bindFromRequest.fold(
+      _ => errorRedirect,
+      Date => Ok(views.html.editOffer(title, Date.date, menuType,
+        editOfferForm.fill(offerModel.getOfferPreferencesByMenuType(menuType, Date.date)))
+      )
     )
+  }
+
+  def toRecipesOnThisWeekPage: PlayAction = Action { implicit request =>
+    passDateForm.bindFromRequest.fold(
+      _ => errorRedirect,
+      Date => Ok(views.html.recipesOnThisWeek(offerModel.getAllRecipesOnThisWeek(Date.date)))
+      )
   }
 
   def getRecipesForOfferSearch(name: String): PlayAction = Action {
@@ -63,7 +99,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
       "promo" -> Redirect(routes.OfferController.toOfferPage("Налаштування Промо Меню", "promo"))
     )
     setOfferForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.createOffer(menuType, formWithErrors)),
+      formWithErrors => BadRequest(views.html.createOffer(menuType, formWithErrors.value.head.executionDate, formWithErrors)),
       settingOffer => {
         resultWithFlash(offerPageMap(menuType), offerModel.setOffer(settingOffer), "Готово Тепер Встановіть ціни, мяу")
       }
@@ -72,7 +108,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
 
   def editOffer(): PlayAction = Action { implicit request =>
     editOfferForm.bindFromRequest.fold(
-      formWithError => BadRequest(views.html.editOffer("Налаштування Пропозиції", formWithError.data("menuType"), formWithError)),
+      formWithError => BadRequest(views.html.editOffer("Налаштування Пропозиції", formWithError.value.head.executionDate, formWithError.data("menuType"), formWithError)),
       offerPreferences => {
         resultWithFlash(offersPage, offerModel.setOfferPreferences(offerPreferences), "Пропозицію Зміненно")
       }

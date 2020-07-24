@@ -25,9 +25,14 @@ POST        /newOrder                               controllers.OrderController.
 POST        /updateOrder/:id                        controllers.OrderController.updateOrder(id: Int)
 
 GET         /offers                                 controllers.OfferController.toOffersPage
+GET         /offersNextWeekFromGivenDate            controllers.OfferController.toOfferPageWithNextWeek
+GET         /offersLastWeekFromGivenDate            controllers.OfferController.toOfferPageWithLastWeek
 GET         /offer/:title/:menuType                 controllers.OfferController.toOfferPage(title: String, menuType: String)
 GET         /setOffer/:menuType                     controllers.OfferController.toCreateOfferPage(menuType: String)
 GET         /offerPreferance/:title/:menuType       controllers.OfferController.toOfferPreferencePage(title: String, menuType: String)
+GET         /recipesOnThisWeek                      controllers.OfferController.toRecipesOnThisWeekPage()
+
+
 POST        /editOffer                              controllers.OfferController.editOffer
 POST        /setOffer/:menuType                     controllers.OfferController.setOffer(menuType: String)
 GET         /searchResipeForOffer                   controllers.OfferController.getRecipesForOfferSearch(name)

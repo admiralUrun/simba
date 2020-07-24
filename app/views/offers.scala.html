@@ -1,20 +1,63 @@
 @import views.html.helper._
 @import services.SimbaHTMLHelper._
+@import java.util.Date
 
-@()(implicit request: MessagesRequestHeader)
+@(currentDate: String = getNextSundayFromCornetWeek)(implicit request: MessagesRequestHeader)
 
+@getDataInput = {<input type="date" name="date" value="@currentDate" style="display:none;">}
 
     @main("Пропозиції") {
         @getFlash()
         <div>
-            @*
-                Any Changes in Tittles here should be repeated in OfferController as well
-            *@
-            <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Класичного Меню", "classic")">Класичні</a>
-            <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Лайт Меню", "lite")">Лайт</a>
-            <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Сніданок Меню", "breakfast")">Сніданки</a>
-            <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Суп Меню", "soup")">Супи</a>
-            <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Десерт Меню", "desert")">Десерти</a>
-            <a class="btn btn-primary" href="@routes.OfferController.toOfferPage("Налаштування Промо Меню", "promo")">Промо</a>
+
+            <div class="row">
+            @if(currentDate != getNextSundayFromCornetWeek) {
+                @form(routes.OfferController.toOfferPageWithLastWeek()) {
+                    @getDataInput
+                    <input class="btn btn-link" value="Минулий Тиждень" type="submit">
+                }
+            }
+            <h4>@currentDate</h4>
+            @form(routes.OfferController.toOfferPageWithNextWeek()) {
+                @getDataInput
+                <input class="btn btn-link" value="Наступний Тиждень" type="submit">
+            }
+            </div>
+
+            @* Any Changes in Tittles here should be repeated in OfferController as well *@
+            @form(routes.OfferController.toOfferPage("Налаштування Класичного Меню", "classic")) {
+                @getDataInput
+                <input class="btn btn-primary" value="Класичні" type="submit">
+            }
+
+            @form(routes.OfferController.toOfferPage("Налаштування Лайт Меню", "lite")) {
+                @getDataInput
+                <input class="btn btn-primary" value="Лайт" type="submit">
+            }
+
+            @form(routes.OfferController.toOfferPage("Налаштування Сніданок Меню", "breakfast")) {
+                @getDataInput
+                <input class="btn btn-primary" value="Сніданки" type="submit">
+            }
+
+            @form(routes.OfferController.toOfferPage("Налаштування Суп Меню", "soup")) {
+                @getDataInput
+                <input class="btn btn-primary" value="Супи" type="submit">
+            }
+
+            @form(routes.OfferController.toOfferPage("Налаштування Десерт Меню", "desert")) {
+                @getDataInput
+                <input class="btn btn-primary" value="Десерти" type="submit">
+            }
+
+            @form(routes.OfferController.toOfferPage("Налаштування Промо Меню", "promo")) {
+                @getDataInput
+                <input class="btn btn-primary" value="Промо" type="submit">
+            }
+
+            @form(routes.OfferController.toRecipesOnThisWeekPage()) {
+                @getDataInput
+                <input class="btn btn-info" value="Рецепти та інгрідіенти на цьому тижні" type="submit">
+            }
         </div>
     }

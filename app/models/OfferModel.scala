@@ -8,7 +8,7 @@ import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
-import services.SimbaHTMLHelper.translateMenuType
+import services.SimbaHTMLHelper.translateMenuType // Maybe isn't a good a idea to use it here just don't want to duplicate code
 
 @Singleton
 class OfferModel @Inject()(dS: DoobieStore) {
@@ -19,21 +19,21 @@ class OfferModel @Inject()(dS: DoobieStore) {
       (JsPath \ "menuType").write[String] and
       (JsPath \ "edited").write[Boolean]
   )(unlift(Recipe.unapply))
-  def getOfferPreferencesByMenuType(menuType: String): EditOffer = {
-    val offers = sql"select * from offers where execution_date is null and  menu_type = $menuType"
+  def getOfferPreferencesByMenuType(menuType: String, executionDate: Date): EditOffer = {
+    val offers = sql"select * from offers where execution_date is $executionDate and  menu_type = $menuType"
       .query[Offer]
       .to[List]
       .transact(xa)
       .unsafeRunSync()
 
-    EditOffer(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), menuType)
+    EditOffer(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), executionDate, menuType)
   }
 
   def setOfferPreferences(editOffer: EditOffer): Boolean = {
     if(editOffer.ids.length != editOffer.prices.length || editOffer.ids.length != editOffer.names.length) false
     else {
       editOffer.ids.zip(editOffer.names.zip(editOffer.prices)).traverse { case (id, (name, price)) =>
-        sql"update offers set name =$name, price= $price where id= $id".update.run
+        sql"update offers set name = $name, price= $price where id= $id".update.run
       }.transact(xa).unsafeRunAsyncAndForget()
       true
     }
@@ -45,6 +45,20 @@ class OfferModel @Inject()(dS: DoobieStore) {
   }
 
   def setOffer(sO: SettingOffer): Boolean = {
+    val standardTitleToPrice: Map[String, Int] = Map(
+      "5 на 4 Класичне" -> 2249,
+      "5 на 2 Класичне" -> 1289,
+      "3 на 2 Класичне" -> 849,
+      "3 на 4 Класичне" -> 1489,
+      "5 на 4 Лайт" -> 2249,
+      "5 на 2 Лайт" -> 1289,
+      "3 на 2 Лайт" -> 849,
+      "3 на 4 Лайт" -> 1489,
+      "5 на 4 Сніданок" -> 1589,
+      "5 на 2 Сніданок" -> 849,
+      "3 на 2 Сніданок" -> 549,
+      "3 на 4 Сніданок" -> 989,
+    )
     def validationError(menuType: String, howManyIds: Int): Boolean = Map(
         "promo" -> (howManyIds == 3),
         "soup" -> (howManyIds >= 1),
@@ -54,39 +68,39 @@ class OfferModel @Inject()(dS: DoobieStore) {
         "breakfast" -> (howManyIds == 5)
       )(menuType)
 
-    def insertOffer(name: String, menuType: String, recipes: List[Recipe], quantityOfRecipes: Int): IO[Unit] = {
-      val offerId = {
-        sql"insert into offers (name, price, execution_date, menu_type) values ($name, 0, null, $menuType)".update.run *>
-        sql"select LAST_INSERT_ID()".query[Int].unique
-      }
-      val effect = offerId.map{ id =>
-        recipes.traverse( r =>
+    def insertOffer(name: String, date: Date, menuType: String, recipes: List[Recipe], quantityOfRecipes: Int): IO[Unit] = {
+      val price = standardTitleToPrice.getOrElse(name, 0)
+      (for {
+        _ <- sql"delete from offers where execution_date = $date and menu_type = $menuType".update.run
+        _ <- sql"insert into offers (name, price, execution_date, menu_type) values ($name, $price, $date, $menuType)".update.run
+        id <- sql"select LAST_INSERT_ID()".query[Int].unique
+        _ <- sql"delete from recipes_by_weeks where execution_date = $date and menu_type = $menuType".update.run
+        _ <- recipes.traverse { r =>
           sql"insert into offer_recipes (offer_id, recipe_id, quantity) values ($id, ${r.id}, $quantityOfRecipes)".update.run
-        ).transact(xa).unsafeRunAsyncAndForget()
-      }
-      effect.transact(xa)
+        }
+      } yield ()).transact(xa)
     }
 
     def primeMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[List[Unit]] = {
-      insertOffer(s"5 на 4 ${translateMenuType(menuType)}", menuType, recipes, 4) *>
-        insertOffer(s"5 на 2 ${translateMenuType(menuType)}", menuType, recipes, 2) *>
-        insertOffer(s"3 на 4 ${translateMenuType(menuType)}", menuType, recipes.take(3), 4) *>
-        insertOffer(s"3 на 2 ${translateMenuType(menuType)}", menuType, recipes.take(3), 2) *>
+      insertOffer(s"5 на 4 ${translateMenuType(menuType)}", sO.executionDate, menuType, recipes, 4) *>
+        insertOffer(s"5 на 2 ${translateMenuType(menuType)}", sO.executionDate, menuType, recipes, 2) *>
+        insertOffer(s"3 на 4 ${translateMenuType(menuType)}", sO.executionDate, menuType, recipes.take(3), 4) *>
+        insertOffer(s"3 на 2 ${translateMenuType(menuType)}", sO.executionDate, menuType, recipes.take(3), 2) *>
         recipes.zipWithIndex.traverse { case (r, i) =>
-          insertOffer(s"${translateMenuType(menuType)} ${i + 1} на 4", menuType, List(r), 4) *>
-          insertOffer(s"${translateMenuType(menuType)} ${i + 1} на 2", menuType, List(r), 2)
+          insertOffer(s"${translateMenuType(menuType)} ${i + 1} на 4", sO.executionDate, menuType, List(r), 4) *>
+          insertOffer(s"${translateMenuType(menuType)} ${i + 1} на 2", sO.executionDate, menuType, List(r), 2)
         }
     }
 
     def sideMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[List[Unit]] = {
       recipes.traverse{ r =>
-        insertOffer(s"${r.name}", menuType, List(r), 2)
+        insertOffer(s"${r.name}", sO.executionDate, menuType, List(r), 2)
       }
     }
 
     def promoMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[Unit] = {
-      insertOffer("Промо на 2", menuType, recipes, 2) *>
-      insertOffer(" Промо на 4", menuType, recipes, 4)
+      insertOffer("Промо на 2", sO.executionDate, menuType, recipes, 2) *>
+      insertOffer(" Промо на 4", sO.executionDate, menuType, recipes, 4)
     }
 
     val menuType = sO.menuType
@@ -108,13 +122,24 @@ class OfferModel @Inject()(dS: DoobieStore) {
     }
   }
 
+  def getAllRecipesOnThisWeek(date: Date): List[Recipe] = {
+    (for {
+      ids <- sql"select recipe_id from recipes_by_weeks where execution_date = $date".query[Int].to[List]
+      recipes <- ids.traverse{ id =>
+        sql"select * from recipes where id = $id".query[Recipe].unique
+      }
+    } yield recipes).transact(xa).unsafeRunSync()
+  }
+
+
 }
 
 case class Offer(id: Option[Int], name: String, price: Int, executionDate: Option[Date], menuType: String)
 
 case class Recipe(id: Option[Int], name: String, menuType: String, edited: Boolean)
 
-case class OfferResepies(offerId: Int, resepisId: Int, quantity: Int)
+case class OfferRecipes(offerId: Int, recipesId: Int, quantity: Int)
 
-case class SettingOffer(menuType: String, recipeIds: List[Int])
-case class EditOffer(ids: List[Int], names: List[String], prices: List[Int], menuType: String)
+case class SettingOffer(menuType: String, executionDate: Date,  recipeIds: List[Int])
+case class EditOffer(ids: List[Int], names: List[String], prices: List[Int], executionDate: Date, menuType: String)
+case class PassingDate(date: Date)

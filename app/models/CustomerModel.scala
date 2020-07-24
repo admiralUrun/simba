@@ -179,9 +179,9 @@ class CustomerModel @Inject()(dS: DoobieStore) {
   private def getCustomerById(id: Int): Customer = {
     sql"select * from customers where id = $id"
       .query[Customer]
-      .option
+      .unique
       .transact(xa)
-      .unsafeRunSync().head
+      .unsafeRunSync()
   }
 
   private def decodeAddressString(a: List[String]): List[Address] = {
