@@ -18,6 +18,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
       "deliverFrom" -> nonEmptyText, "deliverTo" -> nonEmptyText,
       "inOrder" -> list(number),
       "total" -> number,
+      "payment" -> nonEmptyText,
       "offlineDelivery" -> boolean, "deliveryOnMonday" -> boolean,
       "paid" -> boolean, "delivered" -> boolean,
       "note" -> optional(text)
@@ -30,10 +31,8 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   def toOrderEditPage(id: Int): PlayAction = Action { implicit request =>
-    val o = orderModel.findById(id)
-    val oF = orderForm.fill(o)
     Ok(views.html.editOrder(id,
-      oF,
+      orderForm.fill(orderModel.findById(id)),
       orderModel.getMenusToolsForAddingToOrder,
       orderModel.getInOrderToTextWithCostMap))
   }
@@ -48,7 +47,10 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
 
   def updateOrder(id: Int): PlayAction = Action { implicit request =>
     orderForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.editOrder(id, formWithErrors, orderModel.getMenusToolsForAddingToOrder, orderModel.getInOrderToTextWithCostMap)),
+      formWithErrors => BadRequest(views.html.editOrder(id,
+        formWithErrors,
+        orderModel.getMenusToolsForAddingToOrder,
+        orderModel.getInOrderToTextWithCostMap)),
       orderForEditAndCreate => resultWithFlash(orderFeedPage, orderModel.edit(orderForEditAndCreate), "Замовлення змінено, мяу")
     )
   }

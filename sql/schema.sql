@@ -83,12 +83,11 @@ create table orders (
     address_id int not null,
     order_day date not null,
     delivery_day date not null,
-    -- deliver_from and deliver_to have time in minutes
+    -- deliver_from and deliver_to save time in minutes
     deliver_from int not null,
     deliver_to int not null,
-
     total int not null,
-
+    payment varchar(128) not null,
     offline_delivery boolean not null,
     delivery_on_monday boolean not null,
     paid boolean not null,

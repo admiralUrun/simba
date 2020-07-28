@@ -1,7 +1,6 @@
 package models
 
 import java.text.SimpleDateFormat
-
 import cats.effect.IO
 import doobie._
 import doobie.implicits._
@@ -34,12 +33,14 @@ class OrderModel @Inject()(dS: DoobieStore) {
                                     order_day, delivery_day,
                                     deliver_from, deliver_to,
                                     total,
+                                    payment,
                                     offline_delivery, delivery_on_monday,
                                     paid, delivered, note)
                                      values (${o.customerId}, ${o.addressId},
                                               ${o.orderDay}, ${o.deliveryDay},
                                               ${convertStringToMinutes(o.deliverFrom)}, ${convertStringToMinutes(o.deliverTo)},
                                               ${o.total},
+                                              ${o.payment},
                                               ${o.offlineDelivery}, ${o.offlineDelivery},
                                               ${o.paid}, ${o.delivered},
                                               ${o.note}) """.update.run
@@ -55,13 +56,32 @@ class OrderModel @Inject()(dS: DoobieStore) {
   }
 
   def findById(id:Int): OrderForEditAndCreate = {
-  val order = sql"select * from orders where id = $id"
+    def orderToOrderForEditAndCreate(o: Order): OrderForEditAndCreate = {
+      /**
+       * Have to use is operation on java.util.Date that was parsed from "yyyy-MM-dd" format
+       * otherwise play.api.form will throw [UnsupportedOperationException: null] from java.sql.Date.toInstant
+       * However if you parsed java.util.Date form "EEE MMM dd HH:mm:ss zzz yyyy" format or use { new java.util.Date() } it will work
+      * */
+      def changingDateFormatForPlayForm(date: Date): Date = {
+        val formatForFillInForm = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")
+       formatForFillInForm.parse(formatForFillInForm.format(date))
+      }
+      OrderForEditAndCreate(o.id, o.customerId, o.addressId,
+        changingDateFormatForPlayForm(o.orderDay), changingDateFormatForPlayForm(o.deliveryDay),
+        convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
+        getAllOfferIdByOrderId(o.id.head).map(_.id.head),
+        o.total,
+        o.payment,
+        o.offlineDelivery, o.deliveryOnMonday,
+        o.paid, o.delivered,
+        o.note)
+    }
+  sql"select * from orders where id = $id"
      .query[Order]
      .unique
      .transact(xa)
      .map(orderToOrderForEditAndCreate)
      .unsafeRunSync()
-    order
   }
 
   def edit(o: OrderForEditAndCreate): Boolean = {
@@ -99,7 +119,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
   }
 
   def getInOrderToTextWithCostMap: Map[String, (MenuTitle, MenuPrice)] = { // TODO aks supervisor's opinion maybe there is better way to make it done
-    getAllOffersOnThisWeek.groupBy(_.id.toString).map{t =>
+    getAllOffersOnThisWeek.groupBy(_.id.head.toString).map{t =>
       t._1 -> t._2.map(offer => (offer.name, offer.price)).head
     }
   }
@@ -128,16 +148,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
       o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
       getAllOfferIdByOrderId(o.id.head).map(_.name).mkString(", "),
       o.total,
-      o.offlineDelivery, o.deliveryOnMonday,
-      o.paid, o.delivered,
-      o.note)
-  }
-
-  private def orderToOrderForEditAndCreate(o: Order): OrderForEditAndCreate = {
-    OrderForEditAndCreate(o.id, o.customerId, o.addressId,
-      o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
-      getAllOfferIdByOrderId(o.id.head).map(_.id.head),
-      o.total,
+      o.payment,
       o.offlineDelivery, o.deliveryOnMonday,
       o.paid, o.delivered,
       o.note)
@@ -186,6 +197,7 @@ case class Order(id: Option[Int],
                  orderDay: Date, deliveryDay: Date,
                  deliverFrom: Int, deliverTo: Int,
                  total: Int,
+                 payment: String,
                  offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                  paid: Boolean, delivered: Boolean, note: Option[String])
 
@@ -196,6 +208,7 @@ case class OrderForDisplay(id: Option[Int],
                            deliverFrom: String, deliverTo: String,
                            inOrder: String,
                            total: Int,
+                           payment: String,
                            offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                            paid: Boolean, delivered: Boolean, note: Option[String])
 
@@ -206,6 +219,7 @@ case class OrderForEditAndCreate(id: Option[Int],
                                  deliverFrom: String, deliverTo: String,
                                  inOrder: List[Int],
                                  total: Int,
+                                 payment: String,
                                  offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                                  paid: Boolean, delivered: Boolean, note: Option[String])
 

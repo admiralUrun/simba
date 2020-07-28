@@ -245,9 +245,10 @@ function cleanDropMenu() {
  * */
 function setPayment(payment) {
     $(`<h5 id="paymentView">Спосіб оплати: ${payment}</h5>
-        <button id="paymentEdit" class="btn btn-success"  onclick="removePayment()">Змінити</button>`).appendTo($('#payment'))
+        <button id="paymentEdit" class="btn btn-success"  onclick="removePayment()">Змінити</button>`).appendTo($('#paymentDIV'))
     $('#paymentMenu').hide()
-    $('#paymentInput').val(payment).click()
+    $('#payment').val(payment)
+    console.log($('#payment').val())
 }
 
 function removePayment() {
@@ -255,5 +256,5 @@ function removePayment() {
     $('#paymentEdit').remove()
 
     $('#paymentMenu').show()
-    $('#paymentInput').val('')
+    $('#payment').val('')
 }

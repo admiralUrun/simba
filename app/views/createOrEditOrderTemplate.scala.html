@@ -8,8 +8,8 @@
         oF: Form[OrderForEditAndCreate],
         buttonLabel: String,
         inMenu: List[OrderMenu],
-        isCreate: Boolean = false,
-        inOrderToTextCost: Map[String, (String, Int)] = Map(),
+        isCreate: Boolean,
+        inOrderToTextCost: Map[String, (String, Int)],
         possibleIdAfterAddingCustomer: Option[Int] = None
 )(implicit requestHeader: MessagesRequestHeader)
 
@@ -98,8 +98,8 @@
                 <input id="total" name="total" value="@getValueFromForm("total", oF).getOrElse("")" type="text" style="display: none;">
                 <label>Всьго</label>
                 <h5 id="totalText">@getValueFromForm("total", oF).getOrElse("0") ₴</h5>
-                <div id="payment">
-                    <input id="paymentInput" type="text" style="display: none;">
+                <div id="paymentDIV">
+                    <input id="payment" type="text" style="display: none;">
                     <div id="paymentMenu">
                     @createDropDown("Спосіб Оплати", List("Готівка", "Карткою", "Бартер"), (s: String) => { // TODO: Add to database remove hardCode
                         val id = "paymentItem"
