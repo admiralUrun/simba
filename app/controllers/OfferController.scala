@@ -6,6 +6,7 @@ import models._
 import play.api.data.Forms._
 import play.api.data.Form
 import play.api.mvc._
+import java.util.Date
 import services.SimbaHTMLHelper.{getLastSundayFromGivenDate, getNextSundayFromGivenDate}
 
 @Singleton
@@ -88,17 +89,6 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
   }
 
   def setOffer(menuType: String): PlayAction = Action { implicit request =>
-    /**
-     * Changes in title here should be repeated in offers.scala.html
-     * */
-    val offerPageMap = Map(
-      "classic" -> Redirect(routes.OfferController.toOfferPage("Налаштування Класичного Меню", "classic")),
-      "lite" -> Redirect(routes.OfferController.toOfferPage("Налаштування Лайт Меню", "lite")),
-      "breakfast" -> Redirect(routes.OfferController.toOfferPage("Налаштування Сніданок Меню", "breakfast")),
-      "soup" -> Redirect(routes.OfferController.toOfferPage("Налаштування Суп Меню", "soup")),
-      "desert" -> Redirect(routes.OfferController.toOfferPage("Налаштування Десерт Меню", "desert")),
-      "promo" -> Redirect(routes.OfferController.toOfferPage("Налаштування Промо Меню", "promo"))
-    )
     setOfferForm.bindFromRequest.fold(
       formWithErrors => {
         val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
@@ -108,7 +98,19 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
           formWithErrors))
       },
       settingOffer => {
-        resultWithFlash(offerPageMap(menuType), offerModel.setOffer(settingOffer), "Готово Тепер Встановіть ціни, мяу")
+        val date = settingOffer.executionDate
+        /**
+         * Changes in title here should be repeated in offers.scala.html
+         * */
+        val offerPageMap = Map(
+          "classic" -> Ok(views.html.offer("Налаштування Класичного Меню", date, "classic")),
+          "lite" -> Ok(views.html.offer("Налаштування Лайт Меню", date, "lite")),
+          "breakfast" -> Ok(views.html.offer("Налаштування Сніданок Меню", date, "breakfast")),
+          "soup" -> Ok(views.html.offer("Налаштування Суп Меню", date, "soup")),
+          "desert" -> Ok(views.html.offer("Налаштування Десерт Меню", date, "desert")),
+          "promo" -> Ok(views.html.offer("Налаштування Промо Меню", date, "promo"))
+        )
+        resultWithFlash(offerPageMap(menuType), offerModel.setOffer(settingOffer), "Готово Тепер Встановіть ціни, мяу") // TODO: Flashing doesn't work think on how to fix it
       }
     )
   }
