@@ -1,11 +1,12 @@
 package controllers
 
+import java.text.SimpleDateFormat
 import javax.inject.{Inject, Singleton}
 import models._
 import play.api.data.Forms._
 import play.api.data.Form
 import play.api.mvc._
-import services.SimbaHTMLHelper.{getNextSundayFromGivenDate, getLastSundayFromGivenDate}
+import services.SimbaHTMLHelper.{getLastSundayFromGivenDate, getNextSundayFromGivenDate}
 
 @Singleton
 class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
@@ -99,7 +100,13 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
       "promo" -> Redirect(routes.OfferController.toOfferPage("Налаштування Промо Меню", "promo"))
     )
     setOfferForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.createOffer(menuType, formWithErrors.value.head.executionDate, formWithErrors)),
+      formWithErrors => {
+        val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
+        val executionDateFromFiled = formWithErrors("executionDate").value.head
+        BadRequest(views.html.createOffer(menuType,
+          dateFormat.parse(executionDateFromFiled),
+          formWithErrors))
+      },
       settingOffer => {
         resultWithFlash(offerPageMap(menuType), offerModel.setOffer(settingOffer), "Готово Тепер Встановіть ціни, мяу")
       }

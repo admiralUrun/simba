@@ -12,8 +12,8 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   private val orderForm = Form(
     mapping(
       "id" -> ignored(None: Option[Int]),
-      "customerID" -> number,
-      "addressID" -> number,
+      "customerId" -> number,
+      "addressId" -> number,
       "orderDay" -> date, "deliveryDay" -> date,
       "deliverFrom" -> nonEmptyText, "deliverTo" -> nonEmptyText,
       "inOrder" -> list(number),
@@ -29,8 +29,13 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
     Ok(views.html.orders(orders, search))
   }
 
-  def toOrderEditPage(id:Int): PlayAction = Action { implicit request =>
-    Ok(views.html.editOrder(id, orderForm.fill(orderModel.findById(id)), orderModel.getMenusToolsForAddingToOrder, orderModel.getInOrderToTextWithCostMap))
+  def toOrderEditPage(id: Int): PlayAction = Action { implicit request =>
+    val o = orderModel.findById(id)
+    val oF = orderForm.fill(o)
+    Ok(views.html.editOrder(id,
+      oF,
+      orderModel.getMenusToolsForAddingToOrder,
+      orderModel.getInOrderToTextWithCostMap))
   }
 
   def toOrderCreatePage: PlayAction = Action { implicit request =>
@@ -50,7 +55,10 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
 
   def createOrder: PlayAction = Action { implicit request =>
     orderForm.bindFromRequest.fold(
-      formWithErrors => BadRequest(views.html.createOrder(formWithErrors, orderModel.getMenusToolsForAddingToOrder, None)),
+      formWithErrors => BadRequest(
+        views.html.createOrder(formWithErrors, // FIX bug with not saving a form in it failed
+        orderModel.getMenusToolsForAddingToOrder,
+        None)),
       orderForEditAndCreate => resultWithFlash(orderFeedPage, orderModel.insert(orderForEditAndCreate), "Замовлення додано, мяу")
     )
   }

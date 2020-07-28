@@ -82,8 +82,8 @@
         @form(formCall, Symbol("id") -> "mainForm") {
             <fieldset>
                 @CSRF.formField
-                <input id="customersID" name="customersID" style="display: none">
-                <input id="addressID" name="addressID" style="display: none">
+                <input id="customerId" name="customerId" type="number" style="display: none">
+                <input id="addressId" name="addressId" type="number" style="display: none">
 
                 <input name="orderDay" type="text" value="@formattingDateForForm(new Date())" style="display: none">
                 <input name="deliveryDay" type="text" value="@getNextSundayFromCornetWeek" style="display: none">
@@ -95,7 +95,7 @@
                     <input id="deliverTo" name="deliverTo" type="text" class=" col-auto">
                 </div>
 
-                <input id="total" value="@getValueFromForm("total", oF).getOrElse("")" type="text" style="display: none;">
+                <input id="total" name="total" value="@getValueFromForm("total", oF).getOrElse("")" type="text" style="display: none;">
                 <label>Всьго</label>
                 <h5 id="totalText">@getValueFromForm("total", oF).getOrElse("0") ₴</h5>
                 <div id="payment">

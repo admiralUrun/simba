@@ -20,7 +20,7 @@ class OfferModel @Inject()(dS: DoobieStore) {
       (JsPath \ "edited").write[Boolean]
   )(unlift(Recipe.unapply))
   def getOfferPreferencesByMenuType(menuType: String, executionDate: Date): EditOffer = {
-    val offers = sql"select * from offers where execution_date is $executionDate and  menu_type = $menuType"
+    val offers = sql"select * from offers where execution_date = $executionDate and  menu_type = $menuType"
       .query[Offer]
       .to[List]
       .transact(xa)
@@ -130,7 +130,6 @@ class OfferModel @Inject()(dS: DoobieStore) {
       }
     } yield recipes).transact(xa).unsafeRunSync()
   }
-
 
 }
 

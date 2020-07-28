@@ -84,8 +84,6 @@ insert into recipes(id, name, type, edited) values ('42', 'Индейка с к�
 
 insert into recipes(id, name, type, edited) values ('43', 'Куриный жюльен с грибами', 'classic', 0);
 
-insert into recipes(id, name, type, edited) values ('44', 'Фаршированная скумбрия, запеченная в фольге', 'classic', 0);
-
 insert into recipes(id, name, type, edited) values ('45', 'Куриный рулет с чеддером и гарниром из фарфалле', 'classic', 0);
 
 insert into recipes(id, name, type, edited) values ('46', 'Куриный пирог с грибами', 'classic', 0);

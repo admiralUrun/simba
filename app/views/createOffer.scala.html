@@ -25,7 +25,7 @@
     @form(routes.OfferController.setOffer(menuType)) {
         @CSRF.formField
         <input name="menuType" value="@menuType" style="display: none">
-        <input name="executionDate" value="@executionDate" style="display: none">
+        <input name="executionDate" type="date" value="@formattingDateForForm(executionDate)" style="display: none">
         <ul id="inOffer"></ul>
         <input class="btn btn-primary" type="submit" value="Встановити">
     }

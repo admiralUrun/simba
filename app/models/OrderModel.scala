@@ -1,10 +1,12 @@
 package models
 
+import java.text.SimpleDateFormat
+
 import cats.effect.IO
 import doobie._
 import doobie.implicits._
 import cats.implicits._
-import java.util.Date
+import java.util.{Calendar, Date}
 import javax.inject._
 
 @Singleton
@@ -19,8 +21,10 @@ class OrderModel @Inject()(dS: DoobieStore) {
       .query[Order]
       .to[List]
       .transact(xa)
-      .unsafeRunSync.map(orderToOrderForDisplay).groupBy(_.deliveryDay)
+      .map(l => l.map(orderToOrderForDisplay).groupBy(_.deliveryDay))
+      .unsafeRunSync
   }
+
 
   def insert(o: OrderForEditAndCreate): Boolean = {
     def insertOrder(o: OrderForEditAndCreate): Int = {
@@ -51,8 +55,13 @@ class OrderModel @Inject()(dS: DoobieStore) {
   }
 
   def findById(id:Int): OrderForEditAndCreate = {
-    val order = sql"select * from orders where id = $id".query[Order].unique.transact(xa).unsafeRunSync()
-    orderToOrderForEditAndCreate(order)
+  val order = sql"select * from orders where id = $id"
+     .query[Order]
+     .unique
+     .transact(xa)
+     .map(orderToOrderForEditAndCreate)
+     .unsafeRunSync()
+    order
   }
 
   def edit(o: OrderForEditAndCreate): Boolean = {
@@ -77,7 +86,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
     }
 
     def offerToMenuItem(o: Offer): OrderMenuItem = {
-      OrderMenuItem(o.name, o.id.toString, o.price)
+      OrderMenuItem(o.name, o.id.head, o.price)
     }
 
     def getAllMenuToolsForAddingOrder(offers: List[Offer]): List[OrderMenu] = {
@@ -96,7 +105,10 @@ class OrderModel @Inject()(dS: DoobieStore) {
   }
 
   private def getAllOffersOnThisWeek: List[Offer] = {
-    sql"select * from offers where execution_date is null"
+    val c = Calendar.getInstance
+    c.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+    val sundayOnCurrentWeek = c.getTime
+    sql"select * from offers where execution_date = $sundayOnCurrentWeek"
       .query[Offer]
       .to[List]
       .transact(xa)
@@ -197,7 +209,7 @@ case class OrderForEditAndCreate(id: Option[Int],
                                  offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                                  paid: Boolean, delivered: Boolean, note: Option[String])
 
-case class OrderMenuItem(titleOnDisplay: String, value: String, cost: Int)
+case class OrderMenuItem(titleOnDisplay: String, value: Int, cost: Int)
 
 case class OrderMenu(titleOnDisplay: String, menuItems: List[OrderMenuItem])
 

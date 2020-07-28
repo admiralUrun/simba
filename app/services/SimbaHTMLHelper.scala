@@ -100,33 +100,13 @@ object SimbaHTMLHelper {
   }
 
   def formattingDateForDisplay(d: Date): String = {
-    val monthsTranslate = Map(
-      "Jan" -> "Січень",
-      "Feb" -> "Лютий",
-      "Mar" -> "Березень",
-      "Apr" -> "Квітень",
-      "May" -> "Травень",
-      "Jun" -> "Червень",
-      "Jul" -> "Липень",
-      "Aug" -> "Серпень",
-      "Sep" -> "Вересень",
-      "Oct" -> "Жовтень",
-      "Nov" -> "Листопад",
-      "Dec" -> "Грудень",
-    )
-    val weekDayTranslate = Map(
-      "Mon" -> "Понеділок",
-      "Tue" -> "Вівторок",
-      "Wed" -> "Середа",
-      "Thu" -> "Четверг",
-      "Fri" -> "П'ятниця",
-      "Sat" -> "Суббота",
-      "Sun" -> "Неділя"
-    )
-    val dateArray = d.toString.split(" ")
-    weekDayTranslate(dateArray(0)) + " " + dateArray(2) + " " + monthsTranslate(dateArray(1)) + " " + dateArray(5)
+    formatter.format(d)
   }
 
+  /**
+   * Used to Format java.util.Date to String that can be used in a form
+   * With out Formatting Play framework will Return Error in form
+  * */
   def formattingDateForForm(d: Date): String = formatter.format(d)
 
   def  getNextSundayFromCornetWeek: String = {

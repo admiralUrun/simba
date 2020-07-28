@@ -183,7 +183,7 @@ function setCustomerAddAddressDropdown(id, customerAddresses) {
 function setAddress(address, id) {
     function setAddress(address) {
         $(`#address`).remove()
-        $(`#addressID`).val(`${address.id}`)
+        $(`#addressId`).val(Number(address.id))
         displayAddress(address)
     }
 
@@ -192,7 +192,7 @@ function setAddress(address, id) {
 }
 
 function setCustomer(customer) {
-    $(`#customersID`).val(`${customer.id}`)
+    $(`#customerId`).val(Number(customer.id))
     displayCustomer(customer)
 }
 
