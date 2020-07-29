@@ -16,6 +16,24 @@ class OrderModel @Inject()(dS: DoobieStore) {
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
 
   def getAllTableRows: Map[Date, List[OrderForDisplay]] = {
+    def orderToOrderForDisplay(o: Order): OrderForDisplay = {
+      def getCustomerById(id: Int): Customer = {
+        sql"select * from customers where id = $id".query[Customer].to[List].transact(xa).unsafeRunSync().head
+      }
+
+      def getAddressById(id: Int): Address = {
+        sql"select * from addresses where id = $id".query[Address].to[List].transact(xa).unsafeRunSync().head
+      }
+
+      OrderForDisplay(o.id, getCustomerById(o.customerId), getAddressById(o.addressId),
+        o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
+        getAllOfferIdByOrderId(o.id.head).map(_.name).mkString(", "),
+        o.total,
+        o.payment,
+        o.offlineDelivery, o.deliveryOnMonday,
+        o.paid, o.delivered,
+        o.note)
+    }
     sql"select * from orders"
       .query[Order]
       .to[List]
@@ -26,7 +44,6 @@ class OrderModel @Inject()(dS: DoobieStore) {
 
 
   def insert(o: OrderForEditAndCreate): Boolean = {
-    def insertOrder(o: OrderForEditAndCreate): Int = {
       (for {
         _ <-
           sql"""insert into orders (customer_id, address_id,
@@ -46,26 +63,26 @@ class OrderModel @Inject()(dS: DoobieStore) {
                                               ${o.note}) """.update.run
         id <- sql"select LAST_INSERT_ID()".query[Int].unique
         o <- sql"select * from orders where id = $id".query[Order].unique
-      } yield o).transact(xa).unsafeRunSync().id.head
-    }
-
-    val orderId = insertOrder(o)
-    val resepisIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.recipesId, o.quantity))
-
-    (insertOrderRecipis(orderId, resepisIdsAndQuantity) *> insertOrderOffers(orderId, o.inOrder)).transact(xa).unsafeRunSync() == o.inOrder.length * 2
+      } yield o)
+        .map{ order =>
+          val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.recipesId, o.quantity))
+          insertOrderRecipes(order.id.head, recipesIdsAndQuantity) *> insertOrderOffers(order.id.head, o.inOrder)
+      }.transact(xa).unsafeRunAsyncAndForget()
+    true
   }
 
   def findById(id:Int): OrderForEditAndCreate = {
     def orderToOrderForEditAndCreate(o: Order): OrderForEditAndCreate = {
       /**
        * Have to use is operation on java.util.Date that was parsed from "yyyy-MM-dd" format
-       * otherwise play.api.form will throw [UnsupportedOperationException: null] from java.sql.Date.toInstant
+       * otherwise play.api.data.Form will throw [UnsupportedOperationException: null] from java.sql.Date.toInstant
        * However if you parsed java.util.Date form "EEE MMM dd HH:mm:ss zzz yyyy" format or use { new java.util.Date() } it will work
       * */
       def changingDateFormatForPlayForm(date: Date): Date = {
         val formatForFillInForm = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")
        formatForFillInForm.parse(formatForFillInForm.format(date))
       }
+
       OrderForEditAndCreate(o.id, o.customerId, o.addressId,
         changingDateFormatForPlayForm(o.orderDay), changingDateFormatForPlayForm(o.deliveryDay),
         convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
@@ -85,12 +102,13 @@ class OrderModel @Inject()(dS: DoobieStore) {
   }
 
   def edit(o: OrderForEditAndCreate): Boolean = {
-    val resepisIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.recipesId, o.quantity))
-    (sql"delete from order_recipes where order_id = ${o.id.head}".update.run *>
-      resepisIdsAndQuantity.traverse { idAndQuantity =>
-        sql"insert into order_recipes (order_id, recipe_id, quantity) values (${o.id.head}, ${idAndQuantity._1}, ${idAndQuantity._2})".update.run
-      }
-      ).transact(xa).unsafeRunSync().length >= o.inOrder.length
+    val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.recipesId, o.quantity))
+    (sql"delete from order_offers where order_id = ${o.id.head}".update.run *>
+      insertOrderOffers(o.id.head, o.inOrder) *>
+      sql"delete from order_recipes where order_id = ${o.id.head}".update.run *>
+      insertOrderRecipes(o.id.head, recipesIdsAndQuantity)
+      ).transact(xa).unsafeRunSync()
+    true
   }
 
   def getMenusToolsForAddingToOrder: List[OrderMenu] = {
@@ -135,25 +153,6 @@ class OrderModel @Inject()(dS: DoobieStore) {
       .unsafeRunSync()
   }
 
-  private def orderToOrderForDisplay(o: Order): OrderForDisplay = {
-    def getCustomerById(id: Int): Customer = {
-      sql"select * from customers where id = $id".query[Customer].to[List].transact(xa).unsafeRunSync().head
-    }
-
-    def getAddressById(id: Int): Address = {
-      sql"select * from addresses where id = $id".query[Address].to[List].transact(xa).unsafeRunSync().head
-    }
-
-    OrderForDisplay(o.id, getCustomerById(o.customerId), getAddressById(o.addressId),
-      o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
-      getAllOfferIdByOrderId(o.id.head).map(_.name).mkString(", "),
-      o.total,
-      o.payment,
-      o.offlineDelivery, o.deliveryOnMonday,
-      o.paid, o.delivered,
-      o.note)
-  }
-
   private def convertStringToMinutes(timeInput: String): Minutes = { // Maybe throw exception if String didn't split by ':'
     val timeArray = timeInput.split(':')
     timeArray(0).toInt * 60 + timeArray(1).toInt
@@ -176,7 +175,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
     }.transact(xa).unsafeRunSync().flatten
   }
 
-  private def insertOrderRecipis(orderId: Int, recipisIdsQuantity: List[(Int, Int)]): ConnectionIO[Int] = {
+  private def insertOrderRecipes(orderId: Int, recipisIdsQuantity: List[(Int, Int)]): ConnectionIO[Int] = {
     recipisIdsQuantity.traverse { rIdQ =>
       sql"insert into order_recipes (order_id, recipe_id, quantity) value ($orderId, ${rIdQ._1}, ${rIdQ._2})".update.run
     }.map(_.sum)
