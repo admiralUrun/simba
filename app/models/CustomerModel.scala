@@ -1,22 +1,24 @@
 package models
 
+import cats.effect
 import cats.effect.IO
 import doobie._
 import doobie.implicits._
 import javax.inject._
 import cats.implicits._
+import com.typesafe.config.ConfigException
 import play.api.libs.json.{JsValue, Json}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 import services.SimbaHTMLHelper.stringToAddress
 import services.SimbaHTMLHelper.addressToString
-
+import services.SimbaAlias._
 @Singleton
 class CustomerModel @Inject()(dS: DoobieStore) {
   type  JSONWrites[T] = OWrites[T]
   protected val xa: DataSourceTransactor[IO] = dS.getXa()
  private implicit val customerWriter: Writes[Customer] = (
-    ( JsPath \ "id").writeNullable[Int] and
+    ( JsPath \ "id").writeNullable[ID] and
       ( JsPath \ "firstName").write[String] and
       ( JsPath \ "lastName").writeNullable[String] and
       ( JsPath \ "phone").write[String] and
@@ -29,8 +31,8 @@ class CustomerModel @Inject()(dS: DoobieStore) {
     )(unlift(Customer.unapply))
 
   private implicit val addressWriter: Writes[Address] = (
-    ( JsPath \ "id").writeNullable[Int] and
-      ( JsPath \ "customerId").writeNullable[Int] and
+    ( JsPath \ "id").writeNullable[ID] and
+      ( JsPath \ "customerId").writeNullable[ID] and
       ( JsPath \ "city").write[String] and
       ( JsPath \ "residentialComplex").writeNullable[String] and
       ( JsPath \ "address").write[String] and
@@ -66,7 +68,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .unsafeRunSync
   }
 
-  def insert(c: CustomerForEditAndCreate): (Boolean, Int) = {
+  def insert(c: CustomerForEditAndCreate): (Boolean, ID) = { // TODO under one transact
     val customerID = (for {
       _ <- sql"""insert into customers
             (first_name, last_name,
@@ -76,21 +78,19 @@ class CustomerModel @Inject()(dS: DoobieStore) {
                 ${c.phone}, ${c.phoneNote}, ${c.phone2}, ${c.phoneNote2},
                 ${c.instagram},
                 ${c.preferences}, ${c.notes})""".update.run
-      id <- sql"select LAST_INSERT_ID()".query[Int].unique
+      id <- sql"select LAST_INSERT_ID()".query[ID].unique
+      _ <- insertAddressesReturnConnectionIOListOfInt(decodeAddressString(c.addresses), id)
     } yield id)
       .transact(xa)
       .unsafeRunSync()
-    (insertAddresses(decodeAddressString(c.addresses), customerID), customerID)
+    (true, customerID)
   }
 
-  def insertAddresses(list: List[Address], customerId: Int): Boolean = {
-    val connectionIO = insertAddressesReturnConnectionIOListOfInt(list, customerId)
-    connectionIO
-        .transact(xa)
-        .unsafeRunSync().forall(_ == 1)
+  def insertAddresses(list: List[Address], customerId: ID): ConnectionIO[List[Int]] = {
+    insertAddressesReturnConnectionIOListOfInt(list, customerId)
   }
 
-  def findByID(id: Int): CustomerForEditAndCreate = {
+  def findByID(id: ID): CustomerForEditAndCreate = {
     val c = getCustomerById(id)
 
     CustomerForEditAndCreate(
@@ -101,32 +101,31 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       encodeAddressesToString(getAllCustomersAddresses(c.id.head)), Option(null))
   }
 
-  def editCustomer(id: Int, c: CustomerForEditAndCreate): Boolean = {
-    sql"""update customers set first_name = ${c.firstName}, last_name = ${c.lastName},
+  def editCustomer(id: ID, c: CustomerForEditAndCreate): Boolean = {
+    (sql"""update customers set first_name = ${c.firstName}, last_name = ${c.lastName},
          phone = ${c.phone}, phone_note = ${c.phoneNote},
          phone2 = ${c.phone2}, phone2_note = ${c.phoneNote2},
          instagram = ${c.instagram},
          preferences = ${c.preferences}, notes = ${c.notes}
          where id = $id"""
       .update
-      .run
-      .transact(xa)
-      .unsafeRunSync() == 1 &&
-      editAddresses(decodeAddressString(c.addresses), c.addressesToDelete.getOrElse(List()), id)
+      .run *>
+      editAddresses(decodeAddressString(c.addresses), c.addressesToDelete.getOrElse(List()), id)).transact(xa).unsafeRunSync()
+    true
   }
 
-  def editAddresses(list: List[Address], listToDelete: List[Int], customerId: Int): Boolean = {
-    def insertAddressesReturnConfectionIO(list: List[Address], customerId: Int): ConnectionIO[Int] = {
+  def editAddresses(list: List[Address], listToDelete: List[ID], customerId: ID): ConnectionIO[Unit] = {
+    def insertAddressesReturnConfectionIO(list: List[Address], customerId: ID): ConnectionIO[Int] = {
       insertAddressesReturnConnectionIOListOfInt(list, customerId).map(_.sum)
     }
 
-    def deleteAddresses(list: List[Int]): ConnectionIO[Int] = {
+    def deleteAddresses(list: List[ID]): ConnectionIO[Int] = {
       list.traverse { id =>
         sql"""delete from addresses where id = $id""".update.run
       }.map(_.sum)
     }
 
-    def editAddresses(list: List[Address], customerId: Int): ConnectionIO[Int] = {
+    def editAddresses(list: List[Address], customerId: ID): ConnectionIO[Int] = {
       list.traverse { a =>
         sql"""update addresses set city = ${a.city},
               residential_complex = ${a.residentialComplex},
@@ -138,19 +137,17 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       }.map(_.sum)
     }
 
-    val customerAddressesInDB = sql"""select * from addresses where customer_id = $customerId""".query[Address].to[List].transact(xa).unsafeRunSync()
-
-    if (customerAddressesInDB.isEmpty) insertAddresses(list, customerId)
-    else {
-      (deleteAddresses(listToDelete) *>
-        insertAddressesReturnConfectionIO(list.filter(p = a => a.id.isEmpty && a.customerId.isEmpty), customerId)  *>
-         editAddresses(list.filter(a => a.id.isDefined && a.customerId.isDefined), customerId)
-        ).transact(xa)
-        .unsafeRunSync() >= list.length
+    sql"""select * from addresses where customer_id = $customerId""".query[Address].to[List].map{ customerAddressesInDB =>
+      if (customerAddressesInDB.isEmpty) insertAddresses(list, customerId)
+      else {
+        deleteAddresses(listToDelete) *>
+          insertAddressesReturnConfectionIO(list.filter(p = a => a.id.isEmpty && a.customerId.isEmpty), customerId)  *>
+          editAddresses(list.filter(a => a.id.isDefined && a.customerId.isDefined), customerId)
+      }
     }
   }
 
-  def getAllCustomersAddresses(customerId: Int): List[Address] = {
+  def getAllCustomersAddresses(customerId: ID): List[Address] = {
     sql"select * from addresses where customer_id = $customerId"
       .query[Address]
       .to[List]
@@ -158,7 +155,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .unsafeRunSync
   }
 
-  def getDataForJsonToDisplayInOrderByID(id: Int): JsValue = {
+  def getDataForJsonToDisplayInOrderByID(id: ID): JsValue = {
     val c = getCustomerById(id)
     Json.toJson(CustomerAddressesToJson(c, getAllCustomersAddresses(id)))
   }
@@ -167,7 +164,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
     CustomerAddressesToJson(c, getAllCustomersAddresses(c.id.head))
   })
 
-  private def insertAddressesReturnConnectionIOListOfInt(list: List[Address], customerId: Int): ConnectionIO[List[Int]] = {
+  private def insertAddressesReturnConnectionIOListOfInt(list: List[Address], customerId: ID): ConnectionIO[List[Int]] = {
     list.traverse { a =>
       sql"""insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, note_for_courier)
             value (${customerId}, ${a.city}, ${a.residentialComplex}, ${a.address}, ${a.entrance}, ${a.floor}, ${a.flat}, ${a.notesForCourier})"""
@@ -176,7 +173,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
     }
   }
 
-  private def getCustomerById(id: Int): Customer = {
+  private def getCustomerById(id: ID): Customer = {
     sql"select * from customers where id = $id"
       .query[Customer]
       .unique
@@ -194,23 +191,23 @@ class CustomerModel @Inject()(dS: DoobieStore) {
 
 }
 
-case class Customer(id: Option[Int],
+case class Customer(id: Option[ID],
                     firstName: String, lastName: Option[String],
                     phone: String, phoneNote: Option[String],
                     phone2: Option[String], phoneNote2: Option[String],
                     instagram: Option[String],
                     preferences: Option[String], notes: Option[String])
 
-case class CustomerForEditAndCreate(id: Option[Int],
+case class CustomerForEditAndCreate(id: Option[ID],
                                     firstName: String, lastName: Option[String],
                                     phone: String, phoneNote: Option[String],
                                     phone2: Option[String], phoneNote2: Option[String],
                                     instagram: Option[String],
                                     preferences: Option[String], notes: Option[String],
                                     addresses: List[String],
-                                    addressesToDelete: Option[List[Int]])
+                                    addressesToDelete: Option[List[ID]])
 
-case class Address(id: Option[Int], customerId: Option[Int],
+case class Address(id: Option[ID], customerId: Option[ID],
                    city: String,
                    residentialComplex: Option[String],
                    address: String,
