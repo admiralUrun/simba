@@ -1,9 +1,10 @@
 @import models.OrderMenu
 @import services.SimbaHTMLHelper._
+@import services.SimbaAlias.ID
 @(id:Int,
         oF: Form[OrderForEditAndCreate],
         menus: List[OrderMenu],
-        inOrderToTextCost: Map[String, (String, Int)])(implicit requestHeader: MessagesRequestHeader)
+        inOrderToTextCost: Map[String, (ID, String, Int)])(implicit requestHeader: MessagesRequestHeader)
 
 @createOrEditOrderTemplate(s"Замовлення $id",
     routes.OrderController.updateOrder(id),

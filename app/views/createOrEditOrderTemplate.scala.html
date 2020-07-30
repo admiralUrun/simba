@@ -3,13 +3,14 @@
 @import services.SimbaHTMLHelper._
 @import models.OrderMenu
 @import models.OrderMenuItem
+@import services.SimbaAlias.ID
 @(title: String,
         formCall: Call,
         oF: Form[OrderForEditAndCreate],
         buttonLabel: String,
         inMenu: List[OrderMenu],
         isCreate: Boolean,
-        inOrderToTextCost: Map[String, (String, Int)],
+        inOrderToTextCost: Map[String, (ID, String, Int)],
         possibleIdAfterAddingCustomer: Option[Int] = None,
         customer: Option[Customer] = None,
         setAddress: Option[Address] = None,
@@ -33,7 +34,7 @@
         <div class="container-fluid row">
             <div class="container-fluid row">
                 <ul id="orderList" class="list-group">
-                @if(getValueFromForm("inOrder", oF).isDefined) {
+                @if(!isCreate) {
                     @getAllArrayInputFromForm(oF, "inOrder", addToDisplay, (s: String) => inOrderToTextCost(s))
                 }
                 </ul>
@@ -44,11 +45,11 @@
         </div>
     }
 
-    @addToDisplay(textCost: (String, Int), index: Int) = {
+    @addToDisplay(idTextCost: (ID, String, Int), index: Int) = {
         <li class="list-group-item" id="element@index">
-            @textCost._1
-            <input id="inOrder[]" name="inOrder[]" value="@{textCost._1}" style="display: none">
-            <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder('@index', '@textCost._2')"><span aria-hidden="true">&times;</span></button>
+            @idTextCost._2
+            <input id="inOrder[]" name="inOrder[]" value="@{idTextCost._1}" style="display: none">
+            <button type="button" class="close" aria-label="Close" onclick="deleteFromOrder('@index', '@idTextCost._3')"><span aria-hidden="true">&times;</span></button>
         </li>
     }
 
@@ -84,7 +85,7 @@
                 <input id="customerId" value="@getValueFromForm("customerId", oF)" name="customerId" type="number" style="display: none">
                 <input id="addressId" value="@getValueFromForm("addressId", oF)" name="addressId" type="number" style="display: none">
 
-                <input name="orderDay" type="text" value="@formattingDateForForm(new Date())" style="display: none"> @* Maybe Need to be changed in the future *@
+                <input name="orderDay" type="text" value="@getValueFromForm("orderDay", oF).getOrElse(formattingDateForForm(new Date()))" style="display: none"> @* Maybe Need to be changed in the future to be not new Date() but Date from aguments *@
                 <input name="deliveryDay" type="text" value="@getNextSundayFromCornetWeek" style="display: none">
 
                 <label class="label" for="dataInput">Час доставки </label>
@@ -117,7 +118,7 @@
                 </div>
 
                 <div class="container-fluid row">
-                    @createBooleanInput("offlineDelivery", "За межами Доставки", "За межами Доставки", getCheckBoxValue("paid", oF),
+                    @createBooleanInput("offlineDelivery", "За межами Доставки", "За межами Доставки", getCheckBoxValue("offlineDelivery", oF),
                         jsOnclick = JavaScript("changeButton(`За межами Доставки`, `За межами Доставки`, `offlineDelivery`, 75);")
                     )
                     @createBooleanInput("deliveryOnMonday", "Доставка у Понеділок", "Доставка у Понеділок", getCheckBoxValue("delivered", oF),

@@ -35,7 +35,6 @@ function addToOrder(item, title, cost) {
         }
 
         let count = $('#orderList').children('li').length
-        console.log(count)
         addElementForDisplay(count, text, value)
     }
 
@@ -241,10 +240,9 @@ function createDropDownForAddresses(id, addresses) {
 }
 
 function setCustomerAndAddressAddDropdown(customerAddresses) {
-    console.log(customerAddresses)
     let addressId = Number($(`#addressId`).val())
     setCustomer(customerAddresses.customer)
-    if(customerAddresses.addresses.lenght > 1) {
+    if(customerAddresses.addresses.length > 1) {
         let address = customerAddresses.addresses.filter(function (a) {
             return a.id === addressId
         })

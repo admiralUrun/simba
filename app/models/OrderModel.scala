@@ -137,9 +137,9 @@ class OrderModel @Inject()(dS: DoobieStore) {
     getAllMenuToolsForAddingOrder(getAllOffersOnThisWeek)
   }
 
-  def getInOrderToTextWithCostMap: Map[String, (MenuTitle, MenuPrice)] = { // TODO aks supervisor's opinion maybe there is better way to make it done
+  def getInOrderToTextWithCostMap: Map[String, (ID, MenuTitle, MenuPrice)] = { // TODO aks supervisor's opinion maybe there is better way to make it done
     getAllOffersOnThisWeek.groupBy(_.id.head.toString).map{t =>
-      t._1 -> t._2.map(offer => (offer.name, offer.price)).head
+      t._1 -> t._2.map(offer => (t._1.toInt, offer.name, offer.price)).head
     }
   }
 
