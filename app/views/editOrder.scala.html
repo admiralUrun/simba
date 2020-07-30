@@ -1,5 +1,9 @@
 @import models.OrderMenu
-@(id:Int, oF: Form[OrderForEditAndCreate], menus: List[OrderMenu], inOrderToTextCost: Map[String, (String, Int)])(implicit requestHeader: MessagesRequestHeader)
+@import services.SimbaHTMLHelper._
+@(id:Int,
+        oF: Form[OrderForEditAndCreate],
+        menus: List[OrderMenu],
+        inOrderToTextCost: Map[String, (String, Int)])(implicit requestHeader: MessagesRequestHeader)
 
 @createOrEditOrderTemplate(s"Замовлення $id",
     routes.OrderController.updateOrder(id),
@@ -7,5 +11,6 @@
     buttonLabel = "Змінити",
     menus,
     isCreate = false,
-    inOrderToTextCost
+    inOrderToTextCost,
+    getValueFromForm("customerId", oF).map(_.toInt)
 )

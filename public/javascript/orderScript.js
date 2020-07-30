@@ -51,7 +51,7 @@ function changeTotal(cost) {
 function deleteFromOrder(indexToRemove, cost) {
     $(`#element${indexToRemove}`).remove()
     total.val(Number(total.val()) - Number(cost))
-    totalText.html(total.val() + '₴')
+    totalText.html(total.val() + ' ₴')
 }
 
 /**
@@ -152,25 +152,6 @@ function displayAddress(address) {
 
 function setCustomerAddAddressDropdown(id, customerAddresses) {
     function setCustomerCreateDropDownFormAddresses(customerAddresses) {
-        function createDropDownForAddresses(addresses) {
-            $(`<div id="addresses" class="col-auto btn-group dropright">
-            <div>
-                <button type="button" class="btn btn-info start dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Адреси 
-                </button>
-            <div id="customer${customerAddresses.id}Addresses" class="dropdown-menu"></div>
-            </div>
-            </div>`).appendTo($('#customerInformation'))
-            addresses.forEach( function (address) {
-                $(`<a id="address${address.id}" class="dropdown-item" onclick="setAddress(null, '${address.id}')">
-                            ${address.city} ${$.getValeOrEmptyString(address.residentialComplex)}
-                            ${address.address}
-                            ${$.getValeOrEmptyString(address.flat)}
-                        </a>`).appendTo($(`#customer${customerAddresses.id}Addresses`))
-                $(`#address${address.id}`).data(`address`, address)
-                })
-        }
-
         $.hideSearchDiv()
         setCustomer(customerAddresses.customer)
         createDropDownForAddresses(customerAddresses.addresses)
@@ -240,6 +221,41 @@ function cleanDropMenu() {
     $(`<span class="dropdown-header">Тут можна знайти Клієнта</span>`).appendTo($("#searchMenu"))
 }
 
+function createDropDownForAddresses(addresses) {
+    $(`<div id="addresses" class="col-auto btn-group dropright">
+            <div>
+                <button type="button" class="btn btn-info start dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Адреси 
+                </button>
+            <div id="customer${customerAddresses.id}Addresses" class="dropdown-menu"></div>
+            </div>
+            </div>`).appendTo($('#customerInformation'))
+    addresses.forEach( function (address) {
+        $(`<a id="address${address.id}" class="dropdown-item" onclick="setAddress(null, '${address.id}')">
+                            ${address.city} ${$.getValeOrEmptyString(address.residentialComplex)}
+                            ${address.address}
+                            ${$.getValeOrEmptyString(address.flat)}
+                        </a>`).appendTo($(`#customer${customerAddresses.id}Addresses`))
+        $(`#address${address.id}`).data(`address`, address)
+    })
+}
+
+function setCustomerAndAddressAddDropdown(customerAddresses) {
+    console.log(customerAddresses)
+    let addressId = Number($(`#addressId`).val())
+    setCustomer(customerAddresses.customer)
+    if(customerAddresses.addresses.lenght > 1) {
+        let address = customerAddresses.addresses.filter(function (a) {
+            return a.id === addressId
+        })
+        createDropDownForAddresses(customerAddresses.addresses)
+        setAddress(address[0], addressId)
+    } else {
+        setAddress(customerAddresses.addresses[0], addressId)
+    }
+
+}
+
 /**
  * Used inside createOrEditOrderTemplate
  * */
@@ -248,7 +264,6 @@ function setPayment(payment) {
         <button id="paymentEdit" class="btn btn-success"  onclick="removePayment()">Змінити</button>`).appendTo($('#paymentDIV'))
     $('#paymentMenu').hide()
     $('#payment').val(payment)
-    console.log($('#payment').val())
 }
 
 function removePayment() {

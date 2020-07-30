@@ -10,7 +10,11 @@
         inMenu: List[OrderMenu],
         isCreate: Boolean,
         inOrderToTextCost: Map[String, (String, Int)],
-        possibleIdAfterAddingCustomer: Option[Int] = None
+        possibleIdAfterAddingCustomer: Option[Int] = None,
+        customer: Option[Customer] = None,
+        setAddress: Option[Address] = None,
+        allAddresses: Option[List[Address]] = None
+
 )(implicit requestHeader: MessagesRequestHeader)
 
     @createAMenuDropDown(menuTitle: String, inMenu: List[OrderMenuItem]) = {
@@ -27,13 +31,10 @@
 
     @createInputInOrder = {
         <div class="container-fluid row">
-            <input type="text" id="inOrder" name="inOrder" value="@getValueFromForm("inOrder", oF).getOrElse("")" class="col-1" style="display: none">
             <div class="container-fluid row">
                 <ul id="orderList" class="list-group">
-                @if(!isCreate) {
-                    @getAllArrayInputFromForm(oF, "inOrder", addToDisplay, (s: String) => {
-                        inOrderToTextCost(s)
-                    })
+                @if(getValueFromForm("inOrder", oF).isDefined) {
+                    @getAllArrayInputFromForm(oF, "inOrder", addToDisplay, (s: String) => inOrderToTextCost(s))
                 }
                 </ul>
             </div>
@@ -52,13 +53,11 @@
     }
 
     @getCustomerSearch = {
-    @if(isCreate) {
         <div id="customerInformation" class="row container-fluid">
-        @getStandardSearchDiv(None, Option("Тут можна знайти Клієнта"), Option(routes.CustomerController.toCreateCustomerPageForOrder()), withSideJS = true)
+            @if(isCreate) {
+                @getStandardSearchDiv(None, Option("Тут можна знайти Клієнта"), Option(routes.CustomerController.toCreateCustomerPageForOrder()), withSideJS = true)
+            }
         </div>
-    } else {
-
-    }
     }
 
 
@@ -82,24 +81,24 @@
         @form(formCall, Symbol("id") -> "mainForm") {
             <fieldset>
                 @CSRF.formField
-                <input id="customerId" name="customerId" type="number" style="display: none">
-                <input id="addressId" name="addressId" type="number" style="display: none">
+                <input id="customerId" value="@getValueFromForm("customerId", oF)" name="customerId" type="number" style="display: none">
+                <input id="addressId" value="@getValueFromForm("addressId", oF)" name="addressId" type="number" style="display: none">
 
-                <input name="orderDay" type="text" value="@formattingDateForForm(new Date())" style="display: none">
+                <input name="orderDay" type="text" value="@formattingDateForForm(new Date())" style="display: none"> @* Maybe Need to be changed in the future *@
                 <input name="deliveryDay" type="text" value="@getNextSundayFromCornetWeek" style="display: none">
 
                 <label class="label" for="dataInput">Час доставки </label>
                 <div id="dataInput" class="container-fluid row">
-                    <input id="deliverFrom" name="deliverFrom" type="text" class=" col-auto">
+                    <input id="deliverFrom" value="@getValueFromForm("deliverFrom", oF)" name="deliverFrom" type="text" class=" col-auto">
                     <b class="col-auto"> По </b>
-                    <input id="deliverTo" name="deliverTo" type="text" class=" col-auto">
+                    <input id="deliverTo" value="@getValueFromForm("deliverTo", oF)" name="deliverTo" type="text" class=" col-auto">
                 </div>
 
                 <input id="total" name="total" value="@getValueFromForm("total", oF).getOrElse("")" type="text" style="display: none;">
                 <label>Всьго</label>
                 <h5 id="totalText">@getValueFromForm("total", oF).getOrElse("0") ₴</h5>
                 <div id="paymentDIV">
-                    <input id="payment" type="text" style="display: none;">
+                    <input id="payment" name="payment" value="@getValueFromForm("payment", oF)" type="text" style="display: none;">
                     <div id="paymentMenu">
                     @createDropDown("Спосіб Оплати", List("Готівка", "Карткою", "Бартер"), (s: String) => { // TODO: Add to database remove hardCode
                         val id = "paymentItem"
@@ -141,11 +140,12 @@
                 $(document).ready(function () {
                     if (@possibleIdAfterAddingCustomer.isDefined) {
                         $.get("/searchCustomerForOrderById/" + @possibleIdAfterAddingCustomer.getOrElse(0), function (data) {
-                            /**
-                             * Won't use -1
-                             * */
-                            setCustomerAddAddressDropdown(-1, data)
+                            setCustomerAndAddressAddDropdown(data)
                         })
+                    }
+
+                    if(@{!isCreate}) {
+                        setPayment('@getValueFromForm("payment", oF)')
                     }
                     $("input").keypress(function (e) {
                         if (e.which === 13) {

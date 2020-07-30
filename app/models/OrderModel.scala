@@ -7,6 +7,7 @@ import doobie.implicits._
 import cats.implicits._
 import java.util.{Calendar, Date}
 import javax.inject._
+import services.SimbaAlias._
 
 @Singleton
 class OrderModel @Inject()(dS: DoobieStore) {
@@ -17,11 +18,11 @@ class OrderModel @Inject()(dS: DoobieStore) {
 
   def getAllTableRows: Map[Date, List[OrderForDisplay]] = {
     def orderToOrderForDisplay(o: Order): OrderForDisplay = {
-      def getCustomerById(id: Int): Customer = {
+      def getCustomerById(id: ID): Customer = {
         sql"select * from customers where id = $id".query[Customer].to[List].transact(xa).unsafeRunSync().head
       }
 
-      def getAddressById(id: Int): Address = {
+      def getAddressById(id: ID): Address = {
         sql"select * from addresses where id = $id".query[Address].to[List].transact(xa).unsafeRunSync().head
       }
 
@@ -190,9 +191,9 @@ class OrderModel @Inject()(dS: DoobieStore) {
 }
 
 
-case class Order(id: Option[Int],
-                 customerId: Int,
-                 addressId: Int,
+case class Order(id: Option[ID],
+                 customerId: ID,
+                 addressId: ID,
                  orderDay: Date, deliveryDay: Date,
                  deliverFrom: Int, deliverTo: Int,
                  total: Int,
@@ -200,7 +201,7 @@ case class Order(id: Option[Int],
                  offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                  paid: Boolean, delivered: Boolean, note: Option[String])
 
-case class OrderForDisplay(id: Option[Int],
+case class OrderForDisplay(id: Option[ID],
                            customer: Customer,
                            address: Address,
                            orderDay: Date, deliveryDay: Date,
@@ -211,9 +212,9 @@ case class OrderForDisplay(id: Option[Int],
                            offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                            paid: Boolean, delivered: Boolean, note: Option[String])
 
-case class OrderForEditAndCreate(id: Option[Int],
-                                 customerId: Int,
-                                 addressId: Int,
+case class OrderForEditAndCreate(id: Option[ID],
+                                 customerId: ID,
+                                 addressId: ID,
                                  orderDay: Date, deliveryDay: Date,
                                  deliverFrom: String, deliverTo: String,
                                  inOrder: List[Int],
@@ -226,6 +227,6 @@ case class OrderMenuItem(titleOnDisplay: String, value: Int, cost: Int)
 
 case class OrderMenu(titleOnDisplay: String, menuItems: List[OrderMenuItem])
 
-case class OrderResepies(orderId: Int, resepisId: Int, quantity: Int)
+case class OrderResepies(orderId: ID, resepisId: ID, quantity: Int)
 
-case class OrderOffer(orderId: Int, offerId: Int)
+case class OrderOffer(orderId: ID, offerId: ID)
