@@ -3,11 +3,9 @@ package models
 import java.util.Date
 
 import cats.effect.IO
-import cats.free.Free
 import doobie._
 import doobie.implicits._
 import cats.implicits._
-import doobie.free.connection.ConnectionOp
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -71,39 +69,64 @@ class OfferModel @Inject()(dS: DoobieStore) {
         "breakfast" -> (howManyIds == 5)
       )(menuType)
 
-    def insertOffer(name: String, date: Date, menuType: String, recipes: List[Recipe], quantityOfRecipes: Int): IO[Unit] = {
+    def insertOffer(name: String, date: Date, menuType: String, recipes: List[Recipe], quantityOfRecipes: Int): ConnectionIO[Unit] = {
       val price = standardTitleToPrice.getOrElse(name, 0)
-      (for {
-        _ <- sql"delete from offers where execution_date = $date and menu_type = $menuType".update.run
+      for {
         _ <- sql"insert into offers (name, price, execution_date, menu_type) values ($name, $price, $date, $menuType)".update.run
         id <- sql"select LAST_INSERT_ID()".query[Int].unique
-        _ <- sql"delete from recipes_by_weeks where execution_date = $date and menu_type = $menuType".update.run
         _ <- recipes.traverse { r =>
           sql"insert into offer_recipes (offer_id, recipe_id, quantity) values ($id, ${r.id}, $quantityOfRecipes)".update.run
         }
-      } yield ()).transact(xa) // TODO: remove transact from here
+      } yield ()
     }
 
-    def primeMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[List[Unit]] = { // TODO: need to be reworked as soon as possible
-      insertOffer(s"5 на 4 ${translateMenuType(menuType)}", sO.executionDate, menuType, recipes, 4) *>
-        insertOffer(s"5 на 2 ${translateMenuType(menuType)}", sO.executionDate, menuType, recipes, 2) *>
-        insertOffer(s"3 на 4 ${translateMenuType(menuType)}", sO.executionDate, menuType, recipes.take(3), 4) *>
-        insertOffer(s"3 на 2 ${translateMenuType(menuType)}", sO.executionDate, menuType, recipes.take(3), 2) *>
-        recipes.zipWithIndex.traverse { case (r, i) =>
-          insertOffer(s"${translateMenuType(menuType)} ${i + 1} на 4", sO.executionDate, menuType, List(r), 4) *>
-          insertOffer(s"${translateMenuType(menuType)} ${i + 1} на 2", sO.executionDate, menuType, List(r), 2)
-        }
+    def primeMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[List[Unit]] = {
+      val recipesWithIndex = recipes.zipWithIndex
+      val allRecipesOnFour = recipesWithIndex.map{ case (r, i) =>
+        (s"${translateMenuType(menuType)} ${i + 1} на 4", 4, List(r))
+      }
+      val allRecipesOnTwo = recipesWithIndex.map{ case (r, i) =>
+        (s"${translateMenuType(menuType)} ${i + 1} на 2", 2, List(r))
+      }
+
+      val list: List[(String, Int, List[Recipe])] = List( // TODO: Think of something better
+        (s"5 на 4 ${translateMenuType(menuType)}", 4, recipes),
+        (s"5 на 2 ${translateMenuType(menuType)}", 2, recipes),
+        (s"3 на 4 ${translateMenuType(menuType)}", 4, recipes.take(3)),
+        (s"3 на 2 ${translateMenuType(menuType)}", 2, recipes.take(3))
+      ) ::: allRecipesOnFour ::: allRecipesOnTwo
+
+      (deleteBeforeInsets(sO.executionDate, menuType) *>
+      insertIntoRecipesByWeek(recipes, sO.executionDate, menuType) *>
+      list.traverse{ case (name, quantityOfRecipes, recipes) =>
+        insertOffer(name, sO.executionDate, menuType, recipes, quantityOfRecipes)
+      }).transact(xa)
     }
 
     def sideMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[List[Unit]] = {
+      (deleteBeforeInsets(sO.executionDate, menuType) *>
+        insertIntoRecipesByWeek(recipes, sO.executionDate, menuType) *>
       recipes.traverse{ r =>
         insertOffer(s"${r.name}", sO.executionDate, menuType, List(r), 2)
-      }
+      }).transact(xa)
     }
 
     def promoMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[Unit] = {
+      (deleteBeforeInsets(sO.executionDate, menuType) *>
+        insertIntoRecipesByWeek(recipes, sO.executionDate, menuType) *>
       insertOffer("Промо на 2", sO.executionDate, menuType, recipes, 2) *>
-      insertOffer(" Промо на 4", sO.executionDate, menuType, recipes, 4)
+      insertOffer(" Промо на 4", sO.executionDate, menuType, recipes, 4)). transact(xa)
+    }
+
+    def deleteBeforeInsets(date: Date, menuType: String): ConnectionIO[Int] = {
+      sql"delete from offers where execution_date = $date and menu_type = $menuType".update.run *>
+      sql"delete from recipes_by_weeks where execution_date = $date and menu_type = $menuType".update.run
+    }
+
+    def insertIntoRecipesByWeek(recipes: List[Recipe], date: Date , menuType: String): ConnectionIO[List[Int]] = {
+      recipes.traverse{ r =>
+        sql"insert into recipes_by_weeks (recipe_id, execution_date, menu_type) values (${r.id}, $date, $menuType)".update.run
+      }
     }
 
     val menuType = sO.menuType
