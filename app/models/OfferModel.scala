@@ -1,10 +1,13 @@
 package models
 
 import java.util.Date
+
 import cats.effect.IO
+import cats.free.Free
 import doobie._
 import doobie.implicits._
 import cats.implicits._
+import doobie.free.connection.ConnectionOp
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
@@ -78,10 +81,10 @@ class OfferModel @Inject()(dS: DoobieStore) {
         _ <- recipes.traverse { r =>
           sql"insert into offer_recipes (offer_id, recipe_id, quantity) values ($id, ${r.id}, $quantityOfRecipes)".update.run
         }
-      } yield ()).transact(xa)
+      } yield ()).transact(xa) // TODO: remove transact from here
     }
 
-    def primeMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[List[Unit]] = {
+    def primeMenuTypeInsets(menuType: String, recipes: List[Recipe]): IO[List[Unit]] = { // TODO: need to be reworked as soon as possible
       insertOffer(s"5 на 4 ${translateMenuType(menuType)}", sO.executionDate, menuType, recipes, 4) *>
         insertOffer(s"5 на 2 ${translateMenuType(menuType)}", sO.executionDate, menuType, recipes, 2) *>
         insertOffer(s"3 на 4 ${translateMenuType(menuType)}", sO.executionDate, menuType, recipes.take(3), 4) *>

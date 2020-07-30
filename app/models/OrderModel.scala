@@ -176,8 +176,8 @@ class OrderModel @Inject()(dS: DoobieStore) {
     }.transact(xa).unsafeRunSync().flatten
   }
 
-  private def insertOrderRecipes(orderId: Int, recipisIdsQuantity: List[(Int, Int)]): ConnectionIO[Int] = {
-    recipisIdsQuantity.traverse { rIdQ =>
+  private def insertOrderRecipes(orderId: Int, recipesIdsQuantity: List[(Int, Int)]): ConnectionIO[Int] = {
+    recipesIdsQuantity.traverse { rIdQ =>
       sql"insert into order_recipes (order_id, recipe_id, quantity) value ($orderId, ${rIdQ._1}, ${rIdQ._2})".update.run
     }.map(_.sum)
   }
