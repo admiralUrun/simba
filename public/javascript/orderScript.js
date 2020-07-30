@@ -154,7 +154,7 @@ function setCustomerAddAddressDropdown(id, customerAddresses) {
     function setCustomerCreateDropDownFormAddresses(customerAddresses) {
         $.hideSearchDiv()
         setCustomer(customerAddresses.customer)
-        createDropDownForAddresses(customerAddresses.addresses)
+        createDropDownForAddresses(customerAddresses.customer.id, customerAddresses.addresses)
     }
 
     if(customerAddresses)  setCustomerCreateDropDownFormAddresses(customerAddresses)
@@ -221,13 +221,13 @@ function cleanDropMenu() {
     $(`<span class="dropdown-header">Тут можна знайти Клієнта</span>`).appendTo($("#searchMenu"))
 }
 
-function createDropDownForAddresses(addresses) {
+function createDropDownForAddresses(id, addresses) {
     $(`<div id="addresses" class="col-auto btn-group dropright">
             <div>
                 <button type="button" class="btn btn-info start dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     Адреси 
                 </button>
-            <div id="customer${customerAddresses.id}Addresses" class="dropdown-menu"></div>
+            <div id="customer${id}Addresses" class="dropdown-menu"></div>
             </div>
             </div>`).appendTo($('#customerInformation'))
     addresses.forEach( function (address) {
@@ -235,7 +235,7 @@ function createDropDownForAddresses(addresses) {
                             ${address.city} ${$.getValeOrEmptyString(address.residentialComplex)}
                             ${address.address}
                             ${$.getValeOrEmptyString(address.flat)}
-                        </a>`).appendTo($(`#customer${customerAddresses.id}Addresses`))
+                        </a>`).appendTo($(`#customer${id}Addresses`))
         $(`#address${address.id}`).data(`address`, address)
     })
 }
@@ -248,7 +248,7 @@ function setCustomerAndAddressAddDropdown(customerAddresses) {
         let address = customerAddresses.addresses.filter(function (a) {
             return a.id === addressId
         })
-        createDropDownForAddresses(customerAddresses.addresses)
+        createDropDownForAddresses(customerAddresses.customer.id, customerAddresses.addresses)
         setAddress(address[0], addressId)
     } else {
         setAddress(customerAddresses.addresses[0], addressId)
