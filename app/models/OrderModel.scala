@@ -113,7 +113,7 @@ class OrderModel @Inject()(dS: DoobieStore) {
               delivery_on_monday = ${o.deliveryOnMonday},
               paid = ${o.paid},
               delivered = ${o.delivered},
-              note = ${o.note}
+              note = ${o.note} where id = $id
               """.update.run *>
       sql"delete from order_offers where order_id = ${id}".update.run *>
       insertOrderOffers(id, o.inOrder) *>
