@@ -11,7 +11,6 @@ import views.html.helper._
 
 object SimbaHTMLHelper {
   private val formatter = new SimpleDateFormat("yyyy-MM-dd")
-
   def formatString(o: Option[String], n: Option[String]): String = {
     o.map(p => p + n.map(n => s"($n)").getOrElse("")).getOrElse("")
   }

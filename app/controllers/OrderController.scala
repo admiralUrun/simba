@@ -5,6 +5,7 @@ import models.{OrderModel, OrderForEditAndCreate}
 import play.api.data.Forms._
 import play.api.data.Form
 import play.api.mvc._
+import services.SimbaAlias.ID
 
 @Singleton
 class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
@@ -45,13 +46,13 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
     Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder, Option(id), orderModel.getInOrderToTextWithCostMap))
   }
 
-  def updateOrder(id: Int): PlayAction = Action { implicit request =>
+  def updateOrder(id: ID): PlayAction = Action { implicit request =>
     orderForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.editOrder(id,
         formWithErrors,
         orderModel.getMenusToolsForAddingToOrder,
         orderModel.getInOrderToTextWithCostMap)),
-      orderForEditAndCreate => resultWithFlash(orderFeedPage, orderModel.edit(orderForEditAndCreate), "Замовлення змінено, мяу")
+      orderForEditAndCreate => resultWithFlash(orderFeedPage, orderModel.edit(id, orderForEditAndCreate), "Замовлення змінено, мяу")
     )
   }
 

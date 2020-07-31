@@ -115,9 +115,9 @@ class OrderModel @Inject()(dS: DoobieStore) {
               delivered = ${o.delivered},
               note = ${o.note} where id = $id
               """.update.run *>
-      sql"delete from order_offers where order_id = ${id}".update.run *>
+      sql"delete from order_offers where order_id = $id".update.run *>
       insertOrderOffers(id, o.inOrder) *>
-      sql"delete from order_recipes where order_id = ${id}".update.run *>
+      sql"delete from order_recipes where order_id = $id".update.run *>
       insertOrderRecipes(id, recipesIdsAndQuantity)
       ).transact(xa).unsafeRunSync()
     true

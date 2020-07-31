@@ -85,8 +85,14 @@
                 <input id="customerId" value="@getValueFromForm("customerId", oF)" name="customerId" type="number" style="display: none">
                 <input id="addressId" value="@getValueFromForm("addressId", oF)" name="addressId" type="number" style="display: none">
 
-                <input name="orderDay" type="text" value="@getValueFromForm("orderDay", oF).getOrElse(formattingDateForForm(new Date()))" style="display: none"> @* Maybe Need to be changed in the future to be not new Date() but Date from aguments *@
-                <input name="deliveryDay" type="text" value="@getNextSundayFromCornetWeek" style="display: none">
+                <input name="orderDay" type="text" value="@{
+                    if(isCreate) formattingDateForForm(new Date()) // Maybe Need to be changed in the future to be not new Date() but Date from aguments
+                    else getValueFromForm("orderDay", oF).head
+                }" style="display: none">
+                <input name="deliveryDay" type="text" value="@{
+                    if(isCreate) getNextSundayFromCornetWeek
+                    else getValueFromForm("deliveryDay", oF).head
+                }" style="display: none">
 
                 <label class="label" for="dataInput">Час доставки </label>
                 <div id="dataInput" class="container-fluid row">
@@ -121,7 +127,7 @@
                     @createBooleanInput("offlineDelivery", "За межами Доставки", "За межами Доставки", getCheckBoxValue("offlineDelivery", oF),
                         jsOnclick = JavaScript("changeButton(`За межами Доставки`, `За межами Доставки`, `offlineDelivery`, 75);")
                     )
-                    @createBooleanInput("deliveryOnMonday", "Доставка у Понеділок", "Доставка у Понеділок", getCheckBoxValue("delivered", oF),
+                    @createBooleanInput("deliveryOnMonday", "Доставка у Понеділок", "Доставка у Понеділок", getCheckBoxValue("deliveryOnMonday", oF),
                         jsOnclick = JavaScript("changeButton(`Доставка у Понеділок`, `Доставка у Понеділок`, `deliveryOnMonday`, 100);")
                     )
                 </div>
