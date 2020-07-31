@@ -98,7 +98,7 @@ function prepareToEdit(i) {
             else return text
         }
         cityInput.val(getValueOrEmptyStringIfDash($(`#city-`+ i).text()))
-        residentialComplexInput.val(getValueOrEmptyStringIfDash($(`#residentialComplex-`).text()))
+        residentialComplexInput.val(getValueOrEmptyStringIfDash($(`#residentialComplex-`+ i).text()))
         addressInput.val(getValueOrEmptyStringIfDash($(`#address-` + i).text()))
         entranceInput.val(getValueOrEmptyStringIfDash($(`#entrance-` + i).text()))
         floorInput.val(getValueOrEmptyStringIfDash($(`#floor-` + i).text()))
