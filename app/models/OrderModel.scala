@@ -63,12 +63,9 @@ class OrderModel @Inject()(dS: DoobieStore) {
                                               ${o.paid}, ${o.delivered},
                                               ${o.note}) """.update.run
         id <- sql"select LAST_INSERT_ID()".query[Int].unique
-        o <- sql"select * from orders where id = $id".query[Order].unique
-      } yield o)
-        .map{ order =>
-          val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.recipesId, o.quantity))
-          insertOrderRecipes(order.id.head, recipesIdsAndQuantity) *> insertOrderOffers(order.id.head, o.inOrder)
-      }.transact(xa).unsafeRunAsyncAndForget()
+        _ <- insertOrderRecipes(id, getAllOffersRecipes(o.inOrder).map(o => (o.recipesId, o.quantity)))
+        _ <- insertOrderOffers(id, o.inOrder)
+      } yield ()).transact(xa).unsafeRunAsyncAndForget()
     true
   }
 
@@ -102,12 +99,26 @@ class OrderModel @Inject()(dS: DoobieStore) {
      .unsafeRunSync()
   }
 
-  def edit(o: OrderForEditAndCreate): Boolean = {
+  def edit(id: ID, o: OrderForEditAndCreate): Boolean = {
     val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).map(o => (o.recipesId, o.quantity))
-    (sql"delete from order_offers where order_id = ${o.id.head}".update.run *>
-      insertOrderOffers(o.id.head, o.inOrder) *>
-      sql"delete from order_recipes where order_id = ${o.id.head}".update.run *>
-      insertOrderRecipes(o.id.head, recipesIdsAndQuantity)
+    (
+      sql"""update orders set
+           address_id = ${o.addressId},
+            delivery_day = ${o.deliveryDay},
+             deliver_from = ${convertStringToMinutes(o.deliverFrom)},
+              deliver_to = ${convertStringToMinutes(o.deliverTo)},
+              total = ${o.total},
+              payment = ${o.payment},
+              offline_delivery = ${o.offlineDelivery},
+              delivery_on_monday = ${o.deliveryOnMonday},
+              paid = ${o.paid},
+              delivered = ${o.delivered},
+              note = ${o.note}
+              """.update.run *>
+      sql"delete from order_offers where order_id = ${id}".update.run *>
+      insertOrderOffers(id, o.inOrder) *>
+      sql"delete from order_recipes where order_id = ${id}".update.run *>
+      insertOrderRecipes(id, recipesIdsAndQuantity)
       ).transact(xa).unsafeRunSync()
     true
   }
@@ -183,9 +194,10 @@ class OrderModel @Inject()(dS: DoobieStore) {
   }
 
   private def getAllOffersRecipes(ids: List[Int]): List[OfferRecipes] = {
-    ids.traverse { offerId =>
+    val listOfLists =  ids.traverse { offerId =>
       sql"select * from offer_recipes where offer_id = $offerId".query[OfferRecipes].to[List]
-    }.transact(xa).unsafeRunSync().flatten
+    }.transact(xa).unsafeRunSync()
+    listOfLists.flatten
   }
 
 }
@@ -227,6 +239,6 @@ case class OrderMenuItem(titleOnDisplay: String, value: Int, cost: Int)
 
 case class OrderMenu(titleOnDisplay: String, menuItems: List[OrderMenuItem])
 
-case class OrderResepies(orderId: ID, resepisId: ID, quantity: Int)
+case class OrderResepies(orderId: ID, recipesId: ID, quantity: Int)
 
 case class OrderOffer(orderId: ID, offerId: ID)
