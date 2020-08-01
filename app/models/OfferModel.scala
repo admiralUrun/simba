@@ -1,7 +1,6 @@
 package models
 
 import java.util.Date
-
 import cats.effect.IO
 import doobie._
 import doobie.implicits._

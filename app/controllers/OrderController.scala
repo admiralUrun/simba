@@ -56,6 +56,10 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
     )
   }
 
+//  def deleteOrder(id: ID): PlayAction = Action { implicit request => // TODO: Need to think on it a bit more
+//
+//  }
+
   def createOrder: PlayAction = Action { implicit request =>
     orderForm.bindFromRequest.fold(
       formWithErrors => BadRequest(
