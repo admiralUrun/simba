@@ -106,7 +106,7 @@ function takeCustomerJSONAddToUI(JSONArray) {
     }
 
     JSONArray.forEach(function (c) {
-        addDropItem(c)
+        addDropItem(new CustomerAddresses(c))
     })
 }
 
