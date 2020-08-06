@@ -271,3 +271,40 @@ function removePayment() {
     $('#paymentMenu').show()
     $('#payment').val('')
 }
+
+
+class Customer {
+    constructor(customer) {
+        this.id = customer.id
+        this.firstName = customer.firstName
+        this.lastName = customer.lastName
+        this.phone = customer.phone
+        this.phoneNote = customer.phoneNote
+        this.phone2 = customer.phone2
+        this.phoneNote2 = customer.phoneNote2
+        this.instagram = customer.instagram
+        this.preferences = customer.preferences
+        this.notes = customer.notes
+    }
+}
+
+class Address {
+    constructor(address) {
+        this.id = address.id
+        this.customerId = address.customerId
+        this.city = address.city
+        this.residentialComplex = address.residentialComplex
+        this.address = address.address
+        this.entrance = address.entrance
+        this.floor = address.floor
+        this.flat = address.flat
+        this.notesForCourier = address.notesForCourier
+    }
+}
+
+class CustomerAddresses {
+    constructor(object) {
+        this.customer = new Customer(object.customer)
+        this.addresses = object.addresses.map(a => new Address(a))
+    }
+}
