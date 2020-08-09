@@ -11,7 +11,7 @@ create table customers (
 
     instagram varchar(64) unique,
 
-    preferences varchar(255),
+    preferences varchar(256),
     notes text
 );
 
@@ -21,13 +21,14 @@ create table addresses (
     customer_id int not null,
     city varchar(64) not null ,
     residential_complex varchar(64),
-    address varchar(128) not null ,
     -- Street address like вул. Володимирська 62
+    address varchar(128) not null,
     entrance varchar(8),
     floor varchar(8),
     flat varchar(8),
-    note_for_courier text
+    delivery_notes text
 );
+create index addresses_customer_id on addresses(customer_id);
 
 drop table if exists ingredients;
 create table ingredients (
@@ -35,10 +36,10 @@ create table ingredients (
     description varchar(256) not null,
     -- SI unit, g, mg, l, etc.
     unit varchar(4) not null,
-    art_by int unique,
     -- art_by mean article Belarus
-    edited bit
-    -- see if still has old name or was edited
+    art_by int unique,
+    -- see if still has an old name or was edited
+    edited boolean
 );
 
 drop table if exists recipes;
@@ -46,9 +47,11 @@ create table recipes (
     id int primary key,
     name varchar(256) not null,
     type varchar(50),
-    edited bit
     -- see if still has old name or was edited
+    -- TODO: consider adding old_name instead of this field
+    edited boolean
 );
+create index recipes_type on recipes(type);
 
 drop table if exists recipe_ingredients;
 create table recipe_ingredients (
@@ -63,16 +66,19 @@ create table offers (
     id int primary key auto_increment,
     name varchar(128),
     price int not null,
+    -- TODO: rename to expiration_date
     execution_date date,
+    -- TODO: change to int
     menu_type varchar(128)
 );
+create index offers_execution_date on offers(execution_date);
 
 drop table if exists offer_recipes;
 create table offer_recipes (
     offer_id int,
     recipe_id int,
+    -- number of servings (for 2 or 4 people)
     quantity int,
-
     primary key (offer_id, recipe_id)
 );
 
@@ -87,14 +93,20 @@ create table orders (
     deliver_from int not null,
     deliver_to int not null,
     total int not null,
+    -- TODO: change to int
     payment varchar(128) not null,
+    -- TODO: rename to out_of_zone_delivery ??
     offline_delivery boolean not null,
+    -- same as (dayofweek(delivery_day) == 2) :)
     delivery_on_monday boolean not null,
+    -- TODO: move closer to total, payment?
     paid boolean not null,
     delivered boolean not null,
     note text
 );
+create index orders_customer_id on orders(customer_id);
 
+-- TODO: consider eliminating this table in favour of adding offer_id to order_recipes
 drop table if exists order_offers;
 create table order_offers (
     order_id int not null,
@@ -105,10 +117,12 @@ create table order_offers (
 drop table if exists order_recipes;
 create table order_recipes (
     order_id int not null,
+    -- offer_id int not null,
     recipe_id int not null,
     quantity int
 );
 
+-- TODO: kill this
 drop table if exists recipes_by_weeks;
 create table recipes_by_weeks (
     recipe_id int not null,

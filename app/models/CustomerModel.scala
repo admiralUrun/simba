@@ -1,23 +1,21 @@
 package models
 
-import cats.effect
 import cats.effect.IO
+import cats.implicits._
 import doobie._
 import doobie.implicits._
 import javax.inject._
-import cats.implicits._
-import com.typesafe.config.ConfigException
-import play.api.libs.json.{JsValue, Json}
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
-import services.SimbaHTMLHelper.stringToAddress
-import services.SimbaHTMLHelper.addressToString
+import play.api.libs.json.{JsValue, Json, _}
 import services.SimbaAlias._
+import services.SimbaHTMLHelper.{addressToString, stringToAddress}
 @Singleton
 class CustomerModel @Inject()(dS: DoobieStore) {
   type  JSONWrites[T] = OWrites[T]
-  protected val xa: DataSourceTransactor[IO] = dS.getXa()
- private implicit val customerWriter: Writes[Customer] = (
+  private val xa: DataSourceTransactor[IO] = dS.getXa()
+
+  // TODO: move json serialization out, make this class concerned on db interacions (Dao)
+  private implicit val customerWriter: Writes[Customer] = (
     ( JsPath \ "id").writeNullable[ID] and
       ( JsPath \ "firstName").write[String] and
       ( JsPath \ "lastName").writeNullable[String] and
@@ -30,7 +28,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       ( JsPath \ "notes").writeNullable[String]
     )(unlift(Customer.unapply))
 
-  private implicit val addressWriter: Writes[Address] = (
+   private implicit val addressWriter: Writes[Address] = (
     ( JsPath \ "id").writeNullable[ID] and
       ( JsPath \ "customerId").writeNullable[ID] and
       ( JsPath \ "city").write[String] and
@@ -47,6 +45,8 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       (JsPath \ "addresses").write[Seq[Address]]
     )(unlift(CustomerAddressesToJson.unapply))
 
+  // TODO: replace * with field list, you can use doobie fragments, (or maybe just strings)
+  // TODO: make those methods return IO[_], empowering women
   def getAllCustomerTableRows: Seq[Customer] = {
     sql"select * from customers"
       .query[Customer]
@@ -55,9 +55,9 @@ class CustomerModel @Inject()(dS: DoobieStore) {
       .unsafeRunSync
   }
 
-  def getAllCustomerTableRowsWhere(search: String): Seq[Customer] = {
-    sql"""select * from customers where
-          first_name like $search or
+  def getAllCustomerTableRowsLike(search: String): Seq[Customer] = {
+    sql"""select * from customers
+          where first_name like $search or
            last_name like $search or
             phone like $search or
              phone2 like $search or
@@ -86,6 +86,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
     (true, customerID)
   }
 
+  // TODO: this is the same as insertAddressesReturnConnectionIOListOfInt
   def insertAddresses(list: List[Address], customerId: ID): ConnectionIO[List[Int]] = {
     insertAddressesReturnConnectionIOListOfInt(list, customerId)
   }
@@ -133,7 +134,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
                 entrance = ${a.entrance},
                  floor = ${a.floor},
                   flat = ${a.flat},
-                  note_for_courier = ${a.notesForCourier} where id = ${a.id} and customer_id = $customerId""".update.run
+                  delivery_notes = ${a.notesForCourier} where id = ${a.id} and customer_id = $customerId""".update.run
       }.map(_.sum)
     }
 
@@ -160,13 +161,13 @@ class CustomerModel @Inject()(dS: DoobieStore) {
     Json.toJson(CustomerAddressesToJson(c, getAllCustomersAddresses(id)))
   }
 
-  def getDataForJsonToDisplayInOrder(search: String): JsValue = Json.toJson(getAllCustomerTableRowsWhere(search).map{ c =>
+  def getDataForJsonToDisplayInOrder(search: String): JsValue = Json.toJson(getAllCustomerTableRowsLike(search).map{ c =>
     CustomerAddressesToJson(c, getAllCustomersAddresses(c.id.head))
   })
 
   private def insertAddressesReturnConnectionIOListOfInt(list: List[Address], customerId: ID): ConnectionIO[List[Int]] = {
     list.traverse { a =>
-      sql"""insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, note_for_courier)
+      sql"""insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes)
             value (${customerId}, ${a.city}, ${a.residentialComplex}, ${a.address}, ${a.entrance}, ${a.floor}, ${a.flat}, ${a.notesForCourier})"""
         .update
         .run
@@ -185,6 +186,7 @@ class CustomerModel @Inject()(dS: DoobieStore) {
     a.map(stringToAddress)
   }
 
+  // TODO: Enigma!
   private def encodeAddressesToString(l: List[Address]): List[String] = {
     l.map(addressToString)
   }
@@ -198,6 +200,7 @@ case class Customer(id: Option[ID],
                     instagram: Option[String],
                     preferences: Option[String], notes: Option[String])
 
+// TODO: rename to CustomerInput?
 case class CustomerForEditAndCreate(id: Option[ID],
                                     firstName: String, lastName: Option[String],
                                     phone: String, phoneNote: Option[String],

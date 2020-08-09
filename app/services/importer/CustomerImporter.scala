@@ -5,8 +5,6 @@ import java.util.regex.Pattern
 
 import com.github.tototoshi.csv.CSVReader
 import models.{Address, Customer}
-import play.api.db.Database
-import services.Counter
 
 import scala.annotation.tailrec
 
@@ -107,7 +105,7 @@ class CustomerImporter extends Importer {
     "entrance" -> "entrance",
     "floor" -> "floor",
     "flat" -> "flat",
-    "notesForCourier" -> "note_for_courier"
+    "notesForCourier" -> "delivery_notes"
 
   )
 

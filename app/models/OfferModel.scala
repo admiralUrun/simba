@@ -1,13 +1,14 @@
 package models
 
 import java.util.Date
+
 import cats.effect.IO
+import cats.implicits._
 import doobie._
 import doobie.implicits._
-import cats.implicits._
 import javax.inject.{Inject, Singleton}
-import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import play.api.libs.json._
 import services.SimbaHTMLHelper.translateMenuType // Maybe isn't a good a idea to use it here just don't want to duplicate code
 
 @Singleton
@@ -19,6 +20,7 @@ class OfferModel @Inject()(dS: DoobieStore) {
       (JsPath \ "menuType").write[String] and
       (JsPath \ "edited").write[Boolean]
   )(unlift(Recipe.unapply))
+
   def getOfferPreferencesByMenuType(menuType: String, executionDate: Date): EditOffer = {
     val offers = sql"select * from offers where execution_date = $executionDate and  menu_type = $menuType"
       .query[Offer]

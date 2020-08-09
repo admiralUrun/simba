@@ -30,7 +30,8 @@ type PlayAction = Action[AnyContent]
   private val customerListPage: Result = Redirect(toCustomerListPage)
 
   def toCustomersListPage(search: String): PlayAction = Action { implicit request =>
-    val rows = if(search.isEmpty) customerModel.getAllCustomerTableRows else customerModel.getAllCustomerTableRowsWhere(search)
+    val rows = if(search.isEmpty) customerModel.getAllCustomerTableRows else customerModel.getAllCustomerTableRowsLike(search)
+
     Ok(views.html.customers(rows, search))
   }
 
