@@ -1,194 +1,57 @@
 package models
 
+import Dao.{Dao, DoobieStore}
 import cats.effect.IO
-import cats.implicits._
-import doobie._
-import doobie.implicits._
 import javax.inject._
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsValue, Json, _}
+import play.api.libs.json.{JsValue, Json}
 import services.SimbaAlias._
-import services.SimbaHTMLHelper.{addressToString, stringToAddress}
+import services.SimbaHTMLHelper.{addressToString}
 @Singleton
-class CustomerModel @Inject()(dS: DoobieStore) {
-  type  JSONWrites[T] = OWrites[T]
-  private val xa: DataSourceTransactor[IO] = dS.getXa()
+class CustomerModel @Inject()(dao: Dao) {
 
-  // TODO: move json serialization out, make this class concerned on db interacions (Dao)
-  private implicit val customerWriter: Writes[Customer] = (
-    ( JsPath \ "id").writeNullable[ID] and
-      ( JsPath \ "firstName").write[String] and
-      ( JsPath \ "lastName").writeNullable[String] and
-      ( JsPath \ "phone").write[String] and
-      ( JsPath \ "phoneNote").writeNullable[String] and
-      ( JsPath \ "phone2").writeNullable[String] and
-      ( JsPath \ "phoneNote2").writeNullable[String] and
-      ( JsPath \ "instagram").writeNullable[String] and
-      ( JsPath \ "preferences").writeNullable[String] and
-      ( JsPath \ "notes").writeNullable[String]
-    )(unlift(Customer.unapply))
 
-   private implicit val addressWriter: Writes[Address] = (
-    ( JsPath \ "id").writeNullable[ID] and
-      ( JsPath \ "customerId").writeNullable[ID] and
-      ( JsPath \ "city").write[String] and
-      ( JsPath \ "residentialComplex").writeNullable[String] and
-      ( JsPath \ "address").write[String] and
-      ( JsPath \ "entrance").writeNullable[String] and
-      ( JsPath \ "floor").writeNullable[String] and
-      ( JsPath \ "flat").writeNullable[String] and
-      ( JsPath \ "notesForCourier").writeNullable[String]
-    )(unlift(Address.unapply))
-
-  private implicit val customerAddressesToJsonWriter: Writes[CustomerAddressesToJson] = (
-    (JsPath \ "customer").write[Customer] and
-      (JsPath \ "addresses").write[Seq[Address]]
-    )(unlift(CustomerAddressesToJson.unapply))
-
-  // TODO: replace * with field list, you can use doobie fragments, (or maybe just strings)
   // TODO: make those methods return IO[_], empowering women
   def getAllCustomerTableRows: Seq[Customer] = {
-    sql"select * from customers"
-      .query[Customer]
-      .to[List]
-      .transact(xa)
-      .unsafeRunSync
+    dao.getAllCustomers.unsafeRunSync()
   }
 
   def getAllCustomerTableRowsLike(search: String): Seq[Customer] = {
-    sql"""select * from customers
-          where first_name like $search or
-           last_name like $search or
-            phone like $search or
-             phone2 like $search or
-              instagram like $search"""
-      .query[Customer]
-      .to[List]
-      .transact(xa)
-      .unsafeRunSync
+    dao.getAllCustomerTableRowsLike(search).unsafeRunSync
   }
 
-  def insert(c: CustomerForEditAndCreate): (Boolean, ID) = { // TODO under one transact
-    val customerID = (for {
-      _ <- sql"""insert into customers
-            (first_name, last_name,
-            phone, phone_note, phone2, phone2_note,
-           instagram, preferences, notes)
-           values (${c.firstName}, ${c.lastName},
-                ${c.phone}, ${c.phoneNote}, ${c.phone2}, ${c.phoneNote2},
-                ${c.instagram},
-                ${c.preferences}, ${c.notes})""".update.run
-      id <- sql"select LAST_INSERT_ID()".query[ID].unique
-      _ <- insertAddressesReturnConnectionIOListOfInt(decodeAddressString(c.addresses), id)
-    } yield id)
-      .transact(xa)
-      .unsafeRunSync()
-    (true, customerID)
+  def insert(c: CustomerInput): (Boolean, ID) = {
+    val id = dao.insertCustomer(c).unsafeRunSync()
+    (true, id)
   }
 
-  // TODO: this is the same as insertAddressesReturnConnectionIOListOfInt
-  def insertAddresses(list: List[Address], customerId: ID): ConnectionIO[List[Int]] = {
-    insertAddressesReturnConnectionIOListOfInt(list, customerId)
-  }
-
-  def findByID(id: ID): CustomerForEditAndCreate = {
-    val c = getCustomerById(id)
-
-    CustomerForEditAndCreate(
+  def findByID(id: ID): CustomerInput = {
+    (for {
+      c <- dao.getCustomerById(id)
+      addresses <- dao.getAllCustomersAddresses(c.id.head).map(_.map(addressToString))
+    } yield CustomerInput(
       c.id, c.firstName, c.lastName,
       c.phone, c.phoneNote,
       c.phone2, c.phoneNote2,
       c.instagram, c.preferences, c.notes,
-      encodeAddressesToString(getAllCustomersAddresses(c.id.head)), Option(null))
+      addresses.toList)).unsafeRunSync()
   }
 
-  def editCustomer(id: ID, c: CustomerForEditAndCreate): Boolean = {
-    (sql"""update customers set first_name = ${c.firstName}, last_name = ${c.lastName},
-         phone = ${c.phone}, phone_note = ${c.phoneNote},
-         phone2 = ${c.phone2}, phone2_note = ${c.phoneNote2},
-         instagram = ${c.instagram},
-         preferences = ${c.preferences}, notes = ${c.notes}
-         where id = $id"""
-      .update
-      .run *>
-      editAddresses(decodeAddressString(c.addresses), c.addressesToDelete.getOrElse(List()), id)).transact(xa).unsafeRunSync()
+  def editCustomer(id: ID, c: CustomerInput): Boolean = {
+    dao.editCustomer(id, c).unsafeRunSync()
     true
   }
 
-  def editAddresses(list: List[Address], listToDelete: List[ID], customerId: ID): ConnectionIO[Unit] = {
-    def insertAddressesReturnConfectionIO(list: List[Address], customerId: ID): ConnectionIO[Int] = {
-      insertAddressesReturnConnectionIOListOfInt(list, customerId).map(_.sum)
-    }
-
-    def deleteAddresses(list: List[ID]): ConnectionIO[Int] = {
-      list.traverse { id =>
-        sql"""delete from addresses where id = $id""".update.run
-      }.map(_.sum)
-    }
-
-    def editAddresses(list: List[Address], customerId: ID): ConnectionIO[Int] = {
-      list.traverse { a =>
-        sql"""update addresses set city = ${a.city},
-              residential_complex = ${a.residentialComplex},
-               address = ${a.address},
-                entrance = ${a.entrance},
-                 floor = ${a.floor},
-                  flat = ${a.flat},
-                  delivery_notes = ${a.notesForCourier} where id = ${a.id} and customer_id = $customerId""".update.run
-      }.map(_.sum)
-    }
-
-    sql"""select * from addresses where customer_id = $customerId""".query[Address].to[List].map{ customerAddressesInDB =>
-      if (customerAddressesInDB.isEmpty) insertAddresses(list, customerId)
-      else {
-        deleteAddresses(listToDelete) *>
-          insertAddressesReturnConfectionIO(list.filter(p = a => a.id.isEmpty && a.customerId.isEmpty), customerId)  *>
-          editAddresses(list.filter(a => a.id.isDefined && a.customerId.isDefined), customerId)
-      }
-    }
+  def getDataForJsonToDisplayInOrderByID(id: ID): IO[CustomerAddressesForJson] = {
+    for {
+      customer <- dao.getCustomerById(id)
+      addresses <- dao.getAllCustomersAddresses(id)
+    } yield CustomerAddressesForJson(customer, addresses)
   }
 
-  def getAllCustomersAddresses(customerId: ID): List[Address] = {
-    sql"select * from addresses where customer_id = $customerId"
-      .query[Address]
-      .to[List]
-      .transact(xa)
-      .unsafeRunSync
-  }
-
-  def getDataForJsonToDisplayInOrderByID(id: ID): JsValue = {
-    val c = getCustomerById(id)
-    Json.toJson(CustomerAddressesToJson(c, getAllCustomersAddresses(id)))
-  }
-
-  def getDataForJsonToDisplayInOrder(search: String): JsValue = Json.toJson(getAllCustomerTableRowsLike(search).map{ c =>
-    CustomerAddressesToJson(c, getAllCustomersAddresses(c.id.head))
-  })
-
-  private def insertAddressesReturnConnectionIOListOfInt(list: List[Address], customerId: ID): ConnectionIO[List[Int]] = {
-    list.traverse { a =>
-      sql"""insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes)
-            value (${customerId}, ${a.city}, ${a.residentialComplex}, ${a.address}, ${a.entrance}, ${a.floor}, ${a.flat}, ${a.notesForCourier})"""
-        .update
-        .run
-    }
-  }
-
-  private def getCustomerById(id: ID): Customer = {
-    sql"select * from customers where id = $id"
-      .query[Customer]
-      .unique
-      .transact(xa)
-      .unsafeRunSync()
-  }
-
-  private def decodeAddressString(a: List[String]): List[Address] = {
-    a.map(stringToAddress)
-  }
-
-  // TODO: Enigma!
-  private def encodeAddressesToString(l: List[Address]): List[String] = {
-    l.map(addressToString)
+  def getDataForJsonToDisplayInOrder(search: String): IO[Seq[CustomerAddressesForJson]] = {
+    IO(getAllCustomerTableRowsLike(search).map { c =>
+      CustomerAddressesForJson(c, dao.getAllCustomersAddresses(c.id.head).unsafeRunSync())
+    })
   }
 
 }
@@ -200,15 +63,13 @@ case class Customer(id: Option[ID],
                     instagram: Option[String],
                     preferences: Option[String], notes: Option[String])
 
-// TODO: rename to CustomerInput?
-case class CustomerForEditAndCreate(id: Option[ID],
-                                    firstName: String, lastName: Option[String],
-                                    phone: String, phoneNote: Option[String],
-                                    phone2: Option[String], phoneNote2: Option[String],
-                                    instagram: Option[String],
-                                    preferences: Option[String], notes: Option[String],
-                                    addresses: List[String],
-                                    addressesToDelete: Option[List[ID]])
+case class CustomerInput(id: Option[ID],
+                         firstName: String, lastName: Option[String],
+                         phone: String, phoneNote: Option[String],
+                         phone2: Option[String], phoneNote2: Option[String],
+                         instagram: Option[String],
+                         preferences: Option[String], notes: Option[String],
+                         addresses: List[String])
 
 case class Address(id: Option[ID], customerId: Option[ID],
                    city: String,
@@ -219,4 +80,4 @@ case class Address(id: Option[ID], customerId: Option[ID],
                    flat: Option[String],
                    notesForCourier: Option[String])
 
-case class CustomerAddressesToJson(customer: Customer, addresses: Seq[Address])
+case class CustomerAddressesForJson(customer: Customer, addresses: Seq[Address])

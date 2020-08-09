@@ -2,6 +2,7 @@ package models
 
 import java.util.Date
 
+import Dao.Dao
 import cats.effect.IO
 import cats.implicits._
 import doobie._
@@ -12,8 +13,7 @@ import play.api.libs.json._
 import services.SimbaHTMLHelper.translateMenuType // Maybe isn't a good a idea to use it here just don't want to duplicate code
 
 @Singleton
-class OfferModel @Inject()(dS: DoobieStore) {
-  protected val xa: DataSourceTransactor[IO] = dS.getXa()
+class OfferModel @Inject()(dao: Dao) {
   private implicit val recipesWriter: Writes[Recipe] = (
     (JsPath \ "id").writeNullable[Int] and
       (JsPath \ "name").write[String] and
@@ -22,12 +22,7 @@ class OfferModel @Inject()(dS: DoobieStore) {
   )(unlift(Recipe.unapply))
 
   def getOfferPreferencesByMenuType(menuType: String, executionDate: Date): EditOffer = {
-    val offers = sql"select * from offers where execution_date = $executionDate and  menu_type = $menuType"
-      .query[Offer]
-      .to[List]
-      .transact(xa)
-      .unsafeRunSync()
-
+    val offers = dao.getOfferByDateAndMenuType(executionDate, menuType).unsafeRunSync().toList
     EditOffer(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), executionDate, menuType)
   }
 

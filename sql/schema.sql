@@ -66,8 +66,7 @@ create table offers (
     id int primary key auto_increment,
     name varchar(128),
     price int not null,
-    -- TODO: rename to expiration_date
-    execution_date date,
+    expiration_date date,
     -- TODO: change to int
     menu_type varchar(128)
 );
@@ -92,15 +91,14 @@ create table orders (
     -- deliver_from and deliver_to save time in minutes
     deliver_from int not null,
     deliver_to int not null,
+    out_of_zone_delivery boolean not null,
+    -- same as (dayofweek(delivery_day) == 2) :)
+    delivery_on_monday boolean not null,
     total int not null,
     -- TODO: change to int
     payment varchar(128) not null,
-    -- TODO: rename to out_of_zone_delivery ??
-    offline_delivery boolean not null,
-    -- same as (dayofweek(delivery_day) == 2) :)
-    delivery_on_monday boolean not null,
-    -- TODO: move closer to total, payment?
     paid boolean not null,
+    -- TODO: move closer to total, payment?
     delivered boolean not null,
     note text
 );
