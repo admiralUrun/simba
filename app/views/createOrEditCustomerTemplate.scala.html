@@ -2,7 +2,7 @@
 @import services.SimbaHTMLHelper._
 
 @(title: String, formCall: Call,
-        cF: Form[CustomerForEditAndCreate],
+        cF: Form[CustomerInput],
         buttonLabel: String,
         cancelCall: Call = routes.CustomerController.toCustomersListPage(""),
         isCreate: Boolean = false)(implicit requestHeader: MessagesRequestHeader)
@@ -43,13 +43,7 @@
             <td id="settings">
                 <button class="btn btn-info" type="button" onclick="prepareToEdit(`@i`) ">Змінити</button>
                 <button class="btn btn-danger" type="button" onclick="deleteRow(`@i`)">Видалити</button>
-                <input id="addresses[@{
-                    i
-                }]" name="addresses[@{
-                    i
-                }]" value="@{
-                    addressToString(a)
-                }" style="display: none;">
+                <input id="addresses[@{i}]" name="addresses[@{i}]" value="@{addressToString(a)}" style="display: none;">
             </td>
         </tr>
     }

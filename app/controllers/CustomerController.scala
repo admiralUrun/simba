@@ -4,7 +4,11 @@ import javax.inject._
 import models._
 import play.api.data.Forms._
 import play.api.data._
+import play.api.libs.functional.syntax.unlift
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{JsPath, Writes, Json}
 import play.api.mvc._
+import services.SimbaAlias._
 
 @Singleton
 class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
@@ -21,25 +25,55 @@ type PlayAction = Action[AnyContent]
       "instagram" -> optional(text),
       "preferences" -> optional(text),
       "notes" -> optional(text),
-      "addresses" -> list(text),
-      "addressesToDelete" -> optional(list(number))
-    )(CustomerForEditAndCreate.apply)(CustomerForEditAndCreate.unapply)
+      "addresses" -> list(text)
+    )(CustomerInput.apply)(CustomerInput.unapply)
   )
   private val toCustomerListPage: Call = routes.CustomerController.toCustomersListPage("")
   private val toOrderCreatePage: Call = routes.OrderController.toOrderCreatePage()
   private val customerListPage: Result = Redirect(toCustomerListPage)
 
+  private implicit val customerWriter: JSONWrites[Customer] = (
+    (JsPath \ "id").writeNullable[ID] and
+      (JsPath \ "firstName").write[String] and
+      (JsPath \ "lastName").writeNullable[String] and
+      (JsPath \ "phone").write[String] and
+      (JsPath \ "phoneNote").writeNullable[String] and
+      (JsPath \ "phone2").writeNullable[String] and
+      (JsPath \ "phoneNote2").writeNullable[String] and
+      (JsPath \ "instagram").writeNullable[String] and
+      (JsPath \ "preferences").writeNullable[String] and
+      (JsPath \ "notes").writeNullable[String]
+    )(unlift(Customer.unapply))
+
+  private implicit val addressWriter: JSONWrites[Address] = (
+    (JsPath \ "id").writeNullable[ID] and
+      (JsPath \ "customerId").writeNullable[ID] and
+      (JsPath \ "city").write[String] and
+      (JsPath \ "residentialComplex").writeNullable[String] and
+      (JsPath \ "address").write[String] and
+      (JsPath \ "entrance").writeNullable[String] and
+      (JsPath \ "floor").writeNullable[String] and
+      (JsPath \ "flat").writeNullable[String] and
+      (JsPath \ "notesForCourier").writeNullable[String]
+    )(unlift(Address.unapply))
+
+  private implicit val customerAddressesToJsonWriter: JSONWrites[CustomerAddressesForJson] = (
+    (JsPath \ "customer").write[Customer] and
+      (JsPath \ "addresses").write[Seq[Address]]
+    )(unlift(CustomerAddressesForJson.unapply))
+
   def toCustomersListPage(search: String): PlayAction = Action { implicit request =>
-    val rows = if(search.isEmpty) customerModel.getAllCustomerTableRows else customerModel.getAllCustomerTableRowsWhere(search)
+    val rows = if(search.isEmpty) customerModel.getAllCustomerTableRows else customerModel.getAllCustomerTableRowsLike(search)
+
     Ok(views.html.customers(rows, search))
   }
 
   def getCustomersForOrderSearch(search: String): PlayAction = Action {
-    Ok(customerModel.getDataForJsonToDisplayInOrder(search))
+    Ok(Json.toJson(customerModel.getDataForJsonToDisplayInOrder(search).unsafeRunSync()))
   }
 
   def getCustomersForOrder(id: Int): PlayAction = Action {
-    Ok(customerModel.getDataForJsonToDisplayInOrderByID(id))
+    Ok(Json.toJson(customerModel.getDataForJsonToDisplayInOrderByID(id).unsafeRunSync()))
   }
 
   def toCreateCustomerPage: PlayAction = Action { implicit request =>

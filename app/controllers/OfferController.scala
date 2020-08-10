@@ -1,12 +1,14 @@
 package controllers
 
 import java.text.SimpleDateFormat
+
 import javax.inject.{Inject, Singleton}
 import models._
 import play.api.data.Forms._
 import play.api.data.Form
 import play.api.mvc._
-import java.util.Date
+import play.api.libs.functional.syntax._
+import play.api.libs.json.{JsPath, Json, Writes}
 import services.SimbaHTMLHelper.{getLastSundayFromGivenDate, getNextSundayFromGivenDate}
 
 @Singleton
@@ -33,6 +35,13 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
       "date" -> date
     )(PassingDate.apply)(PassingDate.unapply)
   )
+
+  private implicit val recipesWriter: Writes[Recipe] = (
+    (JsPath \ "id").writeNullable[Int] and
+      (JsPath \ "name").write[String] and
+      (JsPath \ "menuType").write[String] and
+      (JsPath \ "edited").write[Boolean]
+    )(unlift(Recipe.unapply))
 
   private val offersPage = Redirect(routes.OfferController.toOffersPage())
   private val errorRedirect = Redirect(routes.HomeController.index()).flashing("error" -> "Не треба тут сувати мені відредарований HTML!")
@@ -85,7 +94,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
   }
 
   def getRecipesForOfferSearch(name: String): PlayAction = Action {
-    Ok(offerModel.getRecipesByName(name))
+    Ok(Json.toJson(offerModel.getRecipesByName(name)))
   }
 
   def setOffer(menuType: String): PlayAction = Action { implicit request =>
