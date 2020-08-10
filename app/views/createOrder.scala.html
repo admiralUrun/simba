@@ -1,6 +1,6 @@
 @import models.OrderMenu
 @import services.SimbaAlias.ID
-@(oF: Form[OrderForEditAndCreate], menus: List[OrderMenu], id: Option[Int], inOrderToTextCost: Map[String, (ID, String, Int)])(implicit requestHeader: MessagesRequestHeader)
+@(oF: Form[OrderForEditAndCreate], menus: Seq[OrderMenu], id: Option[Int], inOrderToTextCost: Map[String, (ID, String, Int)])(implicit requestHeader: MessagesRequestHeader)
 
 @createOrEditOrderTemplate("Створити нове замовлення",
     routes.OrderController.createOrder,

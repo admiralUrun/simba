@@ -3,7 +3,7 @@
 @import services.SimbaAlias.ID
 @(id:Int,
         oF: Form[OrderForEditAndCreate],
-        menus: List[OrderMenu],
+        menus: Seq[OrderMenu],
         inOrderToTextCost: Map[String, (ID, String, Int)])(implicit requestHeader: MessagesRequestHeader)
 
 @createOrEditOrderTemplate(s"Замовлення $id",

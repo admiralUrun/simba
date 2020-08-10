@@ -1,10 +1,8 @@
 package models
 
 import java.util.Date
-
 import Dao.Dao
 import cats.effect.IO
-import cats.implicits._
 import javax.inject.{Inject, Singleton}
 import services.SimbaHTMLHelper.translateMenuType // Maybe isn't a good a idea to use it here just don't want to duplicate code
 

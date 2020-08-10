@@ -1,6 +1,6 @@
 @import services.SimbaHTMLHelper._
 @import java.util.Date
-@(orders:Map[Date, List[OrderForDisplay]], search:String)(implicit request: MessagesRequestHeader)
+@(orders:Map[Date, Seq[OrderForDisplay]], search:String)(implicit request: MessagesRequestHeader)
 
     @getDateRow(d: Date) = {
         <div class="row  container-fluid">

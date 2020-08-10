@@ -39,11 +39,11 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   def toOrderCreatePage: PlayAction = Action { implicit request =>
-    Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder, None, orderModel.getInOrderToTextWithCostMap))
+    Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder.toList, None, orderModel.getInOrderToTextWithCostMap))
   }
 
   def toOrderCreatePageWithCustomerId(id: Int): PlayAction = Action { implicit request =>
-    Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder, Option(id), orderModel.getInOrderToTextWithCostMap))
+    Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder.toList, Option(id), orderModel.getInOrderToTextWithCostMap))
   }
 
   def updateOrder(id: ID): PlayAction = Action { implicit request =>
@@ -64,7 +64,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
     orderForm.bindFromRequest.fold(
       formWithErrors => BadRequest(
         views.html.createOrder(formWithErrors,
-        orderModel.getMenusToolsForAddingToOrder,
+        orderModel.getMenusToolsForAddingToOrder.toList,
           None,
           orderModel.getInOrderToTextWithCostMap)),
       orderForEditAndCreate => resultWithFlash(orderFeedPage, orderModel.insert(orderForEditAndCreate), "Замовлення додано, мяу")

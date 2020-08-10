@@ -5,7 +5,7 @@ import cats.effect.IO
 import javax.inject._
 import play.api.libs.json.{JsValue, Json}
 import services.SimbaAlias._
-import services.SimbaHTMLHelper.{addressToString}
+import services.SimbaHTMLHelper.addressToString
 @Singleton
 class CustomerModel @Inject()(dao: Dao) {
 

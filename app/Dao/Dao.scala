@@ -1,7 +1,6 @@
 package Dao
 
 import java.util.Date
-
 import javax.inject.Inject
 import cats.effect.IO
 import cats.implicits._
@@ -22,13 +21,12 @@ class Dao @Inject()(dS: DoobieStore) {
   private val recipesSelect = sql"select (id, name, type, edited) from recipes"
 
   def getAllCustomers: IO[Seq[Customer]] = {
-    query[Customer](customerSelect)
+    customerQuery(customerSelect)
       .to[List]
       .transact(xa)
   }
-  // TODO: Remove or rework fragments if it will show error
    def getAllCustomerTableRowsLike(search: String): IO[Seq[Customer]] = {
-    query[Customer](customerSelect ++
+    customerQuery(customerSelect ++
       sql"""where first_name like $search or
            last_name like $search or
             phone like $search or
@@ -39,58 +37,58 @@ class Dao @Inject()(dS: DoobieStore) {
   }
 
   def getAllCustomersAddresses(customerId: ID): IO[Seq[Address]] = {
-    query[Address](addressSelect ++ sql"where customer_id = $customerId")
+    addressQuery(addressSelect ++ sql"where customer_id = $customerId")
       .to[List]
       .transact(xa)
   }
 
   def getCustomerById(id: ID): IO[Customer] = {
-    query[Customer](customerSelect ++ sql"where id = $id")
+    customerQuery(customerSelect ++ sql"where id = $id")
       .unique
       .transact(xa)
   }
 
   def getAddressById(id: ID): IO[Address] = {
-    query[Address](addressSelect ++ sql"where id = $id")
+    addressQuery(addressSelect ++ sql"where id = $id")
       .unique
       .transact(xa)
   }
 
   def getAllOrders: IO[Seq[Order]] = {
-    query[Order](orderSelect)
+    orderQuery(orderSelect)
       .to[List]
       .transact(xa)
   }
 
   def getOrderByID(id: ID): IO[Order] = {
-    query[Order](orderSelect ++ sql"where id = $id")
+    orderQuery(orderSelect ++ sql"where id = $id")
       .unique
       .transact(xa)
   }
 
   def getAllOfferIdByOrderId(id: ID): IO[List[Offer]] = {
     sql"select * from order_offers where order_id = $id".query[OrderOffer].to[List].transact(xa).unsafeRunSync().traverse { orderOffer =>
-      query[Offer]( offerSelect ++ sql"where id = ${orderOffer.offerId}").to[List]
+      offerQuery( offerSelect ++ sql"where id = ${orderOffer.offerId}").to[List]
     }.transact(xa).map(_.flatten)
   }
 
   def getOffersByDate(date : Date): IO[Seq[Offer]] = {
-    query[Offer](offerSelect ++ sql"where expiration_date $date")
+    offerQuery(offerSelect ++ sql"where expiration_date $date")
       .to[List]
       .transact(xa)
   }
 
   def getOfferByDateAndMenuType(date: Date, menuType: String): IO[Seq[Offer]] = {
-    query[Offer](offerSelect ++ sql"where expiration_date $date" ++ sql"and menu_type = $menuType").to[List].transact(xa)
+    offerQuery(offerSelect ++ sql"where expiration_date $date" ++ sql"and menu_type = $menuType").to[List].transact(xa)
   }
 
   def getRecipesLike(name: String): IO[Seq[Recipe]] = {
-    query[Recipe](recipesSelect ++ sql"where name like $name").to[Seq].transact(xa)
+    recipesQuery(recipesSelect ++ sql"where name like $name").to[Seq].transact(xa)
   }
 
   def getRecipesBy(ids: List[ID]): IO[Seq[Recipe]] = {
     ids.traverse{ id =>
-      query[Recipe](recipesSelect ++ sql"where id = $id").unique
+      recipesQuery(recipesSelect ++ sql"where id = $id").unique
     }.transact(xa)
   }
 
@@ -233,9 +231,17 @@ class Dao @Inject()(dS: DoobieStore) {
     }.map(_.sum)
   }
 
-  private def query[T](cF: Fragment): Query0[T] = cF.query[T]
+  private def customerQuery(cF: Fragment): Query0[Customer] = cF.query[Customer]
 
-  private def update(fragment: Fragment): Update0 = fragment.update
+  private def addressQuery(aF: Fragment): Query0[Address] = aF.query[Address]
+
+  private def orderQuery(oF: Fragment): Query0[Order] = oF.query[Order]
+
+  private def offerQuery(oF: Fragment): Query0[Offer] = oF.query[Offer]
+
+  private def recipesQuery(rF: Fragment): Query0[Recipe] = rF.query[Recipe]
+
+  private def update[T](fragment: Fragment): Update0 = fragment.update
 
 }
 
