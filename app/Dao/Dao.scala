@@ -19,15 +19,16 @@ class Dao @Inject()(dS: DoobieStore) {
   private val addressSelect = sql"select (id, customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes) from addresses"
   private val orderSelect = sql"select (id, customer_id, address_id, order_day, delivery_day, deliver_from, deliver_to, out_of_zone_delivery, delivery_on_monday, total, payment, paid, delivered, note) from orders"
   private val offerSelect = sql"select (id, name, price, execution_date, menu_type) from offers"
+  private val recipesSelect = sql"select (id, name, type, edited) from recipes"
 
   def getAllCustomers: IO[Seq[Customer]] = {
-    customerQuery(customerSelect)
+    query[Customer](customerSelect)
       .to[List]
       .transact(xa)
   }
   // TODO: Remove or rework fragments if it will show error
-  def getAllCustomerTableRowsLike(search: String): IO[Seq[Customer]] = {
-    customerQuery(customerSelect ++
+   def getAllCustomerTableRowsLike(search: String): IO[Seq[Customer]] = {
+    query[Customer](customerSelect ++
       sql"""where first_name like $search or
            last_name like $search or
             phone like $search or
@@ -38,52 +39,62 @@ class Dao @Inject()(dS: DoobieStore) {
   }
 
   def getAllCustomersAddresses(customerId: ID): IO[Seq[Address]] = {
-    addressQuery(addressSelect ++ sql"where customer_id = $customerId")
+    query[Address](addressSelect ++ sql"where customer_id = $customerId")
       .to[List]
       .transact(xa)
   }
 
   def getCustomerById(id: ID): IO[Customer] = {
-    customerQuery(customerSelect ++ sql"where id = $id")
+    query[Customer](customerSelect ++ sql"where id = $id")
       .unique
       .transact(xa)
   }
 
   def getAddressById(id: ID): IO[Address] = {
-    addressQuery(addressSelect ++ sql"where id = $id")
+    query[Address](addressSelect ++ sql"where id = $id")
       .unique
       .transact(xa)
   }
 
   def getAllOrders: IO[Seq[Order]] = {
-    orderQuery(orderSelect)
+    query[Order](orderSelect)
       .to[List]
       .transact(xa)
   }
 
   def getOrderByID(id: ID): IO[Order] = {
-    orderQuery(orderSelect ++ sql"where id = $id")
+    query[Order](orderSelect ++ sql"where id = $id")
       .unique
       .transact(xa)
   }
 
   def getAllOfferIdByOrderId(id: ID): IO[List[Offer]] = {
     sql"select * from order_offers where order_id = $id".query[OrderOffer].to[List].transact(xa).unsafeRunSync().traverse { orderOffer =>
-      offerQuery( offerSelect ++ sql"where id = ${orderOffer.offerId}").to[List]
+      query[Offer]( offerSelect ++ sql"where id = ${orderOffer.offerId}").to[List]
     }.transact(xa).map(_.flatten)
   }
 
   def getOffersByDate(date : Date): IO[Seq[Offer]] = {
-    offerQuery(offerSelect ++ sql"where expiration_date $date")
+    query[Offer](offerSelect ++ sql"where expiration_date $date")
       .to[List]
       .transact(xa)
   }
 
   def getOfferByDateAndMenuType(date: Date, menuType: String): IO[Seq[Offer]] = {
-    offerQuery(offerSelect ++ sql"where expiration_date $date" ++ sql"and menu_type = $menuType").to[List].transact(xa)
+    query[Offer](offerSelect ++ sql"where expiration_date $date" ++ sql"and menu_type = $menuType").to[List].transact(xa)
   }
 
-  // --- ---
+  def getRecipesLike(name: String): IO[Seq[Recipe]] = {
+    query[Recipe](recipesSelect ++ sql"where name like $name").to[Seq].transact(xa)
+  }
+
+  def getRecipesBy(ids: List[ID]): IO[Seq[Recipe]] = {
+    ids.traverse{ id =>
+      query[Recipe](recipesSelect ++ sql"where id = $id").unique
+    }.transact(xa)
+  }
+
+  // --- Change methods ---
 
 
   def insertCustomer(c: CustomerInput): IO[ID] = {
@@ -126,6 +137,29 @@ class Dao @Inject()(dS: DoobieStore) {
     } yield ()).transact(xa)
   }
 
+  def insertOffers(date: Date, menuType: String, list: List[InsertOffer]): IO[Unit] = {
+    def deleteBeforeInsets(date: Date, menuType: String): ConnectionIO[Int] = {
+      sql"delete from offers where execution_date = $date and menu_type = $menuType".update.run
+    }
+
+    def insertOffer(name: String, date: Date, menuType: String, price: Int, recipes: List[Recipe], quantityOfRecipes: Int): ConnectionIO[Unit] = {
+      for {
+        _ <- sql"insert into offers (name, price, execution_date, menu_type) values ($name, $price, $date, $menuType)".update.run
+        id <- sql"select LAST_INSERT_ID()".query[Int].unique
+        _ <- recipes.traverse { r =>
+          sql"insert into offer_recipes (offer_id, recipe_id, quantity) values ($id, ${r.id}, $quantityOfRecipes)".update.run
+        }
+      } yield ()
+    }
+
+    (for {
+      _ <- deleteBeforeInsets(date, menuType)
+      _ <- list.traverse{ o =>
+        insertOffer(o.name, date, menuType, o.price, o.recipes, o.quantityOfRecipes)
+      }
+    } yield ()).transact(xa)
+  }
+
   def editCustomer(id: ID, c: CustomerInput): IO[Unit] = {
     def editAddresses(list: List[Address], customerId: ID): ConnectionIO[Unit] = {
       update(sql"delete from addresses where customer_id = $customerId").run *>
@@ -165,15 +199,12 @@ class Dao @Inject()(dS: DoobieStore) {
     } yield()).transact(xa)
   }
 
-  private def customerQuery(cF: Fragment): Query0[Customer] = cF.query[Customer]
+  def editOffers(list: List[(Int, (String, Int))]): IO[Unit] = {
+    list.traverse { case (id, (name, price)) =>
+      sql"update offers set name = $name, price= $price where id= $id".update.run
+    }.transact(xa).void
+  }
 
-  private def addressQuery(aF: Fragment): Query0[Address] = aF.query[Address]
-
-  private def orderQuery(oF: Fragment): Query0[Order] = oF.query[Order]
-
-  private def offerQuery(oF: Fragment): Query0[Offer] = oF.query[Offer]
-
-  private def update[T](fragment: Fragment): Update0 = fragment.update
 
   private def getAllOffersRecipes(ids: List[Int]): ConnectionIO[List[OfferRecipes]] = {
     ids.traverse { offerId =>
@@ -201,6 +232,10 @@ class Dao @Inject()(dS: DoobieStore) {
       sql"insert into order_recipes (order_id, recipe_id, quantity) value ($orderId, ${rIdQ._1}, ${rIdQ._2})".update.run
     }.map(_.sum)
   }
+
+  private def query[T](cF: Fragment): Query0[T] = cF.query[T]
+
+  private def update(fragment: Fragment): Update0 = fragment.update
 
 }
 

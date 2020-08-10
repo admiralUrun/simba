@@ -119,11 +119,3 @@ create table order_recipes (
     recipe_id int not null,
     quantity int
 );
-
--- TODO: kill this
-drop table if exists recipes_by_weeks;
-create table recipes_by_weeks (
-    recipe_id int not null,
-    execution_date date not null,
-    menu_type varchar(128) not null
-);
