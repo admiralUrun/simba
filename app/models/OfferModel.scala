@@ -71,11 +71,11 @@ class OfferModel @Inject()(dao: Dao) {
       ) ::: allRecipesOnTwo ::: allRecipesOnFour
     }
 
-    def sideMenuTypeInsets(menuType: String, recipes: List[Recipe]): List[InsertOffer] = {
+    def sideMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = {
       recipes.map(r => InsertOffer(r.name, 0, List(r), 2))
     }
 
-    def promoMenuTypeInsets(menuType: String, recipes: List[Recipe]): List[InsertOffer] = {
+    def promoMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = {
       List(
         InsertOffer("Промо на 2", 0, recipes, 2),
           InsertOffer("Промо на 4", 0, recipes, 4)
@@ -88,8 +88,8 @@ class OfferModel @Inject()(dao: Dao) {
     else {
       val recipes = dao.getRecipesBy(sO.recipeIds).unsafeRunSync().toList
       val insertOffers = {
-        if (menuType == "soup" || menuType == "desert") sideMenuTypeInsets(menuType, recipes)
-        else if (menuType == "promo") promoMenuTypeInsets(menuType, recipes)
+        if (menuType == "soup" || menuType == "desert") sideMenuTypeInsets(recipes)
+        else if (menuType == "promo") promoMenuTypeInsets(recipes)
         else primeMenuTypeInsets(menuType, recipes)
       }
 
