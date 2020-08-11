@@ -88,13 +88,8 @@ function addToAddressAndCleanInputs() {
 }
 
 function deleteRow(indexToRemove) {
-    let input = getAddressInputArrayByIndex(indexToRemove)
-    if (input.val().includes("id")) {
-        let id = input.val().split(`,`).shift().replace("(id)", "")
-        $(`<input id="addressesToDelete[${indexToRemove}]" name="addressesToDelete[${indexToRemove}]" value="${id}" style="display: none">`).appendTo($(`#mainForm`))
-    }
     $(`#row-${indexToRemove}`).remove()
-    cleanAllAddressInputs()
+    cleanAllAddressInputs() // TODO: under the question
     changeButton(`Додати`, addToAddressAndCleanInputs)
 }
 
