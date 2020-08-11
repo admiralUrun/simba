@@ -15,10 +15,10 @@ class Dao @Inject()(dS: DoobieStore) {
   private val xa = dS.getXa()
 
   private val customerSelect = sql"select id, first_name, last_name, phone, phone2_note, phone2, phone2_note, instagram, preferences, notes from customers "
-  private val addressSelect = sql"select id, customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes from addresses"
-  private val orderSelect = sql"select id, customer_id, address_id, order_day, delivery_day, deliver_from, deliver_to, out_of_zone_delivery, delivery_on_monday, total, payment, paid, delivered, note from orders"
-  private val offerSelect = sql"select id, name, price, execution_date, menu_type from offers"
-  private val recipesSelect = sql"select id, name, type, edited from recipes"
+  private val addressSelect = sql"select id, customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes from addresses "
+  private val orderSelect = sql"select id, customer_id, address_id, order_day, delivery_day, deliver_from, deliver_to, out_of_zone_delivery, delivery_on_monday, total, payment, paid, delivered, note from orders "
+  private val offerSelect = sql"select id, name, price, execution_date, menu_type from offers "
+  private val recipesSelect = sql"select id, name, type, edited from recipes "
 
   def getAllCustomers: IO[Seq[Customer]] = {
     customerQuery(customerSelect)
@@ -49,7 +49,7 @@ class Dao @Inject()(dS: DoobieStore) {
   }
 
   def getAddressById(id: ID): IO[Address] = {
-    addressQuery(addressSelect ++ sql"where id = $id")
+    addressQuery(addressSelect ++ fr"where id = $id")
       .unique
       .transact(xa)
   }
@@ -61,34 +61,34 @@ class Dao @Inject()(dS: DoobieStore) {
   }
 
   def getOrderByID(id: ID): IO[Order] = {
-    orderQuery(orderSelect ++ sql"where id = $id")
+    orderQuery(orderSelect ++ fr"where id = $id")
       .unique
       .transact(xa)
   }
 
   def getAllOfferIdByOrderId(id: ID): IO[List[Offer]] = {
     sql"select * from order_offers where order_id = $id".query[OrderOffer].to[List].transact(xa).unsafeRunSync().traverse { orderOffer =>
-      offerQuery( offerSelect ++ sql"where id = ${orderOffer.offerId}").to[List]
+      offerQuery( offerSelect ++ fr"where id = ${orderOffer.offerId}").to[List]
     }.transact(xa).map(_.flatten)
   }
 
   def getOffersByDate(date : Date): IO[Seq[Offer]] = {
-    offerQuery(offerSelect ++ sql"where expiration_date $date")
+    offerQuery(offerSelect ++ fr"where expiration_date $date")
       .to[List]
       .transact(xa)
   }
 
   def getOfferByDateAndMenuType(date: Date, menuType: String): IO[Seq[Offer]] = {
-    offerQuery(offerSelect ++ sql"where expiration_date $date" ++ sql"and menu_type = $menuType").to[List].transact(xa)
+    offerQuery(offerSelect ++ fr"where expiration_date $date" ++ fr"and menu_type = $menuType").to[List].transact(xa)
   }
 
   def getRecipesLike(name: String): IO[Seq[Recipe]] = {
-    recipesQuery(recipesSelect ++ sql"where name like $name").to[Seq].transact(xa)
+    recipesQuery(recipesSelect ++ fr"where name like $name").to[Seq].transact(xa)
   }
 
   def getRecipesBy(ids: List[ID]): IO[Seq[Recipe]] = {
     ids.traverse{ id =>
-      recipesQuery(recipesSelect ++ sql"where id = $id").unique
+      recipesQuery(recipesSelect ++ fr"where id = $id").unique
     }.transact(xa)
   }
 
