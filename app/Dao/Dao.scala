@@ -14,11 +14,11 @@ import services.SimbaHTMLHelper.stringToAddress
 class Dao @Inject()(dS: DoobieStore) {
   private val xa = dS.getXa()
 
-  private val customerSelect = sql"select (id, first_name, last_name, phone, phone2_note, phone2, phone2_note, instagram, preferences, notes) from customers"
-  private val addressSelect = sql"select (id, customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes) from addresses"
-  private val orderSelect = sql"select (id, customer_id, address_id, order_day, delivery_day, deliver_from, deliver_to, out_of_zone_delivery, delivery_on_monday, total, payment, paid, delivered, note) from orders"
-  private val offerSelect = sql"select (id, name, price, execution_date, menu_type) from offers"
-  private val recipesSelect = sql"select (id, name, type, edited) from recipes"
+  private val customerSelect = sql"select id, first_name, last_name, phone, phone2_note, phone2, phone2_note, instagram, preferences, notes from customers "
+  private val addressSelect = sql"select id, customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes from addresses"
+  private val orderSelect = sql"select id, customer_id, address_id, order_day, delivery_day, deliver_from, deliver_to, out_of_zone_delivery, delivery_on_monday, total, payment, paid, delivered, note from orders"
+  private val offerSelect = sql"select id, name, price, execution_date, menu_type from offers"
+  private val recipesSelect = sql"select id, name, type, edited from recipes"
 
   def getAllCustomers: IO[Seq[Customer]] = {
     customerQuery(customerSelect)

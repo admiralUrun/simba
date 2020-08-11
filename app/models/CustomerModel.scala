@@ -1,9 +1,8 @@
 package models
 
-import Dao.{Dao, DoobieStore}
+import Dao.Dao
 import cats.effect.IO
 import javax.inject._
-import play.api.libs.json.{JsValue, Json}
 import services.SimbaAlias._
 import services.SimbaHTMLHelper.addressToString
 @Singleton
