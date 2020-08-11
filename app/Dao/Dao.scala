@@ -80,7 +80,7 @@ class Dao @Inject()(dS: DoobieStore) {
   }
 
   def getOfferByDateAndMenuType(date: Date, menuType: String): IO[Seq[Offer]] = {
-    offerQuery(offerSelect ++ fr"where expiration_date $date" ++ fr"and menu_type = $menuType").to[List].transact(xa)
+    offerQuery(offerSelect ++ fr"where expiration_date = $date" ++ fr" and menu_type = $menuType").to[List].transact(xa) // TODO: change db
   }
 
   def getRecipesLike(name: String): IO[Seq[Recipe]] = {

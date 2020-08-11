@@ -70,7 +70,7 @@ create table offers (
     -- TODO: change to int
     menu_type varchar(128)
 );
-create index offers_execution_date on offers(execution_date);
+create index offers_execution_date on offers(expiration_date);
 
 drop table if exists offer_recipes;
 create table offer_recipes (
