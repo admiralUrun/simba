@@ -25,7 +25,8 @@ class Dao @Inject()(dS: DoobieStore) {
       .to[List]
       .transact(xa)
   }
-   def getAllCustomerTableRowsLike(search: String): IO[Seq[Customer]] = {
+
+  def getAllCustomerTableRowsLike(search: String): IO[Seq[Customer]] = {
     customerQuery(customerSelect ++
       sql"""where first_name like $search or
            last_name like $search or
@@ -68,11 +69,11 @@ class Dao @Inject()(dS: DoobieStore) {
 
   def getAllOfferIdByOrderId(id: ID): IO[List[Offer]] = {
     sql"select * from order_offers where order_id = $id".query[OrderOffer].to[List].transact(xa).unsafeRunSync().traverse { orderOffer =>
-      offerQuery( offerSelect ++ fr"where id = ${orderOffer.offerId}").to[List]
+      offerQuery(offerSelect ++ fr"where id = ${orderOffer.offerId}").to[List]
     }.transact(xa).map(_.flatten)
   }
 
-  def getOffersByDate(date : Date): IO[Seq[Offer]] = {
+  def getOffersByDate(date: Date): IO[Seq[Offer]] = {
     offerQuery(offerSelect ++ fr"where expiration_date $date")
       .to[List]
       .transact(xa)
@@ -87,7 +88,7 @@ class Dao @Inject()(dS: DoobieStore) {
   }
 
   def getRecipesBy(ids: List[ID]): IO[Seq[Recipe]] = {
-    ids.traverse{ id =>
+    ids.traverse { id =>
       recipesQuery(recipesSelect ++ fr"where id = $id").unique
     }.transact(xa)
   }
@@ -97,7 +98,8 @@ class Dao @Inject()(dS: DoobieStore) {
 
   def insertCustomer(c: CustomerInput): IO[ID] = {
     (for {
-      _ <- update(sql"""insert into customers
+      _ <- update(
+        sql"""insert into customers
             (first_name, last_name,
             phone, phone_note, phone2, phone2_note,
            instagram, preferences, notes)
@@ -113,7 +115,8 @@ class Dao @Inject()(dS: DoobieStore) {
 
   def insertOrder(o: OrderForEditAndCreate, convertStringToMinutes: String => Int): IO[Unit] = {
     (for {
-      _ <- update(sql"""insert into orders (customer_id, address_id,
+      _ <- update(
+        sql"""insert into orders (customer_id, address_id,
                                     order_day, delivery_day,
                                     deliver_from, deliver_to,
                                     total,
@@ -152,7 +155,7 @@ class Dao @Inject()(dS: DoobieStore) {
 
     (for {
       _ <- deleteBeforeInsets(date, menuType)
-      _ <- list.traverse{ o =>
+      _ <- list.traverse { o =>
         insertOffer(o.name, date, menuType, o.price, o.recipes, o.quantityOfRecipes)
       }
     } yield ()).transact(xa)
@@ -164,7 +167,8 @@ class Dao @Inject()(dS: DoobieStore) {
         insertAddressesReturnConnectionIOListOfInt(list, customerId)
     }
 
-    (update(sql"""update customers set
+    (update(
+      sql"""update customers set
         first_name = ${c.firstName}, last_name = ${c.lastName},
          phone = ${c.phone}, phone_note = ${c.phoneNote},
          phone2 = ${c.phone2}, phone2_note = ${c.phoneNote2},
@@ -176,7 +180,8 @@ class Dao @Inject()(dS: DoobieStore) {
 
   def editOrder(id: ID, o: OrderForEditAndCreate, convertStringToMinutes: String => Int): IO[Unit] = {
     (for {
-     _ <- update(sql"""update orders set
+      _ <- update(
+        sql"""update orders set
            address_id = ${o.addressId},
             delivery_day = ${o.deliveryDay},
              deliver_from = ${convertStringToMinutes(o.deliverFrom)},
@@ -192,9 +197,9 @@ class Dao @Inject()(dS: DoobieStore) {
       _ <- update(sql"delete from order_offers where order_id = $id").run
       _ <- insertOrderOffers(id, o.inOrder)
       _ <- update(sql"delete from order_recipes where order_id = $id").run
-     recipesIdsAndQuantity <- getAllOffersRecipes(o.inOrder).map(_.map(o => (o.recipesId, o.quantity)))
-     _ <- insertOrderRecipes(id, recipesIdsAndQuantity)
-    } yield()).transact(xa)
+      recipesIdsAndQuantity <- getAllOffersRecipes(o.inOrder).map(_.map(o => (o.recipesId, o.quantity)))
+      _ <- insertOrderRecipes(id, recipesIdsAndQuantity)
+    } yield ()).transact(xa)
   }
 
   def editOffers(list: List[(Int, (String, Int))]): IO[Unit] = {

@@ -15,7 +15,7 @@ class OfferModel @Inject()(dao: Dao) {
   }
 
   def setOfferPreferences(editOffer: EditOffer): Boolean = {
-    if(editOffer.ids.length != editOffer.prices.length || editOffer.ids.length != editOffer.names.length) false
+    if (editOffer.ids.length != editOffer.prices.length || editOffer.ids.length != editOffer.names.length) false
     else {
       dao.editOffers(editOffer.ids.zip(editOffer.names.zip(editOffer.prices))).unsafeRunSync()
       true
@@ -44,17 +44,17 @@ class OfferModel @Inject()(dao: Dao) {
     )
 
     def validationError(menuType: String, howManyIds: Int): Boolean = Map(
-        "promo" -> (howManyIds == 3),
-        "soup" -> (howManyIds >= 1),
-        "desert" -> (howManyIds >= 1),
-        "classic" -> (howManyIds == 5),
-        "lite" -> (howManyIds == 5),
-        "breakfast" -> (howManyIds == 5)
-      )(menuType)
+      "promo" -> (howManyIds == 3),
+      "soup" -> (howManyIds >= 1),
+      "desert" -> (howManyIds >= 1),
+      "classic" -> (howManyIds == 5),
+      "lite" -> (howManyIds == 5),
+      "breakfast" -> (howManyIds == 5)
+    )(menuType)
 
     def primeMenuTypeInsets(menuType: String, recipes: List[Recipe]): List[InsertOffer] = {
       val recipesWithIndex = recipes.zipWithIndex
-      val allRecipesOnFour = recipesWithIndex.map{ case (r, i) =>
+      val allRecipesOnFour = recipesWithIndex.map { case (r, i) =>
         InsertOffer(s"${translateMenuType(menuType)} ${i + 1} на 4", 0, List(r), 4)
       }
       val allRecipesOnTwo = recipesWithIndex.map { case (r, i) =>
@@ -76,13 +76,13 @@ class OfferModel @Inject()(dao: Dao) {
     def promoMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = {
       List(
         InsertOffer("Промо на 2", 0, recipes, 2),
-          InsertOffer("Промо на 4", 0, recipes, 4)
+        InsertOffer("Промо на 4", 0, recipes, 4)
       )
     }
 
     val menuType = sO.menuType
 
-    if(!validationError(menuType, sO.recipeIds.length)) false
+    if (!validationError(menuType, sO.recipeIds.length)) false
     else {
       val recipes = dao.getRecipesBy(sO.recipeIds).unsafeRunSync().toList
       val insertOffers = {
@@ -92,9 +92,10 @@ class OfferModel @Inject()(dao: Dao) {
       }
 
       dao.insertOffers(sO.executionDate, sO.menuType, insertOffers).unsafeRunSync()
+
       /**
-       *  Returning true for a version with out unsafeRun in Controller
-       * */
+       * Returning true for a version with out unsafeRun in Controller
+       **/
       true
     }
   }
@@ -111,7 +112,7 @@ case class Recipe(id: Option[Int], name: String, menuType: String, edited: Boole
 
 case class OfferRecipes(offerId: Int, recipesId: Int, quantity: Int)
 
-case class SettingOffer(menuType: String, executionDate: Date,  recipeIds: List[Int])
+case class SettingOffer(menuType: String, executionDate: Date, recipeIds: List[Int])
 
 case class EditOffer(ids: List[Int], names: List[String], prices: List[Int], executionDate: Date, menuType: String)
 

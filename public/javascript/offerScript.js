@@ -12,6 +12,7 @@ function addToDisplay(id) {
                 </button>
         </li>`).appendTo('ul')
     }
+
     addToDisplay($(`#${id}`).data("data"))
 }
 
@@ -20,7 +21,7 @@ function deleteFromOffer(indexToDelete) {
 }
 
 function addToDropDown(recipe) {
-    if(!$.exists(`#recipe${recipe.id}`)) {
+    if (!$.exists(`#recipe${recipe.id}`)) {
         let item = $(`<a id="recipe${recipe.id}" class="dropdown-item" onclick="addToDisplay('recipe${recipe.id}')">${recipe.name}</a>`)
         item.data("data", recipe)
         item.appendTo($("#searchMenu"))

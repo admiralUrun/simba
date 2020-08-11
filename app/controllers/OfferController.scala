@@ -41,7 +41,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
       (JsPath \ "name").write[String] and
       (JsPath \ "menuType").write[String] and
       (JsPath \ "edited").write[Boolean]
-    )(unlift(Recipe.unapply))
+    ) (unlift(Recipe.unapply))
 
   private val offersPage = Redirect(routes.OfferController.toOffersPage())
   private val errorRedirect = Redirect(routes.HomeController.index()).flashing("error" -> "Не треба тут сувати мені відредарований HTML!")
@@ -56,6 +56,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
       Data => Ok(views.html.offers(getNextSundayFromGivenDate(Data.date)))
     )
   }
+
   def toOfferPageWithLastWeek: PlayAction = Action { implicit request =>
     passDateForm.bindFromRequest.fold(
       _ => errorRedirect,
@@ -77,7 +78,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
     )
   }
 
-  def toOfferPreferencePage(title: String, menuType: String): PlayAction = Action { implicit  request =>
+  def toOfferPreferencePage(title: String, menuType: String): PlayAction = Action { implicit request =>
     passDateForm.bindFromRequest.fold(
       _ => errorRedirect,
       Date => Ok(views.html.editOffer(title, Date.date, menuType,
@@ -90,7 +91,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
     passDateForm.bindFromRequest.fold(
       _ => errorRedirect,
       Date => Ok(views.html.recipesOnThisWeek(offerModel.getAllRecipesOnThisWeek(Date.date)))
-      )
+    )
   }
 
   def getRecipesForOfferSearch(name: String): PlayAction = Action {
@@ -110,7 +111,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
         val date = settingOffer.executionDate
         /**
          * Changes in title here should be repeated in offers.scala.html
-         * */
+         **/
         val offerPageMap = Map(
           "classic" -> Ok(views.html.offer("Налаштування Класичного Меню", date, "classic")),
           "lite" -> Ok(views.html.offer("Налаштування Лайт Меню", date, "lite")),

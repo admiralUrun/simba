@@ -56,15 +56,15 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
     )
   }
 
-//  def deleteOrder(id: ID): PlayAction = Action { implicit request => // TODO: Need to think on it a bit more
-//
-//  }
+  //  def deleteOrder(id: ID): PlayAction = Action { implicit request => // TODO: Need to think on it a bit more
+  //
+  //  }
 
   def createOrder: PlayAction = Action { implicit request =>
     orderForm.bindFromRequest.fold(
       formWithErrors => BadRequest(
         views.html.createOrder(formWithErrors,
-        orderModel.getMenusToolsForAddingToOrder.toList,
+          orderModel.getMenusToolsForAddingToOrder.toList,
           None,
           orderModel.getInOrderToTextWithCostMap)),
       orderForEditAndCreate => resultWithFlash(orderFeedPage, orderModel.insert(orderForEditAndCreate), "Замовлення додано, мяу")
@@ -72,7 +72,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   private def resultWithFlash(result: Result, modelResponse: Boolean, successFlash: String, errorFlash: String = "Щось пішло не так ;("): Result = {
-    if(modelResponse) result.flashing("success" -> successFlash)
+    if (modelResponse) result.flashing("success" -> successFlash)
     else result.flashing("error" -> errorFlash)
   }
 }

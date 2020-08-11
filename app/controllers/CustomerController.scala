@@ -12,7 +12,7 @@ import services.SimbaAlias._
 
 @Singleton
 class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
-type PlayAction = Action[AnyContent]
+  type PlayAction = Action[AnyContent]
   private val customerForm = Form(
     mapping(
       "id" -> ignored(None: Option[Int]),
@@ -43,7 +43,7 @@ type PlayAction = Action[AnyContent]
       (JsPath \ "instagram").writeNullable[String] and
       (JsPath \ "preferences").writeNullable[String] and
       (JsPath \ "notes").writeNullable[String]
-    )(unlift(Customer.unapply))
+    ) (unlift(Customer.unapply))
 
   private implicit val addressWriter: JSONWrites[Address] = (
     (JsPath \ "id").writeNullable[ID] and
@@ -55,15 +55,15 @@ type PlayAction = Action[AnyContent]
       (JsPath \ "floor").writeNullable[String] and
       (JsPath \ "flat").writeNullable[String] and
       (JsPath \ "notesForCourier").writeNullable[String]
-    )(unlift(Address.unapply))
+    ) (unlift(Address.unapply))
 
   private implicit val customerAddressesToJsonWriter: JSONWrites[CustomerAddressesForJson] = (
     (JsPath \ "customer").write[Customer] and
       (JsPath \ "addresses").write[Seq[Address]]
-    )(unlift(CustomerAddressesForJson.unapply))
+    ) (unlift(CustomerAddressesForJson.unapply))
 
   def toCustomersListPage(search: String): PlayAction = Action { implicit request =>
-    val rows = if(search.isEmpty) customerModel.getAllCustomerTableRows else customerModel.getAllCustomerTableRowsLike(search)
+    val rows = if (search.isEmpty) customerModel.getAllCustomerTableRows else customerModel.getAllCustomerTableRowsLike(search)
 
     Ok(views.html.customers(rows, search))
   }
@@ -93,7 +93,7 @@ type PlayAction = Action[AnyContent]
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.editCustomer(id, formWithErrors, formWithErrors.data("firstName"))),
       customer => {
-        resultWithFlash(customerListPage, customerModel.editCustomer(id, customer),"Клієнта змінено, мяу")
+        resultWithFlash(customerListPage, customerModel.editCustomer(id, customer), "Клієнта змінено, мяу")
       }
     )
   }
@@ -102,22 +102,23 @@ type PlayAction = Action[AnyContent]
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.createCustomer(formWithErrors, routes.CustomerController.createCustomer(), toCustomerListPage)),
       newCustomer => {
-        resultWithFlash(customerListPage, customerModel.insert(newCustomer)._1,"Клієнта додано, мяу")
+        resultWithFlash(customerListPage, customerModel.insert(newCustomer)._1, "Клієнта додано, мяу")
       }
     )
   }
+
   def createCustomerThenToOrder: PlayAction = Action { implicit request =>
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.createCustomer(formWithErrors, routes.CustomerController.createCustomerThenToOrder(), toOrderCreatePage)),
       newCustomer => {
         val modelResponse: (Boolean, Int) = customerModel.insert(newCustomer)
-        resultWithFlash(Redirect(routes.OrderController.toOrderCreatePageWithCustomerId(modelResponse._2)), modelResponse._1,"Клієнта додано, мяу")
+        resultWithFlash(Redirect(routes.OrderController.toOrderCreatePageWithCustomerId(modelResponse._2)), modelResponse._1, "Клієнта додано, мяу")
       }
     )
   }
 
   private def resultWithFlash(result: Result, modelResponse: Boolean, successFlash: String, errorFlash: String = "Щось пішло не так ;("): Result = {
-    if(modelResponse) result.flashing("success" -> successFlash)
+    if (modelResponse) result.flashing("success" -> successFlash)
     else result.flashing("error" -> errorFlash)
   }
 }

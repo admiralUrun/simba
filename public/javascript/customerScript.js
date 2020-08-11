@@ -16,8 +16,9 @@ function encoderString(i) {
         if (selector.val() === '') return ""
         else return selector.val() + nameForEncoding
     }
+
     function checkForIds() {
-        if(i != null && getAddressInputArrayByIndex(i).val().indexOf("id") >= 0) {
+        if (i != null && getAddressInputArrayByIndex(i).val().indexOf("id") >= 0) {
             console.log(getAddressInputArrayByIndex(i))
             let a = getAddressInputArrayByIndex(i).val().split(',')
             return `${a.shift()},${a.shift()},`
@@ -25,6 +26,7 @@ function encoderString(i) {
             return ""
         }
     }
+
     return Array(checkForIds(),
         getEncodeValueOrEmptyString(cityInput, `(city)`),
         getEncodeValueOrEmptyString(residentialComplexInput, `(residentialComplex)`),
@@ -32,7 +34,9 @@ function encoderString(i) {
         getEncodeValueOrEmptyString(entranceInput, `(entrance)`),
         getEncodeValueOrEmptyString(floorInput, `(floor)`),
         getEncodeValueOrEmptyString(flatInput, `(flat)`),
-        getEncodeValueOrEmptyString(notesForCourierInput, `(notes)`)).filter(function (v) { return v !== '' }).join(',')
+        getEncodeValueOrEmptyString(notesForCourierInput, `(notes)`)).filter(function (v) {
+        return v !== ''
+    }).join(',')
 }
 
 function cleanAllAddressInputs() {
@@ -55,9 +59,11 @@ function addToAddressAndCleanInputs() {
             function getTb(tbID, information) {
                 return `<td id="${tbID}">${$.getValueOrDashIfStringIsEmpty(information)}</td>`
             }
+
             function getInput(i, value) {
                 return `<input id="addresses[${i}]" name="addresses[${i}]" value="${value}" style="display: none">`
             }
+
             let changeButton = `<button class="btn btn-info сol-auto" type="button" onclick="prepareToEdit('${rowIndex}')">Змінити</button>`
             let deleteButton = `<button class="btn btn-danger сol-auto" type="button" onclick="deleteRow('${rowIndex}')">Видалити</button>`
             let row = $(`<tr id='row-${rowIndex}'>
@@ -73,9 +79,10 @@ function addToAddressAndCleanInputs() {
             tableBody.append(row)
         }
 
-            let count = $('#addressTableBody').children('tr').length
-            addToDisplay(count)
+        let count = $('#addressTableBody').children('tr').length
+        addToDisplay(count)
     }
+
     addRowToDisplay()
     cleanAllAddressInputs()
 }
@@ -94,17 +101,19 @@ function deleteRow(indexToRemove) {
 function prepareToEdit(i) {
     function rowToInputs(i) {
         function getValueOrEmptyStringIfDash(text) {
-            if(text === `-`) return ''
+            if (text === `-`) return ''
             else return text
         }
-        cityInput.val(getValueOrEmptyStringIfDash($(`#city-`+ i).text()))
-        residentialComplexInput.val(getValueOrEmptyStringIfDash($(`#residentialComplex-`+ i).text()))
+
+        cityInput.val(getValueOrEmptyStringIfDash($(`#city-` + i).text()))
+        residentialComplexInput.val(getValueOrEmptyStringIfDash($(`#residentialComplex-` + i).text()))
         addressInput.val(getValueOrEmptyStringIfDash($(`#address-` + i).text()))
         entranceInput.val(getValueOrEmptyStringIfDash($(`#entrance-` + i).text()))
         floorInput.val(getValueOrEmptyStringIfDash($(`#floor-` + i).text()))
         flatInput.val(getValueOrEmptyStringIfDash($(`#flat-` + i).text()))
         notesForCourierInput.val(getValueOrEmptyStringIfDash($(`#notes-` + i).text()))
     }
+
     rowToInputs(i)
     changeButton(`Змінити`, editRow, i)
 }

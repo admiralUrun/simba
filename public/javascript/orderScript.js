@@ -7,7 +7,7 @@ jQuery.isDefended = function (object) {
 jQuery.isEmpty = function (object) {
     return object == null
 }
-jQuery.getValeOrEmptyString = function(s) {
+jQuery.getValeOrEmptyString = function (s) {
     if ($.isDefended(s)) return ' ' + s;
     else return ''
 }
@@ -96,10 +96,12 @@ function takeCustomerJSONAddToUI(JSONArray) {
                         ${customerAddresses.customer.firstName} ${customerAddresses.customer.phone} ${$.getValeOrEmptyString(customerAddresses.customer.instagram)}
                     </a>`
                 ).appendTo($("#searchMenu"))
-            } else {}
+            } else {
+            }
 
             $(`#customer${customerAddresses.customer.id}`).data('customerJSON', customerAddresses)
         }
+
         if (!$.exists(`#customer${customerAddresses.customer.id}`)) {
             addDropItem(customerAddresses)
         }
@@ -113,11 +115,13 @@ function takeCustomerJSONAddToUI(JSONArray) {
 function displayCustomer(customer) {
     function getPhones(customer) {
         function secondPhone(phone, note) {
-            if($.isEmpty(phone) || $.isEmpty(note)) return ''
+            if ($.isEmpty(phone) || $.isEmpty(note)) return ''
             else return " " + `Другий Телефон:` + phone + $.getValeOrEmptyString(note)
         }
+
         return `Телефони:` + customer.phone + ` ` + $.getValeOrEmptyString(customer.phoneNote) + secondPhone(customer.phone2, customer.phoneNote2)
     }
+
     $(`<div id="customer" class="col-auto">
             <dl class="col-auto">
                 ${descriptionListElement('Ім\'я', customer.firstName + ' ' + $.getValeOrEmptyString(customer.lastName))}
@@ -156,7 +160,7 @@ function setCustomerAddAddressDropdown(id, customerAddresses) {
         createDropDownForAddresses(customerAddresses.customer.id, customerAddresses.addresses)
     }
 
-    if(customerAddresses)  setCustomerCreateDropDownFormAddresses(customerAddresses)
+    if (customerAddresses) setCustomerCreateDropDownFormAddresses(customerAddresses)
     else setCustomerCreateDropDownFormAddresses($(`#customer${id}`).data(`customerJSON`))
 }
 
@@ -167,7 +171,7 @@ function setAddress(address, id) {
         displayAddress(address)
     }
 
-    if($.isDefended(address)) setAddress(address)
+    if ($.isDefended(address)) setAddress(address)
     else setAddress($(`#address${id}`).data(`address`))
 }
 
@@ -187,18 +191,18 @@ function setCustomerAndAddress(customerID, customerAddress) {
         $.hideSearchDiv()
     }
 
-    if(customerAddress) setCustomerForOrder(customerAddress)
+    if (customerAddress) setCustomerForOrder(customerAddress)
     else setCustomerForOrder($(`#customer${customerID}`).data('customerJSON'))
 }
 
 function descriptionListElement(head, content, needDivWithCol) {
-    if($.isEmpty(head) || $.isEmpty(content) || head === '' || content === '') return ''
+    if ($.isEmpty(head) || $.isEmpty(content) || head === '' || content === '') return ''
     else {
         if (needDivWithCol) return `<div class="col">
                     <dt>${head}</dt>
                     <dd>${content}</dd>
                 </div>`
-        else return`
+        else return `
                 <dt>${head}</dt>
                 <dd>${content}</dd>`
     }
@@ -229,7 +233,7 @@ function createDropDownForAddresses(id, addresses) {
             <div id="customer${id}Addresses" class="dropdown-menu"></div>
             </div>
             </div>`).appendTo($('#customerInformation'))
-    addresses.forEach( function (address) {
+    addresses.forEach(function (address) {
         $(`<a id="address${address.id}" class="dropdown-item" onclick="setAddress(null, '${address.id}')">
                             ${address.city} ${$.getValeOrEmptyString(address.residentialComplex)}
                             ${address.address}
@@ -242,7 +246,7 @@ function createDropDownForAddresses(id, addresses) {
 function setCustomerAndAddressAddDropdown(customerAddresses) {
     let addressId = Number($(`#addressId`).val())
     setCustomer(customerAddresses.customer)
-    if(customerAddresses.addresses.length > 1) {
+    if (customerAddresses.addresses.length > 1) {
         let address = customerAddresses.addresses.filter(function (a) {
             return a.id === addressId
         })

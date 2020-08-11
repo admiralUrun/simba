@@ -23,6 +23,7 @@ class OrderModel @Inject()(dao: Dao) {
         o.paid, o.delivered,
         o.note)
     }
+
     dao.getAllOrders
       .map(_.map(orderToOrderForDisplay).groupBy(_.deliveryDay))
       .unsafeRunSync
@@ -92,7 +93,7 @@ class OrderModel @Inject()(dao: Dao) {
   }
 
   def getInOrderToTextWithCostMap: Map[String, (ID, MenuTitle, MenuPrice)] = { // TODO aks supervisor's opinion maybe there is better way to make it done
-    getAllOffersOnThisWeek.groupBy(_.id.head.toString).map{t =>
+    getAllOffersOnThisWeek.groupBy(_.id.head.toString).map { t =>
       t._1 -> t._2.map(offer => (t._1.toInt, offer.name, offer.price)).head
     }
   }
@@ -111,7 +112,8 @@ class OrderModel @Inject()(dao: Dao) {
   }
 
   private def convertMinutesToString(m: Minutes): String = {
-    def replaceWithDoubleZero(int: Int): String = if(int == 0) "00" else int.toString
+    def replaceWithDoubleZero(int: Int): String = if (int == 0) "00" else int.toString
+
     replaceWithDoubleZero(m / 60) + ":" + replaceWithDoubleZero(m % 60)
   }
 

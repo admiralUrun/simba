@@ -9,8 +9,10 @@ import play.api.db.DBApi
 
 class DoobieStore @Inject()(dbApi: DBApi) {
   private implicit val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
-  protected val (xa, release) = transactor(dbApi.database("default").dataSource).allocated.unsafeRunSync()
+  private val (xa, _) = transactor(dbApi.database("default").dataSource).allocated.unsafeRunSync()
+
   def getXa: DataSourceTransactor[IO] = xa
+
   private def transactor(ds: DataSource): Resource[IO, DataSourceTransactor[IO]] = for {
     ce <- ExecutionContexts.fixedThreadPool[IO](32)
     be <- Blocker[IO]
