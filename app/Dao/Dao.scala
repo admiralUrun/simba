@@ -12,7 +12,7 @@ import services.SimbaHTMLHelper.stringToAddress
 
 
 class Dao @Inject()(dS: DoobieStore) {
-  private val xa = dS.getXa()
+  private val xa = dS.getXa
 
   private val customerSelect = sql"select id, first_name, last_name, phone, phone2_note, phone2, phone2_note, instagram, preferences, notes from customers "
   private val addressSelect = sql"select id, customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes from addresses "

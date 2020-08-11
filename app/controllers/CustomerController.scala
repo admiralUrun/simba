@@ -6,7 +6,7 @@ import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.functional.syntax.unlift
 import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsPath, Writes, Json}
+import play.api.libs.json.{JsPath, Json}
 import play.api.mvc._
 import services.SimbaAlias._
 

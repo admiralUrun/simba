@@ -34,7 +34,7 @@
                 @getDateRow(t._1)
                 <table class="table table-striped table-bordered">
                     <thead>
-                        <tr>@tableHeaders(List("id", "Замовник", "Адреса", "Дата Замовлення", "Дата та Час Доставки", "У заміовлені", "Сума", "Оплата", "Статус", "Нотатка"), true)</tr>
+                        <tr>@tableHeaders(List("id", "Замовник", "Адреса", "Дата Замовлення", "Дата та Час Доставки", "У заміовлені", "Сума", "Оплата", "Статус", "Нотатка"), darkHead = true)</tr>
                     </thead>
                     <tbody>
               @t._2.map{ o =>
