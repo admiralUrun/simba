@@ -5,9 +5,9 @@ import cats.effect.IO
 import javax.inject._
 import services.SimbaAlias._
 import services.SimbaHTMLHelper.addressToString
+
 @Singleton
 class CustomerModel @Inject()(dao: Dao) {
-
 
   // TODO: make those methods return IO[_], empowering women
   def getAllCustomerTableRows: Seq[Customer] = {

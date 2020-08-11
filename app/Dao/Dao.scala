@@ -37,13 +37,13 @@ class Dao @Inject()(dS: DoobieStore) {
   }
 
   def getAllCustomersAddresses(customerId: ID): IO[Seq[Address]] = {
-    addressQuery(addressSelect ++ sql"where customer_id = $customerId")
+    addressQuery(addressSelect ++ fr"where customer_id = $customerId")
       .to[List]
       .transact(xa)
   }
 
   def getCustomerById(id: ID): IO[Customer] = {
-    customerQuery(customerSelect ++ sql"where id = $id")
+    customerQuery(customerSelect ++ fr"where id = $id")
       .unique
       .transact(xa)
   }
