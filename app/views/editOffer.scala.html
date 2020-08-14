@@ -28,9 +28,11 @@
 
 @getInputsFromListInPlayForm(keyInForm: String, isDisplayed: Boolean = true) = {
     @repeatWithIndex(oF(keyInForm)) { (field, index) =>
-    <input class="form-control" id="@{keyInForm}[@index]" name="@{keyInForm}[]" value="@{field.value.head}" style="display: @{
-        if(isDisplayed) "" else "none"
-    }">,
+            @if(field.value.isDefined) {
+                <input class="form-control" id="@{keyInForm}[@index]" name="@{keyInForm}[]" value="@{field.value.head}" style="display: @{
+                    if(isDisplayed) "" else "none"
+                }">,
+            }
     }
 }
 
@@ -40,6 +42,6 @@
             <input name="menuType" value="@menuType" style="display: none;">
             <input name="date" value="@formattingDateForForm(executionDate)" style="display: none;">
             @createEditTools(megreHtmlInputsList(getInputsFromListInPlayForm("id", isDisplayed = false), getInputsFromListInPlayForm("name"), getInputsFromListInPlayForm("price")))
-            <input class="btn btn-primary" type="submit" value="Змінити">
+            <input class="btn btn-primary" type="submit" value="Змінити"> або <a href="@routes.OfferController.toOffersPage()" class="btn">Скасувати</a>
         }
     }
