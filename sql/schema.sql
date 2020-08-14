@@ -98,7 +98,6 @@ create table orders (
     -- TODO: change to int
     payment varchar(128) not null,
     paid boolean not null,
-    -- TODO: move closer to total, payment?
     delivered boolean not null,
     note text
 );

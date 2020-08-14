@@ -17,7 +17,7 @@ class OfferModel @Inject()(dao: Dao) {
   def setOfferPreferences(editOffer: EditOffer): Boolean = {
     if (editOffer.ids.length != editOffer.prices.length || editOffer.ids.length != editOffer.names.length) false
     else {
-      dao.editOffers(editOffer.ids.zip(editOffer.names.zip(editOffer.prices))).unsafeRunSync()
+      dao.updateOffersNameAndPrice(editOffer.ids.zip(editOffer.names.zip(editOffer.prices))).unsafeRunSync()
       true
     }
   }
@@ -91,7 +91,7 @@ class OfferModel @Inject()(dao: Dao) {
         else primeMenuTypeInsets(menuType, recipes)
       }
 
-      dao.insertOffers(sO.executionDate, sO.menuType, insertOffers).unsafeRunSync()
+      dao.insertOrUpdateOffers(sO.executionDate, sO.menuType, insertOffers).unsafeRunSync()
 
       /**
        * Returning true for a version with out unsafeRun in Controller
