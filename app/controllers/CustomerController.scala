@@ -73,7 +73,7 @@ class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesCo
   }
 
   def getCustomersForOrder(id: Int): PlayAction = Action {
-    Ok(Json.toJson(customerModel.getDataForJsonToDisplayInOrderByID(id).unsafeRunSync()))
+    Ok(Json.toJson(customerModel.getDataForJsonToDisplayInOrderBy(id).unsafeRunSync()))
   }
 
   def toCreateCustomerPage: PlayAction = Action { implicit request =>
@@ -85,7 +85,7 @@ class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesCo
   }
 
   def toEditCustomerPage(id: Int): PlayAction = Action { implicit request =>
-    val customer = customerModel.findByID(id)
+    val customer = customerModel.findBy(id)
     Ok(views.html.editCustomer(id, customerForm.fill(customer), customer.firstName))
   }
 

@@ -39,12 +39,12 @@ class Dao @Inject()(dS: DoobieStore) {
     .to[List]
     .transact(xa)
 
-  def getCustomerById(id: ID): IO[Customer] = (customerSelect ++ fr"where id = $id")
+  def getCustomerBy(id: ID): IO[Customer] = (customerSelect ++ fr"where id = $id")
     .query[Customer]
     .unique
     .transact(xa)
 
-  def getAddressById(id: ID): IO[Address] = (addressSelect ++ fr"where id = $id")
+  def getAddressBy(id: ID): IO[Address] = (addressSelect ++ fr"where id = $id")
     .query[Address]
     .unique
     .transact(xa)
@@ -54,12 +54,12 @@ class Dao @Inject()(dS: DoobieStore) {
     .to[List]
     .transact(xa)
 
-  def getOrderByID(id: ID): IO[Order] = (orderSelect ++ fr"where id = $id")
+  def getOrderBy(id: ID): IO[Order] = (orderSelect ++ fr"where id = $id")
     .query[Order]
     .unique
     .transact(xa)
 
-  def getAllOfferIdByOrderId(id: ID): IO[List[Offer]] = {
+  def getAllOfferIdByOrder(id: ID): IO[List[Offer]] = {
     val orderOffers = sql"select * from order_offers where order_id = $id".query[OrderOffer].to[List].transact(xa).unsafeRunSync()
     orderOffers.traverse { orderOffer =>
       (offerSelect ++ fr"where id = ${orderOffer.offerId}").query[Offer].to[List]

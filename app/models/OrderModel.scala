@@ -14,7 +14,7 @@ class OrderModel @Inject()(dao: Dao) {
 
   def getAllTableRows: Map[Date, Seq[OrderForDisplay]] = {
     def orderToOrderForDisplay(o: Order): OrderForDisplay = {
-      OrderForDisplay(o.id, dao.getCustomerById(o.customerId).unsafeRunSync(), dao.getAddressById(o.addressId).unsafeRunSync(),
+      OrderForDisplay(o.id, dao.getCustomerBy(o.customerId).unsafeRunSync(), dao.getAddressBy(o.addressId).unsafeRunSync(),
         o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
         getAllOfferIdByOrderId(o.id.head).map(_.name).mkString(", "),
         o.total,
@@ -34,7 +34,7 @@ class OrderModel @Inject()(dao: Dao) {
     true
   }
 
-  def findById(id: ID): OrderForEditAndCreate = {
+  def findBy(id: ID): OrderForEditAndCreate = {
     def orderToOrderForEditAndCreate(o: Order): OrderForEditAndCreate = {
       /**
        * Have to use is operation on java.util.Date that was parsed from "yyyy-MM-dd" format
@@ -57,7 +57,7 @@ class OrderModel @Inject()(dao: Dao) {
         o.note)
     }
 
-    dao.getOrderByID(id)
+    dao.getOrderBy(id)
       .map(orderToOrderForEditAndCreate)
       .unsafeRunSync()
   }
@@ -118,7 +118,7 @@ class OrderModel @Inject()(dao: Dao) {
   }
 
   private def getAllOfferIdByOrderId(id: ID): List[Offer] = {
-    dao.getAllOfferIdByOrderId(id).unsafeRunSync()
+    dao.getAllOfferIdByOrder(id).unsafeRunSync()
   }
 
 }

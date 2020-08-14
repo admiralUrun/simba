@@ -23,9 +23,9 @@ class CustomerModel @Inject()(dao: Dao) {
     (true, id)
   }
 
-  def findByID(id: ID): CustomerInput = {
+  def findBy(id: ID): CustomerInput = {
     (for {
-      c <- dao.getCustomerById(id)
+      c <- dao.getCustomerBy(id)
       addresses <- dao.getAllCustomersAddresses(c.id.head).map(_.map(addressToString))
     } yield CustomerInput(
       c.id, c.firstName, c.lastName,
@@ -40,9 +40,9 @@ class CustomerModel @Inject()(dao: Dao) {
     true
   }
 
-  def getDataForJsonToDisplayInOrderByID(id: ID): IO[CustomerAddressesForJson] = {
+  def getDataForJsonToDisplayInOrderBy(id: ID): IO[CustomerAddressesForJson] = {
     for {
-      customer <- dao.getCustomerById(id)
+      customer <- dao.getCustomerBy(id)
       addresses <- dao.getAllCustomersAddresses(id)
     } yield CustomerAddressesForJson(customer, addresses)
   }

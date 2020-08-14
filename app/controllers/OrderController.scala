@@ -33,7 +33,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
 
   def toOrderEditPage(id: Int): PlayAction = Action { implicit request =>
     Ok(views.html.editOrder(id,
-      orderForm.fill(orderModel.findById(id)),
+      orderForm.fill(orderModel.findBy(id)),
       orderModel.getMenusToolsForAddingToOrder,
       orderModel.getInOrderToTextWithCostMap))
   }
