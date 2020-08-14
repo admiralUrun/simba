@@ -90,10 +90,9 @@ class Dao @Inject()(dS: DoobieStore) {
   // --- Change methods ---
 
 
-  def insertCustomer(c: CustomerInput): IO[ID] = {
-    (for {
-      _ <-
-        sql"""insert into customers
+  def insertCustomer(c: CustomerInput): IO[ID] = (for {
+    _ <-
+      sql"""insert into customers
             (first_name, last_name,
             phone, phone_note, phone2, phone2_note,
            instagram, preferences, notes)
@@ -101,16 +100,16 @@ class Dao @Inject()(dS: DoobieStore) {
                 ${c.phone}, ${c.phoneNote}, ${c.phone2}, ${c.phoneNote2},
                 ${c.instagram},
                 ${c.preferences}, ${c.notes})""".update.run
-      id <- sql"select LAST_INSERT_ID()".query[ID].unique
-      _ <- insertAddresses(c.addresses.map(stringToAddress), id)
-    } yield id)
-      .transact(xa)
-  }
+    id <- sql"select LAST_INSERT_ID()".query[ID].unique
+    _ <- insertAddresses(c.addresses.map(stringToAddress), id)
+  } yield id)
+    .transact(xa)
 
   def insertOrder(o: OrderForEditAndCreate, convertStringToMinutes: String => Int): IO[Unit] = {
     val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).unsafeRunSync().map(o => (o.recipesId, o.quantity))
     (for {
-      _ <- sql"""insert into orders (customer_id, address_id,
+      _ <-
+        sql"""insert into orders (customer_id, address_id,
                                     order_day, delivery_day,
                                     deliver_from, deliver_to,
                                     total,
