@@ -109,26 +109,26 @@
                     <div id="paymentMenu">
                     @createDropDown("Спосіб Оплати", List("Готівка", "Карткою", "Бартер"), (s: String) => { // TODO: Add to database remove hardCode
                         val id = "paymentItem"
-                        getStandardDropItem(s, js"setPayment('$s')", id)
+                        getStandardDropItem(s, JavaScript(s"setPayment('$s')"), id)
                     })
                     </div>
                 </div>
 
                 <div class="container-fluid row">
                     @createBooleanInput("paid", "Оплаченно", "Не оплаченно", getCheckBoxValue("paid", oF),
-                        jsOnclick = js"changeButton(`Оплаченно`, `Не оплаченно`, `paid`, 0);"
+                        jsOnclick = JavaScript(s"changeButton(`Оплаченно`, `Не оплаченно`, `paid`, 0);")
                     )
                     @createBooleanInput("delivered", "Доставленно", "Не доставленно", getCheckBoxValue("delivered", oF),
-                        jsOnclick = js"changeButton(`Доставленно`, `Не доставленно`, `delivered`, 0);"
+                        jsOnclick = JavaScript(s"changeButton(`Доставленно`, `Не доставленно`, `delivered`, 0);")
                     )
                 </div>
 
                 <div class="container-fluid row">
                     @createBooleanInput("offlineDelivery", "За межами Доставки", "За межами Доставки", getCheckBoxValue("offlineDelivery", oF),
-                        jsOnclick = js"changeButton(`За межами Доставки`, `За межами Доставки`, `offlineDelivery`, 75);"
+                        jsOnclick = JavaScript(s"changeButton(`За межами Доставки`, `За межами Доставки`, `offlineDelivery`, 75);")
                     )
                     @createBooleanInput("deliveryOnMonday", "Доставка у Понеділок", "Доставка у Понеділок", getCheckBoxValue("deliveryOnMonday", oF),
-                        jsOnclick = js"changeButton(`Доставка у Понеділок`, `Доставка у Понеділок`, `deliveryOnMonday`, 100);"
+                        jsOnclick = JavaScript(s"changeButton(`Доставка у Понеділок`, `Доставка у Понеділок`, `deliveryOnMonday`, 100);")
                     )
                 </div>
 
