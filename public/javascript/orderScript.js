@@ -210,18 +210,21 @@ function descriptionListElement(head, content, needDivWithCol) {
 
 function editCustomerInOrder() {
     $(`#customersID`).val("")
+    $(`#addressId`).val("")
+    $(`#inviterId`).val("")
 
     $(`#customer`).remove()
     $('#address').remove()
     $('#addresses').remove()
+    $('#inviterDiv').remove()
     $(`#editCustomerButton`).remove()
 
     $("#searchDIV").show()
 }
 
-function cleanDropMenu() {
-    document.getElementById('searchMenu').innerHTML = ''
-    $(`<span class="dropdown-header">Тут можна знайти Клієнта</span>`).appendTo($("#searchMenu"))
+function cleanDropMenu(id, label) {
+    document.getElementById(id).innerHTML = ''
+    $(`<span class="dropdown-header">${label}</span>`).appendTo($(`#${id}`))
 }
 
 function createDropDownForAddresses(id, addresses) {
@@ -255,7 +258,60 @@ function setCustomerAndAddressAddDropdown(customerAddresses) {
     } else {
         setAddress(customerAddresses.addresses[0], addressId)
     }
+    $(`#searchDIV`).hide()
+}
 
+function addInviterSearch() {
+    $(`<div id="inviterDiv">
+            <form id="inviterForm" class="form-inline">
+                <input id="inviterSearch" type="search" class="form-control mr-sm-4 dropdown-toggle" placeholder="Хто запросив?" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <div id="inviterMenu" class="dropdown-menu">
+                    <span class="dropdown-header">Тут можна знайти того Хто запросив нового Клієнта</span>
+                </div>
+                <input type="button" id="inviterSubmit" value="Пошук" class="btn btn-primary btn-rounded btn-sm my-0">
+            </form>
+    </div>`).appendTo(customerInfoDiv)
+}
+
+function takeCustomerInviterAddToUI(JSONArray) {
+    function addDropItem(customer) {
+        function addDropItem(customer) {
+                $(`<a id="inviterCustomer${customer.id}" class="dropdown-item"
+                    onclick="setInviter('${customer.id}')" href="#">
+                        ${customer.firstName} ${customer.phone} ${$.getValeOrEmptyString(customer.instagram)}
+                    </a>`).appendTo($("#inviterMenu"))
+            $(`#inviterCustomer${customer.id}`).data('customerJSON', customer)
+        }
+
+        if (!$.exists(`#inviterCustomer${customer.id}`)) {
+            addDropItem(customer)
+        }
+    }
+
+    JSONArray.forEach(function (c) {
+        addDropItem(new Customer(c))
+    })
+}
+
+function setInviter(id) {
+    function setInviter(data) {
+        $("#inviterId").val(data.id)
+        $("#inviterForm").hide()
+        $(`
+            <div id="inviter">
+                <b> Запросив: ${data.firstName} ${$.getValeOrEmptyString(data.lastName)}</b>
+                <button class="btn btn-info" onclick="changeInviter()">Змінити</button>
+            </div>
+        `).appendTo($("#inviterDiv"))
+
+    }
+    setInviter($(`#inviterCustomer${id}`).data('customerJSON'))
+}
+
+function changeInviter() {
+    $("#inviterForm").show()
+    $("#inviterId").val("")
+    $("#inviter").remove()
 }
 
 /**
@@ -267,7 +323,9 @@ function setPayment(payment) {
     $('#paymentMenu').hide()
     $('#payment').val(payment)
 }
+{
 
+}
 function removePayment() {
     $('#paymentView').remove()
     $('#paymentEdit').remove()
@@ -275,7 +333,6 @@ function removePayment() {
     $('#paymentMenu').show()
     $('#payment').val('')
 }
-
 
 class Customer {
     constructor(customer) {

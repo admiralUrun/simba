@@ -16,8 +16,8 @@ class Dao @Inject()(dS: DoobieStore) {
 
   private val customerSelect = sql"select id, first_name, last_name, phone, phone2_note, phone2, phone2_note, instagram, preferences, notes from customers "
   private val addressSelect = sql"select id, customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes from addresses "
-  private val orderSelect = sql"select id, customer_id, address_id, order_day, delivery_day, deliver_from, deliver_to, out_of_zone_delivery, delivery_on_monday, total, payment, paid, delivered, note from orders "
-  private val offerSelect = sql"select id, name, price, execution_date, menu_type from offers "
+  private val orderSelect = sql"select id, customer_id, address_id, inviter_id, order_day, delivery_day, deliver_from, deliver_to, out_of_zone_delivery, delivery_on_monday, total, discount,  payment, paid, delivered, note from orders "
+  private val offerSelect = sql"select id, name, price, expiration_date, menu_type from offers "
   private val recipesSelect = sql"select id, name, type, edited from recipes "
 
   def getAllCustomers: IO[Seq[Customer]] = customerSelect
@@ -66,10 +66,12 @@ class Dao @Inject()(dS: DoobieStore) {
     }.transact(xa).map(_.flatten)
   }
 
-  def getOffersByDate(date: Date): IO[Seq[Offer]] = (offerSelect ++ fr"where expiration_date $date")
-    .query[Offer]
-    .to[List]
-    .transact(xa)
+  def getOffersByDate(date: String): IO[Seq[Offer]] = {
+    (offerSelect ++ fr"where expiration_date = $date")
+      .query[Offer]
+      .to[List]
+      .transact(xa)
+  }
 
   def getOfferByDateAndMenuType(date: Date, menuType: String): IO[Seq[Offer]] = (offerSelect ++ fr"where expiration_date = $date" ++ fr" and menu_type = $menuType")
     .query[Offer]
@@ -88,7 +90,6 @@ class Dao @Inject()(dS: DoobieStore) {
   }.transact(xa)
 
   // --- Change methods ---
-
 
   def insertCustomer(c: CustomerInput): IO[ID] = (for {
     _ <-
@@ -109,17 +110,17 @@ class Dao @Inject()(dS: DoobieStore) {
     val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).unsafeRunSync().map(o => (o.recipesId, o.quantity))
     (for {
       _ <-
-        sql"""insert into orders (customer_id, address_id,
+        sql"""insert into orders (customer_id, address_id, inviter_id,
                                     order_day, delivery_day,
                                     deliver_from, deliver_to,
-                                    total,
+                                    total, discount,
                                     payment,
                                     out_of_zone_delivery, delivery_on_monday,
                                     paid, delivered, note)
-                                     values (${o.customerId}, ${o.addressId},
+                                     values (${o.customerId}, ${o.addressId}, ${o.inviterId},
                                               ${o.orderDay}, ${o.deliveryDay},
                                               ${convertStringToMinutes(o.deliverFrom)}, ${convertStringToMinutes(o.deliverTo)},
-                                              ${o.total},
+                                              ${o.total}, ${o.discount},
                                               ${o.payment},
                                               ${o.offlineDelivery}, ${o.offlineDelivery},
                                               ${o.paid}, ${o.delivered},
@@ -175,9 +176,11 @@ class Dao @Inject()(dS: DoobieStore) {
       _ <-
         sql"""update orders set
            address_id = ${o.addressId},
+           inviterId = ${o.inviterId},
             delivery_day = ${o.deliveryDay},
              deliver_from = ${convertStringToMinutes(o.deliverFrom)}, deliver_to = ${convertStringToMinutes(o.deliverTo)},
-              total = ${o.total}, payment = ${o.payment},
+              total = ${o.total}, discount = ${o.discount}
+               payment = ${o.payment},
               out_of_zone_delivery = ${o.offlineDelivery}, delivery_on_monday = ${o.deliveryOnMonday},
               paid = ${o.paid}, delivered = ${o.delivered},
               note = ${o.note} where id = $id""".update.run

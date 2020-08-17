@@ -16,6 +16,7 @@ POST        /newCustomeToOrder                      controllers.CustomerControll
 POST        /updateCustomer/:id                     controllers.CustomerController.update(id: Int)
 GET         /searchCustomerForOrder                 controllers.CustomerController.getCustomersForOrderSearch(search)
 GET         /searchCustomerForOrderById/:id         controllers.CustomerController.getCustomersForOrder(id: Int)
+GET         /searchCustomerInviterForOrder          controllers.CustomerController.getCustomersInviterForOrder(search)
 
 GET         /orders                                 controllers.OrderController.toOrderFeedPage(search)
 GET         /createOrder                            controllers.OrderController.toOrderCreatePage

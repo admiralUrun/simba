@@ -47,10 +47,20 @@ class CustomerModel @Inject()(dao: Dao) {
     } yield CustomerAddressesForJson(customer, addresses)
   }
 
+  def getInviterForJsonToDisplayInOrderBy(id: ID): IO[Customer] = {
+    for {
+      customer <- dao.getCustomerBy(id)
+    } yield customer
+  }
+
   def getDataForJsonToDisplayInOrder(search: String): IO[Seq[CustomerAddressesForJson]] = {
     IO(getAllCustomerTableRowsLike(search).map { c =>
       CustomerAddressesForJson(c, dao.getAllCustomersAddresses(c.id.head).unsafeRunSync())
     })
+  }
+
+  def getInviterForJsonToDisplayInOrder(search: String): Seq[Customer] = {
+    dao.getAllCustomers.unsafeRunSync()
   }
 
 }

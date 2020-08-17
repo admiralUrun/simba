@@ -86,6 +86,7 @@ create table orders (
     id int primary key auto_increment,
     customer_id int not null,
     address_id int not null,
+    inviter_id int,
     order_day date not null,
     delivery_day date not null,
     -- deliver_from and deliver_to save time in minutes
@@ -95,6 +96,7 @@ create table orders (
     -- same as (dayofweek(delivery_day) == 2) :)
     delivery_on_monday boolean not null,
     total int not null,
+    discount int,
     -- TODO: change to int
     payment varchar(128) not null,
     paid boolean not null,

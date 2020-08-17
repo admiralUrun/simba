@@ -3,6 +3,7 @@ package models
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 import Dao.Dao
+import cats.effect.IO
 import javax.inject._
 import services.SimbaAlias._
 
@@ -14,17 +15,21 @@ class OrderModel @Inject()(dao: Dao) {
 
   def getAllTableRows: Map[Date, Seq[OrderForDisplay]] = {
     def orderToOrderForDisplay(o: Order): OrderForDisplay = {
-      OrderForDisplay(o.id, dao.getCustomerBy(o.customerId).unsafeRunSync(), dao.getAddressBy(o.addressId).unsafeRunSync(),
+      (for {
+        customer <- dao.getCustomerBy(o.customerId)
+        address <- dao.getAddressBy(o.addressId)
+        inviter <- if (o.inviterId.isDefined) dao.getCustomerBy(o.inviterId.head).map(c => Option(c)) else IO(None)
+      } yield OrderForDisplay(o.id, customer, address, inviter,
         o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
         getAllOfferIdByOrderId(o.id.head).map(_.name).mkString(", "),
-        o.total,
+        o.total, o.discount,
         o.payment,
         o.offlineDelivery, o.deliveryOnMonday,
         o.paid, o.delivered,
-        o.note)
+        o.note)).unsafeRunSync()
     }
 
-    dao.getAllOrders
+    dao.getAllOrders // TODO maybe get it all under one .unsafeRunSync
       .map(_.map(orderToOrderForDisplay).groupBy(_.deliveryDay))
       .unsafeRunSync
   }
@@ -46,11 +51,11 @@ class OrderModel @Inject()(dao: Dao) {
         formatForFillInForm.parse(formatForFillInForm.format(date))
       }
 
-      OrderForEditAndCreate(o.id, o.customerId, o.addressId,
+      OrderForEditAndCreate(o.id, o.customerId, o.addressId, o.inviterId,
         changingDateFormatForPlayForm(o.orderDay), changingDateFormatForPlayForm(o.deliveryDay),
         convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
         getAllOfferIdByOrderId(o.id.head).map(_.id.head),
-        o.total,
+        o.total, o.discount,
         o.payment,
         o.offlineDelivery, o.deliveryOnMonday,
         o.paid, o.delivered,
@@ -102,7 +107,8 @@ class OrderModel @Inject()(dao: Dao) {
     val c = Calendar.getInstance
     c.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
     val sundayOnCurrentWeek = c.getTime
-    dao.getOffersByDate(sundayOnCurrentWeek)
+    val format = new SimpleDateFormat("yyyy-MM-dd")
+    dao.getOffersByDate(format.format(sundayOnCurrentWeek))
       .unsafeRunSync()
   }
 
@@ -127,20 +133,24 @@ class OrderModel @Inject()(dao: Dao) {
 case class Order(id: Option[ID],
                  customerId: ID,
                  addressId: ID,
+                 inviterId: Option[ID],
                  orderDay: Date, deliveryDay: Date,
                  deliverFrom: Int, deliverTo: Int,
                  offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                  total: Int,
+                 discount: Option[Int],
                  payment: String,
                  paid: Boolean, delivered: Boolean, note: Option[String])
 
 case class OrderForDisplay(id: Option[ID],
                            customer: Customer,
                            address: Address,
+                           inviter: Option[Customer],
                            orderDay: Date, deliveryDay: Date,
                            deliverFrom: String, deliverTo: String,
                            inOrder: String,
                            total: Int,
+                           discount: Option[Int],
                            payment: String,
                            offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                            paid: Boolean, delivered: Boolean, note: Option[String])
@@ -148,10 +158,12 @@ case class OrderForDisplay(id: Option[ID],
 case class OrderForEditAndCreate(id: Option[ID],
                                  customerId: ID,
                                  addressId: ID,
+                                 inviterId: Option[ID],
                                  orderDay: Date, deliveryDay: Date,
                                  deliverFrom: String, deliverTo: String,
                                  inOrder: List[Int],
                                  total: Int,
+                                 discount: Option[Int],
                                  payment: String,
                                  offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                                  paid: Boolean, delivered: Boolean, note: Option[String])
