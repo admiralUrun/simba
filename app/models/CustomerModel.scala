@@ -60,7 +60,7 @@ class CustomerModel @Inject()(dao: Dao) {
   }
 
   def getInviterForJsonToDisplayInOrder(search: String): Seq[Customer] = {
-    dao.getAllCustomers.unsafeRunSync()
+    dao.getAllCustomerTableRowsLike(search).unsafeRunSync()
   }
 
 }

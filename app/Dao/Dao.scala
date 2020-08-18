@@ -195,6 +195,8 @@ class Dao @Inject()(dS: DoobieStore) {
     sql"update offers set name = $name, price= $price where id= $id".update.run
   }.transact(xa).void
 
+  // --- Pivate methods ---
+
   private def getAllOffersRecipes(ids: List[Int]): IO[List[OfferRecipes]] = ids.traverse { offerId =>
     sql"select * from offer_recipes where offer_id = $offerId".query[OfferRecipes].to[List]
   }.map(_.flatten).transact(xa)
