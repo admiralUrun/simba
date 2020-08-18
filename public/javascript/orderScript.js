@@ -307,13 +307,22 @@ function setInviter(id) {
                 <button class="btn btn-info" onclick="changeInviter()">Змінити</button>
             </div>
         `).appendTo($("#inviterDiv"))
-
     }
     setInviter($(`#inviterCustomer${id}`).data('customerJSON'))
+    const discount = $(`#discount`)
+    if($.isEmpty(discount.val())) {
+        discount.val(50)
+    } else {
+        discount.val(Number(discount.val()) + 50)
+    }
 }
 
 function changeInviter() {
+    const discount = $(`#discount`)
     $("#inviterForm").show()
+    if (discount.val() !== "") {
+        discount.val(Number(discount.val()) - 50)
+    }
     $("#inviterId").val("")
     $("#inviter").remove()
 }
