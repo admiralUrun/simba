@@ -264,32 +264,36 @@ function setCustomerAndAddressAddDropdown(customerAddresses) {
 function addInviterSearch() {
     $(`<div id="inviterDiv">
             <form id="inviterForm" class="form-inline">
-                <input id="inviterSearch" type="search" class="form-control mr-sm-4 dropdown-toggle" placeholder="Хто запросив?" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <input id="inviterSearch" type="search" class="form-control mr-sm-4 dropdown-toggle" placeholder="Хто запросив?" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                onkeyup="clearInviterSearch()"
+                >
                 <div id="inviterMenu" class="dropdown-menu">
                     <span class="dropdown-header">Тут можна знайти того Хто запросив нового Клієнта</span>
                 </div>
-                <input type="button" id="inviterSubmit" value="Пошук" class="btn btn-primary btn-rounded btn-sm my-0">
+                <input type="button" id="inviterSubmit" value="Пошук" class="btn btn-primary btn-rounded btn-sm my-0" onclick="takeInviterAddToUI()">
             </form>
     </div>`).appendTo(customerInfoDiv)
 }
 
-function takeCustomerInviterAddToUI(JSONArray) {
-    function addDropItem(customer) {
+function takeInviterAddToUI() {
+    const searchParams = $("#inviterSearch").val()
+    $.get("/searchCustomerInviterForOrder?search=" + searchParams, function (JSONArray) {
         function addDropItem(customer) {
+            function addDropItem(customer) {
                 $(`<a id="inviterCustomer${customer.id}" class="dropdown-item"
                     onclick="setInviter('${customer.id}')" href="#">
                         ${customer.firstName} ${customer.phone} ${$.getValeOrEmptyString(customer.instagram)}
                     </a>`).appendTo($("#inviterMenu"))
-            $(`#inviterCustomer${customer.id}`).data('customerJSON', customer)
-        }
+                $(`#inviterCustomer${customer.id}`).data('customerJSON', customer)
+            }
 
-        if (!$.exists(`#inviterCustomer${customer.id}`)) {
-            addDropItem(customer)
+            if (!$.exists(`#inviterCustomer${customer.id}`)) {
+                addDropItem(customer)
+            }
         }
-    }
-
-    JSONArray.forEach(function (c) {
-        addDropItem(new Customer(c))
+        JSONArray.forEach(function (c) {
+            addDropItem(new Customer(c))
+        })
     })
 }
 
@@ -314,9 +318,12 @@ function changeInviter() {
     $("#inviter").remove()
 }
 
-/**
- * Used inside createOrEditOrderTemplate
- * */
+function clearInviterSearch() {
+    let searchParams = $("#inviterSearch").val()
+    if (searchParams.length === 0) cleanDropMenu('inviterMenu', 'Тут можна знайти того Хто запросив нового Клієнта');
+    cleanDropMenu('inviterMenu', 'Тут можна знайти того Хто запросив нового Клієнта');
+}
+
 function setPayment(payment) {
     $(`<h5 id="paymentView">Спосіб оплати: ${payment}</h5>
         <button id="paymentEdit" class="btn btn-success"  onclick="removePayment()">Змінити</button>`).appendTo($('#paymentDIV'))

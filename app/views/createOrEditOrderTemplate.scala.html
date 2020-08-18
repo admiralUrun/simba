@@ -126,7 +126,7 @@
                     )
                 </div>
 
-                <div class="container-fluid row"0>
+                <div class="container-fluid row">
                     @createBooleanInput("offlineDelivery", "За межами Доставки", "За межами Доставки", getCheckBoxValue("offlineDelivery", oF),
                         jsOnclick = JavaScript(s"changeButton(`За межами Доставки`, `За межами Доставки`, `offlineDelivery`, 75);")
                     )
@@ -148,16 +148,18 @@
         <script charset="UTF-8" src="@routes.Assets.versioned("javascript/orderScript.js")"></script>
         <script id="runtimeScript">
                 $(document).ready(function () {
-                    if (@possibleIdAfterAddingCustomer.isDefined) {
+                    const hasCustomerId = @{possibleIdAfterAddingCustomer.isDefined}
+                    const isCreate = @{!isCreate}
+                    if (hasCustomerId) {
                         $.get("/searchCustomerForOrderById/" + @possibleIdAfterAddingCustomer.getOrElse(0), function (data) {
                             setCustomerAndAddressAddDropdown(data)
                             addInviterSearch()
                         })
                     }
-
-                    if(@{!isCreate}) {
-                        setPayment('@getValueFromForm("payment", oF)')
+                    if (isCreate) {
+                        setPayment(`@getValueFromForm("payment", oF)`)
                     }
+
                     $("input").keypress(function (e) {
                         if (e.which === 13) {
                             let inputSelector = `input[type="text"]`;
@@ -166,22 +168,17 @@
                             e.preventDefault();
                         }
                     });
+
                     $("#search").keyup(function () {
                         let searchParams = $("#search").val()
                         if (searchParams.length === 0) cleanDropMenu('searchMenu', 'Тут можна знайти Клієнта');
                     });
 
                     $("#inviterSearch").keyup(function () {
-                        let searchParams = $("#search").val()
+                        let searchParams = $("#inviterSearch").val()
                         if (searchParams.length === 0) cleanDropMenu('inviterMenu', 'Тут можна знайти того Хто запросив нового Клієнта');
                     });
 
-                    $("#inviterSubmit").click(function () { // TODO: change
-                        let searchParams = $("#inviterSearch").val()
-                        $.get("/searchCustomerInviterForOrder?search=" + searchParams, function (json) {
-                            takeCustomerInviterAddToUI(json)
-                        })
-                    })
                     $("#searchSubmit").click(function () {
                         let searchParams = $("#search").val()
                         $.get("/searchCustomerForOrder?search=" + searchParams, function (json) {
