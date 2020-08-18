@@ -6,11 +6,12 @@
 @import services.SimbaAlias.ID
 @(title: String,
         formCall: Call,
-        oF: Form[OrderForEditAndCreate],
+        oF: Form[OrderInput],
         buttonLabel: String,
         inMenu: Seq[OrderMenu],
         isCreate: Boolean,
         inOrderToTextCost: Map[String, (ID, String, Int)],
+        payment: List[String],
         possibleIdAfterAddingCustomer: Option[Int] = None
 )(implicit requestHeader: MessagesRequestHeader)
 

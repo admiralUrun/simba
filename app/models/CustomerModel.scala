@@ -1,6 +1,9 @@
 package models
 
-import Dao.Dao
+import java.util.Date
+
+import org.joda.time.{DateTime, DateTimeConstants}
+import dao.Dao
 import cats.effect.IO
 import javax.inject._
 import services.SimbaAlias._
@@ -8,8 +11,9 @@ import services.SimbaHTMLHelper.addressToString
 
 @Singleton
 class CustomerModel @Inject()(dao: Dao) {
+  private val discountForInviteNewCustomers = 100
 
-  // TODO: make those methods return IO[_], empowering women
+
   def getAllCustomerTableRows: Seq[Customer] = {
     dao.getAllCustomers.unsafeRunSync()
   }
@@ -44,7 +48,8 @@ class CustomerModel @Inject()(dao: Dao) {
     for {
       customer <- dao.getCustomerBy(id)
       addresses <- dao.getAllCustomersAddresses(id)
-    } yield CustomerAddressesForJson(customer, addresses)
+      discount <- dao.getDiscountFormCustomerBy(customer.id.head, getLastSundayAndMonday)
+    } yield CustomerAddressesForJson(customer, addresses, discount * discountForInviteNewCustomers)
   }
 
   def getInviterForJsonToDisplayInOrderBy(id: ID): IO[Customer] = {
@@ -55,7 +60,10 @@ class CustomerModel @Inject()(dao: Dao) {
 
   def getDataForJsonToDisplayInOrder(search: String): IO[Seq[CustomerAddressesForJson]] = {
     IO(getAllCustomerTableRowsLike(search).map { c =>
-      CustomerAddressesForJson(c, dao.getAllCustomersAddresses(c.id.head).unsafeRunSync())
+      (for {
+        addresses <- dao.getAllCustomersAddresses(c.id.head)
+        discount <- dao.getDiscountFormCustomerBy(c.id.head, getLastSundayAndMonday)
+      } yield CustomerAddressesForJson(c, addresses, discount  * discountForInviteNewCustomers)).unsafeRunSync()
     })
   }
 
@@ -63,6 +71,13 @@ class CustomerModel @Inject()(dao: Dao) {
     dao.getAllCustomerTableRowsLike(search).unsafeRunSync()
   }
 
+  private def getLastSundayAndMonday: (Date, Date) = {
+    val today = DateTime.now
+    val sameDayLastWeek = today.minusWeeks(1)
+    val lastMonday = today.withDayOfWeek(DateTimeConstants.MONDAY).toDate
+    val lastSunday = sameDayLastWeek.withDayOfWeek(DateTimeConstants.SUNDAY).toDate
+    (lastSunday, lastMonday)
+  }
 }
 
 case class Customer(id: Option[ID],
@@ -89,4 +104,4 @@ case class Address(id: Option[ID], customerId: Option[ID],
                    flat: Option[String],
                    notesForCourier: Option[String])
 
-case class CustomerAddressesForJson(customer: Customer, addresses: Seq[Address])
+case class CustomerAddressesForJson(customer: Customer, addresses: Seq[Address], discount: Int)

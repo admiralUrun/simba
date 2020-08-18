@@ -130,7 +130,7 @@ function displayCustomer(customer) {
                 ${descriptionListElement('Нотатка', $.getValeOrEmptyString(customer.notes))}
             </dl>
            <div class="col">
-                <button id="editCustomerButton" class="btn btn-success" onclick="editCustomerInOrder()">Знайти іншого</button>
+                <button id="editCustomerButton" class="btn btn-success" onclick="editCustomerInOrder('${customer.id}') ">Знайти іншого</button>
            </div>
            </div>`).appendTo(customerInfoDiv)
 }
@@ -153,15 +153,22 @@ function displayAddress(address) {
           </div>`).appendTo(customerInfoDiv)
 }
 
-function setCustomerAddAddressDropdown(id, customerAddresses) {
+function setCustomerAddAddressDropdown(id) {
     function setCustomerCreateDropDownFormAddresses(customerAddresses) {
         $.hideSearchDiv()
         setCustomer(customerAddresses.customer)
         createDropDownForAddresses(customerAddresses.customer.id, customerAddresses.addresses)
     }
+    const data = $(`#customer${id}`).data(`customerJSON`)
+    const discount = $("#discount")
 
-    if (customerAddresses) setCustomerCreateDropDownFormAddresses(customerAddresses)
-    else setCustomerCreateDropDownFormAddresses($(`#customer${id}`).data(`customerJSON`))
+    if(discount.val() === "") {
+        discount.val("")
+    } else {
+        discount.val(Number(discount.val()) - data.discount)
+    }
+
+    setCustomerCreateDropDownFormAddresses(data)
 }
 
 function setAddress(address, id) {
@@ -180,7 +187,7 @@ function setCustomer(customer) {
     displayCustomer(customer)
 }
 
-function setCustomerAndAddress(customerID, customerAddress) {
+function setCustomerAndAddress(customerId) {
     function setCustomerForOrder(customerAddress) {
         function addCustomerAddressToOrderAndToUI(customer, address) {
             setCustomer(customer)
@@ -190,9 +197,15 @@ function setCustomerAndAddress(customerID, customerAddress) {
         addCustomerAddressToOrderAndToUI(customerAddress.customer, customerAddress.addresses[0])
         $.hideSearchDiv()
     }
-
-    if (customerAddress) setCustomerForOrder(customerAddress)
-    else setCustomerForOrder($(`#customer${customerID}`).data('customerJSON'))
+    const data = $(`#customer${customerId}`).data(`customerJSON`)
+    const discount = $("#discount")
+    console.log(data.discount)
+    if(discount.val() === "") {
+        discount.val("")
+    } else {
+        discount.val(Number(discount.val()) - data.discount)
+    }
+    setCustomerForOrder(data)
 }
 
 function descriptionListElement(head, content, needDivWithCol) {
@@ -208,7 +221,7 @@ function descriptionListElement(head, content, needDivWithCol) {
     }
 }
 
-function editCustomerInOrder() {
+function editCustomerInOrder(id) {
     $(`#customersID`).val("")
     $(`#addressId`).val("")
     $(`#inviterId`).val("")
@@ -220,6 +233,14 @@ function editCustomerInOrder() {
     $(`#editCustomerButton`).remove()
 
     $("#searchDIV").show()
+
+    const data = $(`#customer${id}`).data(`customerJSON`)
+    const discount = $("#discount")
+    if(discount.val() === "") {
+        discount.val("")
+    } else {
+        discount.val(Number(discount.val()) - data.discount)
+    }
 }
 
 function cleanDropMenu(id, label) {
@@ -339,15 +360,17 @@ function setPayment(payment) {
     $('#paymentMenu').hide()
     $('#payment').val(payment)
 }
-{
 
-}
 function removePayment() {
     $('#paymentView').remove()
     $('#paymentEdit').remove()
 
     $('#paymentMenu').show()
     $('#payment').val('')
+}
+
+function setDiscountFromCustomer() {
+
 }
 
 class Customer {
@@ -383,5 +406,6 @@ class CustomerAddresses {
     constructor(object) {
         this.customer = new Customer(object.customer)
         this.addresses = object.addresses.map(a => new Address(a))
+        this.discount = object.discount
     }
 }

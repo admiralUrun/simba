@@ -1,4 +1,4 @@
-package Dao
+package dao
 
 import cats.effect._
 import doobie._

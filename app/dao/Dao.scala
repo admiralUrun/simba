@@ -1,4 +1,4 @@
-package Dao
+package dao
 
 import java.util.Date
 import javax.inject.Inject
@@ -89,6 +89,13 @@ class Dao @Inject()(dS: DoobieStore) {
       .unique
   }.transact(xa)
 
+  def getDiscountFormCustomerBy(id: ID, sunAndMonLasWeek:(Date, Date)): IO[Int] = { // TODO: ask for batter way to do such things
+    for {
+      ordersLastSunday  <- (orderSelect ++ fr"where inviter_id = $id and delivery_day = ${sunAndMonLasWeek._1}").query[Order].to[List].transact(xa)
+      ordersLastMonday  <- (orderSelect ++ fr"where inviter_id = $id and delivery_day = ${sunAndMonLasWeek._2}").query[Order].to[List].transact(xa)
+    } yield ordersLastSunday.length + ordersLastMonday.length
+  }
+
   // --- Change methods ---
 
   def insertCustomer(c: CustomerInput): IO[ID] = (for {
@@ -101,12 +108,12 @@ class Dao @Inject()(dS: DoobieStore) {
                 ${c.phone}, ${c.phoneNote}, ${c.phone2}, ${c.phoneNote2},
                 ${c.instagram},
                 ${c.preferences}, ${c.notes})""".update.run
-    id <- sql"select LAST_INSERT_ID()".query[ID].unique
+    id <- sql"select last_insert_id()".query[ID].unique
     _ <- insertAddresses(c.addresses.map(stringToAddress), id)
   } yield id)
     .transact(xa)
 
-  def insertOrder(o: OrderForEditAndCreate, convertStringToMinutes: String => Int): IO[Unit] = {
+  def insertOrder(o: OrderInput, convertStringToMinutes: String => Int, convertPayment: String => Int): IO[Unit] = {
     val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).unsafeRunSync().map(o => (o.recipesId, o.quantity))
     (for {
       _ <-
@@ -121,11 +128,11 @@ class Dao @Inject()(dS: DoobieStore) {
                                               ${o.orderDay}, ${o.deliveryDay},
                                               ${convertStringToMinutes(o.deliverFrom)}, ${convertStringToMinutes(o.deliverTo)},
                                               ${o.total}, ${o.discount},
-                                              ${o.payment},
+                                              ${convertPayment(o.payment)},
                                               ${o.offlineDelivery}, ${o.offlineDelivery},
                                               ${o.paid}, ${o.delivered},
                                               ${o.note}) """.update.run
-      id <- sql"select LAST_INSERT_ID()".query[ID].unique
+      id <- sql"select last_insert_id()".query[ID].unique
       _ <- insertOrderRecipes(id, recipesIdsAndQuantity)
       _ <- insertOrderOffers(id, o.inOrder)
     } yield ()).transact(xa)
@@ -139,7 +146,7 @@ class Dao @Inject()(dS: DoobieStore) {
     def insertOrUpdateOffer(name: String, date: Date, menuType: String, price: Int, recipes: List[Recipe], quantityOfRecipes: Int): ConnectionIO[Unit] = {
       for {
         _ <- sql"insert into offers (name, price, execution_date, menu_type) values ($name, $price, $date, $menuType)".update.run
-        id <- sql"select LAST_INSERT_ID()".query[Int].unique
+        id <- sql"select last_insert_id()".query[Int].unique
         _ <- recipes.traverse { r =>
           sql"insert into offer_recipes (offer_id, recipe_id, quantity) values ($id, ${r.id}, $quantityOfRecipes)".update.run
         }
@@ -170,7 +177,7 @@ class Dao @Inject()(dS: DoobieStore) {
       editAddresses(c.addresses.map(stringToAddress), id)).transact(xa)
   }
 
-  def editOrder(id: ID, o: OrderForEditAndCreate, convertStringToMinutes: String => Int): IO[Unit] = {
+  def editOrder(id: ID, o: OrderInput, convertStringToMinutes: String => Int, convertPayment: String => Int): IO[Unit] = {
     val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).unsafeRunSync().map(o => (o.recipesId, o.quantity))
     (for {
       _ <-
@@ -180,7 +187,7 @@ class Dao @Inject()(dS: DoobieStore) {
             delivery_day = ${o.deliveryDay},
              deliver_from = ${convertStringToMinutes(o.deliverFrom)}, deliver_to = ${convertStringToMinutes(o.deliverTo)},
               total = ${o.total}, discount = ${o.discount}
-               payment = ${o.payment},
+               payment = ${convertPayment(o.payment)},
               out_of_zone_delivery = ${o.offlineDelivery}, delivery_on_monday = ${o.deliveryOnMonday},
               paid = ${o.paid}, delivered = ${o.delivered},
               note = ${o.note} where id = $id""".update.run

@@ -1,7 +1,7 @@
 package controllers
 
 import javax.inject._
-import models.{OrderModel, OrderForEditAndCreate}
+import models.{OrderModel, OrderInput}
 import play.api.data.Forms._
 import play.api.data.Form
 import play.api.mvc._
@@ -25,7 +25,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
       "offlineDelivery" -> boolean, "deliveryOnMonday" -> boolean,
       "paid" -> boolean, "delivered" -> boolean,
       "note" -> optional(text)
-    )(OrderForEditAndCreate.apply)(OrderForEditAndCreate.unapply))
+    )(OrderInput.apply)(OrderInput.unapply))
   private val orderFeedPage = Redirect(routes.OrderController.toOrderFeedPage(""))
 
   def toOrderFeedPage(search: String): PlayAction = Action { implicit request =>
@@ -37,15 +37,25 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
     Ok(views.html.editOrder(id,
       orderForm.fill(orderModel.findBy(id)),
       orderModel.getMenusToolsForAddingToOrder,
-      orderModel.getInOrderToTextWithCostMap))
+      orderModel.getInOrderToTextWithCostMap,
+      orderModel.getPayments
+    ))
   }
 
   def toOrderCreatePage: PlayAction = Action { implicit request =>
-    Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder.toList, None, orderModel.getInOrderToTextWithCostMap))
+    Ok(views.html.createOrder(orderForm,
+      orderModel.getMenusToolsForAddingToOrder.toList,
+      None,
+      orderModel.getInOrderToTextWithCostMap,
+      orderModel.getPayments))
   }
 
   def toOrderCreatePageWithCustomerId(id: Int): PlayAction = Action { implicit request =>
-    Ok(views.html.createOrder(orderForm, orderModel.getMenusToolsForAddingToOrder.toList, Option(id), orderModel.getInOrderToTextWithCostMap))
+    Ok(views.html.createOrder(orderForm,
+      orderModel.getMenusToolsForAddingToOrder.toList,
+      Option(id),
+      orderModel.getInOrderToTextWithCostMap,
+      orderModel.getPayments))
   }
 
   def updateOrder(id: ID): PlayAction = Action { implicit request =>
@@ -53,7 +63,8 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
       formWithErrors => BadRequest(views.html.editOrder(id,
         formWithErrors,
         orderModel.getMenusToolsForAddingToOrder,
-        orderModel.getInOrderToTextWithCostMap)),
+        orderModel.getInOrderToTextWithCostMap,
+        orderModel.getPayments)),
       orderForEditAndCreate => resultWithFlash(orderFeedPage, orderModel.edit(id, orderForEditAndCreate), "Замовлення змінено, мяу")
     )
   }
@@ -68,7 +79,8 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
         views.html.createOrder(formWithErrors,
           orderModel.getMenusToolsForAddingToOrder.toList,
           None,
-          orderModel.getInOrderToTextWithCostMap)),
+          orderModel.getInOrderToTextWithCostMap,
+          orderModel.getPayments)),
       orderForEditAndCreate => resultWithFlash(orderFeedPage, orderModel.insert(orderForEditAndCreate), "Замовлення додано, мяу")
     )
   }

@@ -2,7 +2,7 @@ package models
 
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
-import Dao.Dao
+import dao.Dao
 import cats.effect.IO
 import javax.inject._
 import services.SimbaAlias._
@@ -12,6 +12,16 @@ class OrderModel @Inject()(dao: Dao) {
   private type MenuPrice = Int
   private type MenuTitle = String
   private type Minutes = Int
+
+  private val paymentToInt = Map(
+    "Готівка" -> 1,
+    "Карткою" -> 2,
+    "Бартер" -> 3)
+  private val intToPayment = Map(
+    1 -> "Готівка",
+    2 -> "Карткою",
+    3 -> "Бартер")
+  private val payments = List("Готівка", "Карткою", "Бартер")
 
   def getAllTableRows: Map[Date, Seq[OrderForDisplay]] = {
     def orderToOrderForDisplay(o: Order): OrderForDisplay = {
@@ -23,7 +33,7 @@ class OrderModel @Inject()(dao: Dao) {
         o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
         getAllOfferIdByOrderId(o.id.head).map(_.name).mkString(", "),
         o.total, o.discount,
-        o.payment,
+        intToPayment(o.payment),
         o.offlineDelivery, o.deliveryOnMonday,
         o.paid, o.delivered,
         o.note)).unsafeRunSync()
@@ -34,13 +44,13 @@ class OrderModel @Inject()(dao: Dao) {
       .unsafeRunSync
   }
 
-  def insert(o: OrderForEditAndCreate): Boolean = {
-    dao.insertOrder(o, convertStringToMinutes).unsafeRunAsyncAndForget()
+  def insert(o: OrderInput): Boolean = {
+    dao.insertOrder(o, convertStringToMinutes, convertPaymentToInt).unsafeRunAsyncAndForget()
     true
   }
 
-  def findBy(id: ID): OrderForEditAndCreate = {
-    def orderToOrderForEditAndCreate(o: Order): OrderForEditAndCreate = {
+  def findBy(id: ID): OrderInput = {
+    def orderToOrderForEditAndCreate(o: Order): OrderInput = {
       /**
        * Have to use is operation on java.util.Date that was parsed from "yyyy-MM-dd" format
        * otherwise play.api.data.Form will throw [UnsupportedOperationException: null] from java.sql.Date.toInstant
@@ -51,12 +61,12 @@ class OrderModel @Inject()(dao: Dao) {
         formatForFillInForm.parse(formatForFillInForm.format(date))
       }
 
-      OrderForEditAndCreate(o.id, o.customerId, o.addressId, o.inviterId,
+      OrderInput(o.id, o.customerId, o.addressId, o.inviterId,
         changingDateFormatForPlayForm(o.orderDay), changingDateFormatForPlayForm(o.deliveryDay),
         convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
         getAllOfferIdByOrderId(o.id.head).map(_.id.head),
         o.total, o.discount,
-        o.payment,
+        intToPayment(o.payment),
         o.offlineDelivery, o.deliveryOnMonday,
         o.paid, o.delivered,
         o.note)
@@ -67,8 +77,8 @@ class OrderModel @Inject()(dao: Dao) {
       .unsafeRunSync()
   }
 
-  def edit(id: ID, o: OrderForEditAndCreate): Boolean = {
-    dao.editOrder(id, o, convertStringToMinutes).unsafeRunSync()
+  def edit(id: ID, o: OrderInput): Boolean = {
+    dao.editOrder(id, o, convertStringToMinutes, convertPaymentToInt).unsafeRunSync()
     true
   }
 
@@ -103,6 +113,8 @@ class OrderModel @Inject()(dao: Dao) {
     }
   }
 
+  def getPayments: List[String] = payments
+
   private def getAllOffersOnThisWeek: Seq[Offer] = {
     val c = Calendar.getInstance
     c.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
@@ -112,10 +124,12 @@ class OrderModel @Inject()(dao: Dao) {
       .unsafeRunSync()
   }
 
-  private def convertStringToMinutes(timeInput: String): Minutes = { // Maybe throw exception if String didn't split by ':'
+  private def convertStringToMinutes(timeInput: String): Minutes = {
     val timeArray = timeInput.split(':')
     timeArray(0).toInt * 60 + timeArray(1).toInt
   }
+
+  private def convertPaymentToInt(p: String) = paymentToInt(p)
 
   private def convertMinutesToString(m: Minutes): String = {
     def replaceWithDoubleZero(int: Int): String = if (int == 0) "00" else int.toString
@@ -139,7 +153,7 @@ case class Order(id: Option[ID],
                  offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                  total: Int,
                  discount: Option[Int],
-                 payment: String,
+                 payment: Int,
                  paid: Boolean, delivered: Boolean, note: Option[String])
 
 case class OrderForDisplay(id: Option[ID],
@@ -155,18 +169,18 @@ case class OrderForDisplay(id: Option[ID],
                            offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                            paid: Boolean, delivered: Boolean, note: Option[String])
 
-case class OrderForEditAndCreate(id: Option[ID],
-                                 customerId: ID,
-                                 addressId: ID,
-                                 inviterId: Option[ID],
-                                 orderDay: Date, deliveryDay: Date,
-                                 deliverFrom: String, deliverTo: String,
-                                 inOrder: List[Int],
-                                 total: Int,
-                                 discount: Option[Int],
-                                 payment: String,
-                                 offlineDelivery: Boolean, deliveryOnMonday: Boolean,
-                                 paid: Boolean, delivered: Boolean, note: Option[String])
+case class OrderInput(id: Option[ID],
+                      customerId: ID,
+                      addressId: ID,
+                      inviterId: Option[ID],
+                      orderDay: Date, deliveryDay: Date,
+                      deliverFrom: String, deliverTo: String,
+                      inOrder: List[Int],
+                      total: Int,
+                      discount: Option[Int],
+                      payment: String,
+                      offlineDelivery: Boolean, deliveryOnMonday: Boolean,
+                      paid: Boolean, delivered: Boolean, note: Option[String])
 
 case class OrderMenuItem(titleOnDisplay: String, value: Int, cost: Int)
 

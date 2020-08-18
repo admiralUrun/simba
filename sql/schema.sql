@@ -97,13 +97,14 @@ create table orders (
     delivery_on_monday boolean not null,
     total int not null,
     discount int,
-    -- TODO: change to int
-    payment varchar(128) not null,
+    payment int not null,
     paid boolean not null,
     delivered boolean not null,
     note text
 );
 create index orders_customer_id on orders(customer_id);
+create index orders_delivery_day on orders(delivery_day);
+create index orders_inviter on orders(inviter_id);
 
 -- TODO: consider eliminating this table in favour of adding offer_id to order_recipes
 drop table if exists order_offers;

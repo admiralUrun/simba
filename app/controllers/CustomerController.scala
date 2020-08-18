@@ -59,7 +59,8 @@ class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesCo
 
   private implicit val customerAddressesToJsonWriter: JSONWrites[CustomerAddressesForJson] = (
     (JsPath \ "customer").write[Customer] and
-      (JsPath \ "addresses").write[Seq[Address]]
+      (JsPath \ "addresses").write[Seq[Address]] and
+      (JsPath \ "discount").write[Int]
     ) (unlift(CustomerAddressesForJson.unapply))
 
   def toCustomersListPage(search: String): PlayAction = Action { implicit request =>

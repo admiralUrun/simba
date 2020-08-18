@@ -1,8 +1,7 @@
 package models
 
 import java.util.Date
-import Dao.Dao
-import cats.effect.IO
+import dao.Dao
 import javax.inject.{Inject, Singleton}
 import services.SimbaHTMLHelper.translateMenuType // Maybe isn't a good a idea to use it here just don't want to duplicate code
 
@@ -106,7 +105,7 @@ class OfferModel @Inject()(dao: Dao) {
 
 }
 
-case class Offer(id: Option[Int], name: String, price: Int, executionDate: Date, menuType: String)
+case class Offer(id: Option[Int], name: String, price: Int, executionDate: Date, menuType: Int)
 
 case class Recipe(id: Option[Int], name: String, menuType: String, edited: Boolean)
 

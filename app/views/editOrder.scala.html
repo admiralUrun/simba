@@ -2,9 +2,11 @@
 @import services.SimbaHTMLHelper._
 @import services.SimbaAlias.ID
 @(id:Int,
-        oF: Form[OrderForEditAndCreate],
+        oF: Form[OrderInput],
         menus: Seq[OrderMenu],
-        inOrderToTextCost: Map[String, (ID, String, Int)])(implicit requestHeader: MessagesRequestHeader)
+        inOrderToTextCost: Map[String, (ID, String, Int)],
+        payments: List[String]
+)(implicit requestHeader: MessagesRequestHeader)
 
 @createOrEditOrderTemplate(s"Замовлення $id",
     routes.OrderController.updateOrder(id),
@@ -13,5 +15,6 @@
     menus,
     isCreate = false,
     inOrderToTextCost,
+    payments,
     getValueFromForm("customerId", oF).map(_.toInt)
 )
