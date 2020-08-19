@@ -16,7 +16,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
   type PlayAction = Action[AnyContent]
   private val setOfferForm = Form(
     mapping(
-      "menuType" -> nonEmptyText,
+      "menuType" -> number,
       "executionDate" -> date,
       "recipesId" -> list(number).verifying(_.nonEmpty)
     )(SettingOffer.apply)(SettingOffer.unapply)
@@ -27,7 +27,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
       "name" -> list(nonEmptyText),
       "price" -> list(number),
       "date" -> date,
-      "menuType" -> nonEmptyText
+      "menuType" -> number
     )(EditOffer.apply)(EditOffer.unapply)
   )
   private val passDateForm = Form(
@@ -64,21 +64,21 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
     )
   }
 
-  def toOfferPage(title: String, menuType: String): PlayAction = Action { implicit request =>
+  def toOfferPage(title: String, menuType: Int): PlayAction = Action { implicit request =>
     passDateForm.bindFromRequest.fold(
       _ => errorRedirect,
       Date => Ok(views.html.offer(title, Date.date, menuType))
     )
   }
 
-  def toCreateOfferPage(menuType: String): PlayAction = Action { implicit request =>
+  def toCreateOfferPage(menuType: Int): PlayAction = Action { implicit request =>
     passDateForm.bindFromRequest.fold(
       _ => errorRedirect,
       Date => Ok(views.html.createOffer(menuType, Date.date, setOfferForm))
     )
   }
 
-  def toOfferPreferencePage(title: String, menuType: String): PlayAction = Action { implicit request =>
+  def toOfferPreferencePage(title: String, menuType: Int): PlayAction = Action { implicit request =>
     passDateForm.bindFromRequest.fold(
       _ => errorRedirect,
       Date => Ok(views.html.editOffer(title, Date.date, menuType,
@@ -98,7 +98,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
     Ok(Json.toJson(offerModel.getRecipesByName(name)))
   }
 
-  def setOffer(menuType: String): PlayAction = Action { implicit request =>
+  def setOffer(menuType: Int): PlayAction = Action { implicit request =>
     setOfferForm.bindFromRequest.fold(
       formWithErrors => {
         val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
@@ -113,12 +113,12 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
          * Changes in title here should be repeated in offers.scala.html
          **/
         val offerPageMap = Map(
-          "classic" -> Ok(views.html.offer("Налаштування Класичного Меню", date, "classic")),
-          "lite" -> Ok(views.html.offer("Налаштування Лайт Меню", date, "lite")),
-          "breakfast" -> Ok(views.html.offer("Налаштування Сніданок Меню", date, "breakfast")),
-          "soup" -> Ok(views.html.offer("Налаштування Суп Меню", date, "soup")),
-          "desert" -> Ok(views.html.offer("Налаштування Десерт Меню", date, "desert")),
-          "promo" -> Ok(views.html.offer("Налаштування Промо Меню", date, "promo"))
+          1 -> Ok(views.html.offer(s"Налаштування Класичного Меню", date, 1)),
+          2 -> Ok(views.html.offer(s"Налаштування Лайт Меню", date, 2)),
+          3 -> Ok(views.html.offer(s"Налаштування Сніданок Меню", date, 3)),
+          4 -> Ok(views.html.offer(s"Налаштування Суп Меню", date, 4)),
+          5 -> Ok(views.html.offer(s"Налаштування Десерт Меню", date, 5)),
+          6 -> Ok(views.html.offer(s"Налаштування Промо Меню", date, 6))
         )
         resultWithFlash(offerPageMap(menuType), offerModel.setOffer(settingOffer), "Готово Тепер Встановіть ціни, мяу") // TODO: Flashing doesn't work think on how to fix it
       }
@@ -127,7 +127,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
 
   def editOffer(): PlayAction = Action { implicit request =>
     editOfferForm.bindFromRequest.fold(
-      formWithError => BadRequest(views.html.editOffer("Налаштування Пропозиції", formWithError.value.head.executionDate, formWithError.data("menuType"), formWithError)),
+      formWithError => BadRequest(views.html.editOffer("Налаштування Пропозиції", formWithError.value.head.executionDate, formWithError.data("menuType").toInt, formWithError)),
       offerPreferences => {
         resultWithFlash(offersPage, offerModel.setOfferPreferences(offerPreferences), "Пропозицію Зміненно")
       }

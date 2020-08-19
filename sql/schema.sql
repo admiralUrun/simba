@@ -46,14 +46,14 @@ drop table if exists recipes;
 create table recipes (
     id int primary key,
     name varchar(256) not null,
-    type varchar(50),
+    menu_type int,
     -- see if still has old name or was edited
     -- TODO: consider adding old_name instead of this field
     edited boolean
 );
-create index recipes_type on recipes(type);
+create index recipes_type on recipes(menu_type);
 
-drop table if exists recipe_ingredients;
+ drop table if exists recipe_ingredients;
 create table recipe_ingredients (
     recipe_id int,
     ingredient_id int,
@@ -68,7 +68,7 @@ create table offers (
     price int not null,
     expiration_date date,
     -- TODO: change to int
-    menu_type varchar(128)
+    menu_type int
 );
 create index offers_execution_date on offers(expiration_date);
 

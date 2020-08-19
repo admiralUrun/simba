@@ -3,12 +3,12 @@ package models
 import java.util.Date
 import dao.Dao
 import javax.inject.{Inject, Singleton}
-import services.SimbaHTMLHelper.translateMenuType // Maybe isn't a good a idea to use it here just don't want to duplicate code
+import services.SimbaHTMLHelper.convertMenuTypeToString
 
 @Singleton
 class OfferModel @Inject()(dao: Dao) {
 
-  def getOfferPreferencesByMenuType(menuType: String, executionDate: Date): EditOffer = {
+  def getOfferPreferencesByMenuType(menuType: Int, executionDate: Date): EditOffer = {
     val offers = dao.getOfferByDateAndMenuType(executionDate, menuType).unsafeRunSync().toList
     EditOffer(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), executionDate, menuType)
   }
@@ -42,29 +42,29 @@ class OfferModel @Inject()(dao: Dao) {
       "3 на 4 Сніданок" -> 989,
     )
 
-    def validationError(menuType: String, howManyIds: Int): Boolean = Map(
-      "promo" -> (howManyIds == 3),
-      "soup" -> (howManyIds >= 1),
-      "desert" -> (howManyIds >= 1),
-      "classic" -> (howManyIds == 5),
-      "lite" -> (howManyIds == 5),
-      "breakfast" -> (howManyIds == 5)
+    def validationError(menuType: Int, howManyIds: Int): Boolean = Map(
+      6 -> (howManyIds == 3),
+      5 -> (howManyIds >= 1),
+      4 -> (howManyIds >= 1),
+      3 -> (howManyIds == 5),
+      2 -> (howManyIds == 5),
+      1 -> (howManyIds == 5)
     )(menuType)
 
-    def primeMenuTypeInsets(menuType: String, recipes: List[Recipe]): List[InsertOffer] = {
+    def primeMenuTypeInsets(menuType: Int, recipes: List[Recipe]): List[InsertOffer] = {
       val recipesWithIndex = recipes.zipWithIndex
       val allRecipesOnFour = recipesWithIndex.map { case (r, i) =>
-        InsertOffer(s"${translateMenuType(menuType)} ${i + 1} на 4", 0, List(r), 4)
+        InsertOffer(s"${convertMenuTypeToString(menuType)} ${i + 1} на 4", 0, List(r), 4)
       }
       val allRecipesOnTwo = recipesWithIndex.map { case (r, i) =>
-        InsertOffer(s"${translateMenuType(menuType)} ${i + 1} на 2", 0, List(r), 2)
+        InsertOffer(s"${convertMenuTypeToString(menuType)} ${i + 1} на 2", 0, List(r), 2)
       }
 
       List( // TODO: Think of something better
-        InsertOffer(s"5 на 4 ${translateMenuType(menuType)}", standardTitleToPrice(s"5 на 4 ${translateMenuType(menuType)}"), recipes, 4),
-        InsertOffer(s"5 на 2 ${translateMenuType(menuType)}", standardTitleToPrice(s"5 на 2 ${translateMenuType(menuType)}"), recipes, 2),
-        InsertOffer(s"3 на 4 ${translateMenuType(menuType)}", standardTitleToPrice(s"3 на 4 ${translateMenuType(menuType)}"), recipes.take(3), 4),
-        InsertOffer(s"3 на 2 ${translateMenuType(menuType)}", standardTitleToPrice(s"3 на 2 ${translateMenuType(menuType)}"), recipes.take(3), 2)
+        InsertOffer(s"5 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 4 ${convertMenuTypeToString(menuType)}"), recipes, 4),
+        InsertOffer(s"5 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 2 ${convertMenuTypeToString(menuType)}"), recipes, 2),
+        InsertOffer(s"3 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 4 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 4),
+        InsertOffer(s"3 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 2 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 2)
       ) ::: allRecipesOnTwo ::: allRecipesOnFour
     }
 
@@ -85,12 +85,12 @@ class OfferModel @Inject()(dao: Dao) {
     else {
       val recipes = dao.getRecipesBy(sO.recipeIds).unsafeRunSync().toList
       val insertOffers = {
-        if (menuType == "soup" || menuType == "desert") sideMenuTypeInsets(recipes)
-        else if (menuType == "promo") promoMenuTypeInsets(recipes)
+        if (menuType == 4 || menuType == 5) sideMenuTypeInsets(recipes)
+        else if (menuType == 6) promoMenuTypeInsets(recipes)
         else primeMenuTypeInsets(menuType, recipes)
       }
 
-      dao.insertOrUpdateOffers(sO.executionDate, sO.menuType, insertOffers).unsafeRunSync()
+      dao.insertOrUpdateOffers(sO.executionDate, menuType, insertOffers).unsafeRunSync()
 
       /**
        * Returning true for a version with out unsafeRun in Controller
@@ -111,9 +111,9 @@ case class Recipe(id: Option[Int], name: String, menuType: String, edited: Boole
 
 case class OfferRecipes(offerId: Int, recipesId: Int, quantity: Int)
 
-case class SettingOffer(menuType: String, executionDate: Date, recipeIds: List[Int])
+case class SettingOffer(menuType: Int, executionDate: Date, recipeIds: List[Int])
 
-case class EditOffer(ids: List[Int], names: List[String], prices: List[Int], executionDate: Date, menuType: String)
+case class EditOffer(ids: List[Int], names: List[String], prices: List[Int], executionDate: Date, menuType: Int)
 
 case class PassingDate(date: Date)
 

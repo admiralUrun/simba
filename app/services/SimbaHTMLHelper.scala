@@ -20,26 +20,26 @@ object SimbaHTMLHelper {
     else s.getOrElse("-")
   }
 
-  def translateMenuType(menuType: String): String = {
+  def convertMenuTypeToString(menuType: Int): String = {
     val translator = Map(
-      "classic" -> "Класичне",
-      "lite" -> "Лайт",
-      "breakfast" -> "Сніданок",
-      "soup" -> "Суп",
-      "desert" -> "Десерт",
-      "promo" -> "Промо"
+      1 -> "Класичне",
+      2 -> "Лайт",
+      3 -> "Сніданок",
+      4 -> "Суп",
+      5 -> "Десерт",
+      6 -> "Промо"
     )
-    translator.getOrElse(menuType, throw new RuntimeException(s"Error can't translate $menuType"))
+    translator.getOrElse(menuType, throw new RuntimeException(s"Error can't Map $menuType"))
   }
 
-  def menuTypeToTittleForOfferCreatePage(menuType: String): String = {
+  def menuTypeToTittleForOfferCreatePage(menuType: Int): String = {
     val menuTypeToTitle = Map (
-      "classic" -> "Встановлення Класичного Меню",
-      "lite" -> "Встановлення Лайт Меню",
-      "breakfast" -> "Встановлення Сніданок Меню",
-      "soup" -> "Встановлення Суп Меню",
-      "desert" -> "Встановлення Десерт Меню",
-      "promo" -> "Встановлення Промо Меню"
+      1 -> "Встановлення Класичного Меню",
+      2 -> "Встановлення Лайт Меню",
+      3 -> "Встановлення Сніданок Меню",
+      4 -> "Встановлення Суп Меню",
+      5 -> "Встановлення Десерт Меню",
+      6 -> "Встановлення Промо Меню"
     )
     menuTypeToTitle(menuType)
   }

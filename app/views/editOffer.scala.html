@@ -2,7 +2,7 @@
 @import services.SimbaHTMLHelper._
 @import java.util.Date
 
-@(title: String, executionDate: Date,  menuType: String, oF: Form[EditOffer])(implicit requestHeader: MessagesRequestHeader)
+@(title: String, executionDate: Date,  menuType: Int, oF: Form[EditOffer])(implicit requestHeader: MessagesRequestHeader)
 
 
 @megreHtmlInputsList(ids: Html, names: Html, prices: Html) = @{
@@ -39,7 +39,7 @@
     @main(title) {
         @form(routes.OfferController.editOffer) {
             @CSRF.formField
-            <input name="menuType" value="@menuType" style="display: none;">
+            <input name="menuType" type="number" value="@menuType" style="display: none;">
             <input name="date" value="@formattingDateForForm(executionDate)" style="display: none;">
             @createEditTools(megreHtmlInputsList(getInputsFromListInPlayForm("id", isDisplayed = false), getInputsFromListInPlayForm("name"), getInputsFromListInPlayForm("price")))
             <input class="btn btn-primary" type="submit" value="Змінити"> або <a href="@routes.OfferController.toOffersPage()" class="btn">Скасувати</a>

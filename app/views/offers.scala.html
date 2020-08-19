@@ -1,6 +1,5 @@
 @import views.html.helper._
 @import services.SimbaHTMLHelper._
-@import java.util.Date
 
 @(currentDate: String = getNextSundayFromCornetWeek)(implicit request: MessagesRequestHeader)
 
@@ -25,39 +24,39 @@
             </div>
 
             @* Any Changes in Tittles here should be repeated in OfferController as well *@
-            @form(routes.OfferController.toOfferPage("Налаштування Класичного Меню", "classic")) {
+            @form(routes.OfferController.toOfferPage("Налаштування Класичного Меню", 1)) {
                 @getDataInput
                 <input class="btn btn-primary" value="Класичні" type="submit">
             }
 
-            @form(routes.OfferController.toOfferPage("Налаштування Лайт Меню", "lite")) {
+            @form(routes.OfferController.toOfferPage("Налаштування Лайт Меню", 2)) {
                 @getDataInput
                 <input class="btn btn-primary" value="Лайт" type="submit">
             }
 
-            @form(routes.OfferController.toOfferPage("Налаштування Сніданок Меню", "breakfast")) {
+            @form(routes.OfferController.toOfferPage("Налаштування Сніданок Меню", 3)) {
                 @getDataInput
                 <input class="btn btn-primary" value="Сніданки" type="submit">
             }
 
-            @form(routes.OfferController.toOfferPage("Налаштування Суп Меню", "soup")) {
+            @form(routes.OfferController.toOfferPage("Налаштування Суп Меню", 4)) {
                 @getDataInput
                 <input class="btn btn-primary" value="Супи" type="submit">
             }
 
-            @form(routes.OfferController.toOfferPage("Налаштування Десерт Меню", "desert")) {
+            @form(routes.OfferController.toOfferPage("Налаштування Десерт Меню", 5)) {
                 @getDataInput
                 <input class="btn btn-primary" value="Десерти" type="submit">
             }
 
-            @form(routes.OfferController.toOfferPage("Налаштування Промо Меню", "promo")) {
+            @form(routes.OfferController.toOfferPage("Налаштування Промо Меню", 6)) {
                 @getDataInput
                 <input class="btn btn-primary" value="Промо" type="submit">
             }
 
             @form(routes.OfferController.toRecipesOnThisWeekPage()) {
                 @getDataInput
-                <input class="btn btn-info" value="Рецепти та інгрідіенти на цьому тижні" type="submit">
+                <input class="btn btn-info" value="Рецепти та інгрідіенти на цьому тижні" type="submit" style="display: none">
             }
         </div>
     }

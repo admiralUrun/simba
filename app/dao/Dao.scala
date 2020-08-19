@@ -73,7 +73,7 @@ class Dao @Inject()(dS: DoobieStore) {
       .transact(xa)
   }
 
-  def getOfferByDateAndMenuType(date: Date, menuType: String): IO[Seq[Offer]] = (offerSelect ++ fr"where expiration_date = $date" ++ fr" and menu_type = $menuType")
+  def getOfferByDateAndMenuType(date: Date, menuType: Int): IO[Seq[Offer]] = (offerSelect ++ fr"where expiration_date = $date" ++ fr" and menu_type = $menuType")
     .query[Offer]
     .to[List]
     .transact(xa)
@@ -138,14 +138,14 @@ class Dao @Inject()(dS: DoobieStore) {
     } yield ()).transact(xa)
   }
 
-  def insertOrUpdateOffers(date: Date, menuType: String, list: List[InsertOffer]): IO[Unit] = {
-    def deleteBeforeUpdate(date: Date, menuType: String): ConnectionIO[Int] = { // TODO: select and delete if needed to fix join table bugs
-      sql"delete from offers where execution_date = $date and menu_type = $menuType".update.run
+  def insertOrUpdateOffers(date: Date, menuType: Int, list: List[InsertOffer]): IO[Unit] = {
+    def deleteBeforeUpdate(date: Date, menuType: Int): ConnectionIO[Int] = { // TODO: select and delete if needed to fix join table bugs
+      sql"delete from offers where expiration_date = $date and menu_type = $menuType".update.run
     }
 
-    def insertOrUpdateOffer(name: String, date: Date, menuType: String, price: Int, recipes: List[Recipe], quantityOfRecipes: Int): ConnectionIO[Unit] = {
+    def insertOrUpdateOffer(name: String, date: Date, menuType: Int, price: Int, recipes: List[Recipe], quantityOfRecipes: Int): ConnectionIO[Unit] = {
       for {
-        _ <- sql"insert into offers (name, price, execution_date, menu_type) values ($name, $price, $date, $menuType)".update.run
+        _ <- sql"insert into offers (name, price, expiration_date, menu_type) values ($name, $price, $date, $menuType)".update.run
         id <- sql"select last_insert_id()".query[Int].unique
         _ <- recipes.traverse { r =>
           sql"insert into offer_recipes (offer_id, recipe_id, quantity) values ($id, ${r.id}, $quantityOfRecipes)".update.run

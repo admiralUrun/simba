@@ -2,7 +2,7 @@
 @import services.SimbaHTMLHelper._
 @import java.util.Date
 
-@(menuType: String, executionDate: Date, oF: Form[SettingOffer])(implicit requestHeader: MessagesRequestHeader)
+@(menuType: Int, executionDate: Date, oF: Form[SettingOffer])(implicit requestHeader: MessagesRequestHeader)
 
 @getSearchForRecipes = {
     <div id="searchDIV">

@@ -6,6 +6,7 @@ import dao.Dao
 import cats.effect.IO
 import javax.inject._
 import services.SimbaAlias._
+import services.SimbaHTMLHelper._
 
 @Singleton
 class OrderModel @Inject()(dao: Dao) {
@@ -83,16 +84,6 @@ class OrderModel @Inject()(dao: Dao) {
   }
 
   def getMenusToolsForAddingToOrder: Seq[OrderMenu] = {
-    def translateMenuType(string: String): String = {
-      val translator = Map(
-        "classic" -> "Класичне",
-        "lite" -> "Лайт",
-        "breakfast" -> "Сніданок",
-        "soup" -> "Суп",
-        "desert" -> "Десерт"
-      )
-      translator.getOrElse(string, throw UninitializedFieldError(s"Translation Error, can't translate $string"))
-    }
 
     def offerToMenuItem(o: Offer): OrderMenuItem = {
       OrderMenuItem(o.name, o.id.head, o.price)
@@ -100,7 +91,7 @@ class OrderModel @Inject()(dao: Dao) {
 
     def getAllMenuToolsForAddingOrder(offers: Seq[Offer]): Seq[OrderMenu] = {
       offers.groupBy(_.menuType).map { t =>
-        OrderMenu(translateMenuType(t._1), t._2.map(offerToMenuItem))
+        OrderMenu(convertMenuTypeToString(t._1), t._2.map(offerToMenuItem))
       }.toList
     }
 
