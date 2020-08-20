@@ -29,8 +29,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   private val orderFeedPage = Redirect(routes.OrderController.toOrderFeedPage(""))
 
   def toOrderFeedPage(search: String): PlayAction = Action { implicit request =>
-    val orders = orderModel.getAllTableRows
-    Ok(views.html.orders(orders, search))
+    Ok(views.html.orders(orderModel.getAllTableRows, search))
   }
 
   def toOrderEditPage(id: Int): PlayAction = Action { implicit request =>

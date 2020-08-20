@@ -22,9 +22,7 @@ function encoderString(i) {
             console.log(getAddressInputArrayByIndex(i))
             let a = getAddressInputArrayByIndex(i).val().split(',')
             return `${a.shift()},${a.shift()},`
-        } else {
-            return ""
-        }
+        } else return ""
     }
 
     return Array(checkForIds(),

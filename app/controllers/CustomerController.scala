@@ -69,20 +69,6 @@ class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesCo
     Ok(views.html.customers(rows, search))
   }
 
-  def getCustomersForOrderSearch(search: String): PlayAction = Action {
-    Ok(Json.toJson(customerModel.getDataForJsonToDisplayInOrder(search).unsafeRunSync()))
-  }
-
-  def getCustomersForOrder(id: ID): PlayAction = Action {
-    Ok(Json.toJson(customerModel.getDataForJsonToDisplayInOrderBy(id).unsafeRunSync()))
-  }
-
-  def getCustomersInviterForOrder(search: String): PlayAction = Action {
-    Ok(Json.toJson(customerModel.getInviterForJsonToDisplayInOrder(search)))
-  }
-
-
-
   def toCreateCustomerPage: PlayAction = Action { implicit request =>
     Ok(views.html.createCustomer(customerForm, routes.CustomerController.createCustomer(), toCustomerListPage))
   }
@@ -94,6 +80,18 @@ class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesCo
   def toEditCustomerPage(id: Int): PlayAction = Action { implicit request =>
     val customer = customerModel.findBy(id)
     Ok(views.html.editCustomer(id, customerForm.fill(customer), customer.firstName))
+  }
+
+  def getCustomersForOrderSearch(search: String): PlayAction = Action {
+    Ok(Json.toJson(customerModel.getDataForJsonToDisplayInOrder(search).unsafeRunSync()))
+  }
+
+  def getCustomersForOrder(id: ID): PlayAction = Action {
+    Ok(Json.toJson(customerModel.getDataForJsonToDisplayInOrderBy(id).unsafeRunSync()))
+  }
+
+  def getCustomersInviterForOrder(search: String): PlayAction = Action {
+    Ok(Json.toJson(customerModel.getInviterForJsonToDisplayInOrder(search)))
   }
 
   def update(id: Int): PlayAction = Action { implicit request =>
