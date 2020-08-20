@@ -177,6 +177,4 @@ case class OrderMenuItem(titleOnDisplay: String, value: Int, cost: Int)
 
 case class OrderMenu(titleOnDisplay: String, menuItems: Seq[OrderMenuItem])
 
-case class OrderResepies(orderId: ID, recipesId: ID, quantity: Int)
-
-case class OrderOffer(orderId: ID, offerId: ID)
+case class OrderResepies(orderId: ID, offerId: ID, recipesId: ID, quantity: Int)

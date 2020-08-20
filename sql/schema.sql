@@ -67,7 +67,6 @@ create table offers (
     name varchar(128),
     price int not null,
     expiration_date date,
-    -- TODO: change to int
     menu_type int
 );
 create index offers_execution_date on offers(expiration_date);
@@ -106,18 +105,11 @@ create index orders_customer_id on orders(customer_id);
 create index orders_delivery_day on orders(delivery_day);
 create index orders_inviter on orders(inviter_id);
 
--- TODO: consider eliminating this table in favour of adding offer_id to order_recipes
-drop table if exists order_offers;
-create table order_offers (
-    order_id int not null,
-    offer_id int not null,
-    primary key (order_id, offer_id)
-);
 
 drop table if exists order_recipes;
 create table order_recipes (
     order_id int not null,
-    -- offer_id int not null,
+    offer_id int not null,
     recipe_id int not null,
     quantity int
 );

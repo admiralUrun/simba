@@ -4,6 +4,7 @@ import java.util.Date
 import dao.Dao
 import javax.inject.{Inject, Singleton}
 import services.SimbaHTMLHelper.convertMenuTypeToString
+import services.SimbaAlias._
 
 @Singleton
 class OfferModel @Inject()(dao: Dao) {
@@ -105,15 +106,15 @@ class OfferModel @Inject()(dao: Dao) {
 
 }
 
-case class Offer(id: Option[Int], name: String, price: Int, executionDate: Date, menuType: Int)
+case class Offer(id: Option[ID], name: String, price: Int, executionDate: Date, menuType: Int)
 
-case class Recipe(id: Option[Int], name: String, menuType: String, edited: Boolean)
+case class Recipe(id: Option[ID], name: String, menuType: String, edited: Boolean)
 
-case class OfferRecipes(offerId: Int, recipesId: Int, quantity: Int)
+case class OfferRecipes(offerId: ID, recipesId: ID, quantity: Int)
 
-case class SettingOffer(menuType: Int, executionDate: Date, recipeIds: List[Int])
+case class SettingOffer(menuType: Int, executionDate: Date, recipeIds: List[ID])
 
-case class EditOffer(ids: List[Int], names: List[String], prices: List[Int], executionDate: Date, menuType: Int)
+case class EditOffer(ids: List[ID], names: List[String], prices: List[Int], executionDate: Date, menuType: Int)
 
 case class PassingDate(date: Date)
 

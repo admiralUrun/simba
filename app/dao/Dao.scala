@@ -60,9 +60,9 @@ class Dao @Inject()(dS: DoobieStore) {
     .transact(xa)
 
   def getAllOfferIdByOrder(id: ID): IO[List[Offer]] = {
-    val orderOffers = sql"select * from order_offers where order_id = $id".query[OrderOffer].to[List].transact(xa).unsafeRunSync()
-    orderOffers.traverse { orderOffer =>
-      (offerSelect ++ fr"where id = ${orderOffer.offerId}").query[Offer].to[List]
+    val orderOffers = sql"select distinct offer_id from order_recipes where order_id = $id".query[ID].to[List].transact(xa).unsafeRunSync()
+    orderOffers.traverse { id =>
+      (offerSelect ++ fr"where id = $id").query[Offer].to[List]
     }.transact(xa).map(_.flatten)
   }
 
@@ -114,7 +114,7 @@ class Dao @Inject()(dS: DoobieStore) {
     .transact(xa)
 
   def insertOrder(o: OrderInput, convertStringToMinutes: String => Int, convertPayment: String => Int): IO[Unit] = {
-    val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).unsafeRunSync().map(o => (o.recipesId, o.quantity))
+    val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).unsafeRunSync()
     (for {
       _ <-
         sql"""insert into orders (customer_id, address_id, inviter_id,
@@ -134,7 +134,6 @@ class Dao @Inject()(dS: DoobieStore) {
                                               ${o.note}) """.update.run
       id <- sql"select last_insert_id()".query[ID].unique
       _ <- insertOrderRecipes(id, recipesIdsAndQuantity)
-      _ <- insertOrderOffers(id, o.inOrder)
     } yield ()).transact(xa)
   }
 
@@ -178,7 +177,7 @@ class Dao @Inject()(dS: DoobieStore) {
   }
 
   def editOrder(id: ID, o: OrderInput, convertStringToMinutes: String => Int, convertPayment: String => Int): IO[Unit] = {
-    val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).unsafeRunSync().map(o => (o.recipesId, o.quantity))
+    val recipesIdsAndQuantity = getAllOffersRecipes(o.inOrder).unsafeRunSync()
     (for {
       _ <-
         sql"""update orders set
@@ -191,8 +190,6 @@ class Dao @Inject()(dS: DoobieStore) {
               out_of_zone_delivery = ${o.offlineDelivery}, delivery_on_monday = ${o.deliveryOnMonday},
               paid = ${o.paid}, delivered = ${o.delivered},
               note = ${o.note} where id = $id""".update.run
-      _ <- sql"delete from order_offers where order_id = $id".update.run
-      _ <- insertOrderOffers(id, o.inOrder)
       _ <- sql"delete from order_recipes where order_id = $id".update.run
       _ <- insertOrderRecipes(id, recipesIdsAndQuantity)
     } yield ()).transact(xa)
@@ -204,9 +201,9 @@ class Dao @Inject()(dS: DoobieStore) {
 
   // --- Pivate methods ---
 
-  private def getAllOffersRecipes(ids: List[Int]): IO[List[OfferRecipes]] = ids.traverse { offerId =>
+  private def getAllOffersRecipes(ids: List[Int]): IO[List[(ID, Int, Int)]] = ids.traverse { offerId =>
     sql"select * from offer_recipes where offer_id = $offerId".query[OfferRecipes].to[List]
-  }.map(_.flatten).transact(xa)
+  }.map(_.flatten).transact(xa).map(_.map(o => (o.offerId, o.recipesId, o.quantity)))
 
   private def insertAddresses(list: List[Address], customerId: ID): ConnectionIO[Unit] = list.traverse { a =>
     sql"""insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes)
@@ -215,12 +212,8 @@ class Dao @Inject()(dS: DoobieStore) {
       .run
   }.void
 
-  private def insertOrderOffers(orderId: Int, offersInOrder: List[Int]): ConnectionIO[Unit] = offersInOrder.traverse { offerId =>
-    sql"insert into order_offers (order_id, offer_id) values ($orderId, $offerId)".update.run
-  }.void
-
-  private def insertOrderRecipes(orderId: Int, recipesIdsQuantity: List[(Int, Int)]): ConnectionIO[Unit] = recipesIdsQuantity.traverse { rIdQ =>
-    sql"insert into order_recipes (order_id, recipe_id, quantity) value ($orderId, ${rIdQ._1}, ${rIdQ._2})".update.run
+  private def insertOrderRecipes(orderId: Int, recipesIdsQuantity: List[(Int, Int, Int)]): ConnectionIO[Unit] = recipesIdsQuantity.traverse { rIdQ =>
+    sql"insert into order_recipes (order_id, offer_id, recipe_id, quantity) value ($orderId, ${rIdQ._1}, ${rIdQ._2}, ${rIdQ._3})".update.run
   }.void
 
 }
