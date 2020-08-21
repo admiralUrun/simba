@@ -42,7 +42,7 @@
                       <td><a href="@routes.OrderController.toOrderEditPage(o.id.head)">@o.id</a></td>
                       <td>@getCustomerDataForView(o.customer)</td>
                       <td>@getAddressForView(o.address)</td>
-                      <td>@formattingDateForDisplay(o.orderDay)</td> @* TODO: Format Data to Display    *@
+                      <td>@formattingDateForDisplay(o.orderDay)</td>
                       <td>
                       @formattingDateForDisplay(o.deliveryDay) –
                           З @o.deliverFrom по @o.deliverTo
@@ -53,7 +53,7 @@
                       <td>@o.inOrder</td>
                       <td>@o.total</td>
                       <td>@o.discount.getOrElse("-")</td>
-                      <td class="">@formatBoolean(o.paid, "Оплаченно", "Не оплаченно")</td> @* TODO: Add swithc classes   *@
+                      <td class="">@formatBoolean(o.paid, "Оплаченно", "Не оплаченно")</td>
                       <td>@formatBoolean(o.delivered, "Доставленно", "Не Доставленно")</td>
                       <td>@o.note.getOrElse("-")</td>
                   </tr>

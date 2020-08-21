@@ -23,8 +23,7 @@ class CustomerModel @Inject()(dao: Dao) {
   }
 
   def insert(c: CustomerInput): (Boolean, ID) = {
-    val id = dao.insertCustomer(c).unsafeRunSync()
-    (true, id)
+    dao.insertCustomer(c).redeemWith(_ => IO(false, -1), b => IO(true, b)).unsafeRunSync()
   }
 
   def findBy(id: ID): CustomerInput = {
@@ -40,8 +39,7 @@ class CustomerModel @Inject()(dao: Dao) {
   }
 
   def editCustomer(id: ID, c: CustomerInput): Boolean = {
-    dao.editCustomer(id, c).unsafeRunSync()
-    true
+    dao.editCustomer(id, c).redeemWith(_ => IO(false), _ => IO(true)).unsafeRunSync()
   }
 
   def getDataForJsonToDisplayInOrderBy(id: ID): IO[CustomerAddressesForJson] = {

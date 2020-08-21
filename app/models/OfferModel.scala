@@ -1,6 +1,7 @@
 package models
 
 import java.util.Date
+import cats.effect.IO
 import dao.Dao
 import javax.inject.{Inject, Singleton}
 import services.SimbaHTMLHelper.convertMenuTypeToString
@@ -13,19 +14,6 @@ class OfferModel @Inject()(dao: Dao) {
     val offers = dao.getOfferByDateAndMenuType(executionDate, menuType).unsafeRunSync().toList
     EditOffer(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), executionDate, menuType)
   }
-
-  def setOfferPreferences(editOffer: EditOffer): Boolean = {
-    if (editOffer.ids.length != editOffer.prices.length || editOffer.ids.length != editOffer.names.length) false
-    else {
-      dao.updateOffersNameAndPrice(editOffer.ids.zip(editOffer.names.zip(editOffer.prices))).unsafeRunSync()
-      true
-    }
-  }
-
-  def getRecipesByName(name: String): Seq[Recipe] = {
-    dao.getRecipesLike(name).unsafeRunSync()
-  }
-
 
   def setOffer(sO: SettingOffer): Boolean = {
     val standardTitleToPrice: Map[String, Int] = Map(
@@ -91,13 +79,19 @@ class OfferModel @Inject()(dao: Dao) {
         else primeMenuTypeInsets(menuType, recipes)
       }
 
-      dao.insertOrUpdateOffers(sO.executionDate, menuType, insertOffers).unsafeRunSync()
-
-      /**
-       * Returning true for a version with out unsafeRun in Controller
-       **/
-      true
+      dao.insertOrUpdateOffers(sO.executionDate, menuType, insertOffers).redeemWith(_ => IO(false), _ => IO(true)).unsafeRunSync()
     }
+  }
+
+  def setOfferPreferences(editOffer: EditOffer): Boolean = {
+    if (editOffer.ids.length != editOffer.prices.length || editOffer.ids.length != editOffer.names.length) false
+    else {
+      dao.updateOffersNameAndPrice(editOffer.ids.zip(editOffer.names.zip(editOffer.prices))).redeemWith(_ => IO(false), _ => IO(true)).unsafeRunSync()
+    }
+  }
+
+  def getRecipesByName(name: String): Seq[Recipe] = {
+    dao.getRecipesLike(name).unsafeRunSync()
   }
 
   def getAllRecipesOnThisWeek(date: Date): List[Recipe] = { // TODO

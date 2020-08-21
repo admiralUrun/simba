@@ -46,8 +46,9 @@ class OrderModel @Inject()(dao: Dao) {
   }
 
   def insert(o: OrderInput): Boolean = {
-    dao.insertOrder(o, convertStringToMinutes, convertPaymentToInt).unsafeRunAsyncAndForget()
-    true
+    dao.insertOrder(o, convertStringToMinutes, convertPaymentToInt)
+      .redeemWith(_ => IO(false), _ => IO(true))
+      .unsafeRunSync()
   }
 
   def findBy(id: ID): OrderInput = {
@@ -79,8 +80,9 @@ class OrderModel @Inject()(dao: Dao) {
   }
 
   def edit(id: ID, o: OrderInput): Boolean = {
-    dao.editOrder(id, o, convertStringToMinutes, convertPaymentToInt).unsafeRunSync()
-    true
+    dao.editOrder(id, o, convertStringToMinutes, convertPaymentToInt)
+      .redeemWith(_ => IO(false), _ => IO(true))
+      .unsafeRunSync()
   }
 
   def getMenusToolsForAddingToOrder: Seq[OrderMenu] = {
