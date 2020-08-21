@@ -44,7 +44,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
     ) (unlift(Recipe.unapply))
 
   private val offersPage = Redirect(routes.OfferController.toOffersPage())
-  private val errorRedirect = Redirect(routes.HomeController.index()).flashing("error" -> "Не треба тут сувати мені відредарований HTML!")
+  private val errorRedirect = Redirect(routes.HomeController.index()).flashing("error" -> "Якщо чесно я сам не зрозумів що тільки що сталось... Мяу.")
 
   def toOffersPage: PlayAction = Action { implicit request =>
     Ok(views.html.offers())
@@ -69,6 +69,11 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
       _ => errorRedirect,
       Date => Ok(views.html.offer(title, Date.date, menuType))
     )
+  }
+
+  def toOfferPageWithOutForm(title: String, menuType: Int, date: String): PlayAction = Action { implicit request =>
+      val formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")
+      Ok(views.html.offer(title, formatter.parse(date), menuType))
   }
 
   def toCreateOfferPage(menuType: Int): PlayAction = Action { implicit request =>
@@ -113,14 +118,14 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
          * Changes in title here should be repeated in offers.scala.html
          **/
         val offerPageMap = Map(
-          1 -> Ok(views.html.offer(s"Налаштування Класичного Меню", date, 1)),
-          2 -> Ok(views.html.offer(s"Налаштування Лайт Меню", date, 2)),
-          3 -> Ok(views.html.offer(s"Налаштування Сніданок Меню", date, 3)),
-          4 -> Ok(views.html.offer(s"Налаштування Суп Меню", date, 4)),
-          5 -> Ok(views.html.offer(s"Налаштування Десерт Меню", date, 5)),
-          6 -> Ok(views.html.offer(s"Налаштування Промо Меню", date, 6))
+          1 -> Redirect(routes.OfferController.toOfferPageWithOutForm(s"Налаштування Класичного Меню", menuType , date.toString)),
+          2 -> Redirect(routes.OfferController.toOfferPageWithOutForm(s"Налаштування Лайт Меню",  menuType, date.toString)),
+          3 -> Redirect(routes.OfferController.toOfferPageWithOutForm(s"Налаштування Сніданок Меню",  menuType, date.toString)),
+          4 -> Redirect(routes.OfferController.toOfferPageWithOutForm(s"Налаштування Суп Меню",  menuType, date.toString)),
+          5 -> Redirect(routes.OfferController.toOfferPageWithOutForm(s"Налаштування Десерт Меню",  menuType, date.toString)),
+          6 -> Redirect(routes.OfferController.toOfferPageWithOutForm(s"Налаштування Промо Меню",  menuType, date.toString))
         )
-        resultWithFlash(offerPageMap(menuType), offerModel.setOffer(settingOffer), "Готово Тепер Встановіть ціни, мяу") // TODO: Flashing doesn't work think on how to fix it
+        resultWithFlash(offerPageMap(menuType), offerModel.setOffer(settingOffer), "Готово. Тепер Встановіть ціни, мяу")
       }
     )
   }

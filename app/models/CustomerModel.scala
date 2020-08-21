@@ -13,7 +13,6 @@ import services.SimbaHTMLHelper.addressToString
 class CustomerModel @Inject()(dao: Dao) {
   private val discountForInviteNewCustomers = 100
 
-
   def getAllCustomerTableRows: Seq[Customer] = {
     dao.getAllCustomers.unsafeRunSync()
   }

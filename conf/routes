@@ -29,6 +29,8 @@ GET         /offers                                 controllers.OfferController.
 GET         /offersNextWeekFromGivenDate            controllers.OfferController.toOfferPageWithNextWeek
 GET         /offersLastWeekFromGivenDate            controllers.OfferController.toOfferPageWithLastWeek
 GET         /offer/:title/:menuType                 controllers.OfferController.toOfferPage(title: String, menuType: Int)
+# offerWithOutForm never used out side scala code in OfferController.scala
+GET         /offerWithOutForm/:title/:menuType/:date           controllers.OfferController.toOfferPageWithOutForm(title: String, menuType: Int, date: String)
 GET         /setOffer/:menuType                     controllers.OfferController.toCreateOfferPage(menuType: Int)
 GET         /offerPreferance/:title/:menuType       controllers.OfferController.toOfferPreferencePage(title: String, menuType: Int)
 GET         /recipesOnThisWeek                      controllers.OfferController.toRecipesOnThisWeekPage()
