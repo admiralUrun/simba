@@ -10,10 +10,11 @@ import play.api.mvc._
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json, Writes}
 import services.SimbaHTMLHelper.{getLastSundayFromGivenDate, getNextSundayFromGivenDate}
+import services.SimbaAlias.PlayAction
 
 @Singleton
 class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
-  type PlayAction = Action[AnyContent]
+
   private val setOfferForm = Form(
     mapping(
       "menuType" -> number,

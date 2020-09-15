@@ -5,11 +5,10 @@ import models.{OrderModel, OrderInput}
 import play.api.data.Forms._
 import play.api.data.Form
 import play.api.mvc._
-import services.SimbaAlias.ID
+import services.SimbaAlias._
 
 @Singleton
 class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
-  type PlayAction = Action[AnyContent]
   private val orderForm = Form(
     mapping(
       "id" -> ignored(None: Option[Int]),

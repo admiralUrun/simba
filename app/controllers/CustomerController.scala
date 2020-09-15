@@ -12,7 +12,6 @@ import services.SimbaAlias._
 
 @Singleton
 class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
-  type PlayAction = Action[AnyContent]
   private val customerForm = Form(
     mapping(
       "id" -> ignored(None: Option[Int]),

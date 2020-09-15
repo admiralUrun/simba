@@ -43,28 +43,28 @@ class OfferModel @Inject()(dao: Dao) {
     def primeMenuTypeInsets(menuType: Int, recipes: List[Recipe]): List[InsertOffer] = {
       val recipesWithIndex = recipes.zipWithIndex
       val allRecipesOnFour = recipesWithIndex.map { case (r, i) =>
-        InsertOffer(s"${convertMenuTypeToString(menuType)} ${i + 1} на 4", 0, List(r), 4)
+        InsertOffer(s"${convertMenuTypeToString(menuType)} ${i + 1} на 4", 0, List(r), 2)
       }
       val allRecipesOnTwo = recipesWithIndex.map { case (r, i) =>
-        InsertOffer(s"${convertMenuTypeToString(menuType)} ${i + 1} на 2", 0, List(r), 2)
+        InsertOffer(s"${convertMenuTypeToString(menuType)} ${i + 1} на 2", 0, List(r), 1)
       }
 
       List( // TODO: Think of something better
-        InsertOffer(s"5 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 4 ${convertMenuTypeToString(menuType)}"), recipes, 4),
-        InsertOffer(s"5 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 2 ${convertMenuTypeToString(menuType)}"), recipes, 2),
-        InsertOffer(s"3 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 4 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 4),
-        InsertOffer(s"3 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 2 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 2)
+        InsertOffer(s"5 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 4 ${convertMenuTypeToString(menuType)}"), recipes, 2),
+        InsertOffer(s"5 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 2 ${convertMenuTypeToString(menuType)}"), recipes, 1),
+        InsertOffer(s"3 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 4 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 2),
+        InsertOffer(s"3 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 2 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 1)
       ) ::: allRecipesOnTwo ::: allRecipesOnFour
     }
 
     def sideMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = {
-      recipes.map(r => InsertOffer(r.name, 0, List(r), 2))
+      recipes.map(r => InsertOffer(r.name, 0, List(r), 1))
     }
 
     def promoMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = {
       List(
-        InsertOffer("Промо на 2", 0, recipes, 2),
-        InsertOffer("Промо на 4", 0, recipes, 4)
+        InsertOffer("Промо на 2", 0, recipes, 1),
+        InsertOffer("Промо на 4", 0, recipes, 2)
       )
     }
 
@@ -112,4 +112,4 @@ case class EditOffer(ids: List[ID], names: List[String], prices: List[Int], exec
 
 case class PassingDate(date: Date)
 
-case class InsertOffer(name: String, price: Int, recipes: List[Recipe], quantityOfRecipes: Int)
+case class InsertOffer(name: String, price: Int, recipes: List[Recipe], multipliepQuantity: Int)

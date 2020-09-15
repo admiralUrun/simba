@@ -89,11 +89,23 @@ class Dao @Inject()(dS: DoobieStore) {
       .unique
   }.transact(xa)
 
-  def getDiscountFormCustomerBy(id: ID, sunAndMonLasWeek:(Date, Date)): IO[Int] = { // TODO: ask for batter way to do such things
+  def getDiscountFormCustomerBy(id: ID, sunAndMonLasWeek:(Date, Date)): IO[Int] = {
     for {
       ordersLastSunday  <- (orderSelect ++ fr"where inviter_id = $id and delivery_day = ${sunAndMonLasWeek._1}").query[Order].to[List].transact(xa)
       ordersLastMonday  <- (orderSelect ++ fr"where inviter_id = $id and delivery_day = ${sunAndMonLasWeek._2}").query[Order].to[List].transact(xa)
     } yield ordersLastSunday.length + ordersLastMonday.length
+  }
+
+  def getCalculationsOnThisWeek(dates: (Date, Date)): Seq[Calculation] = {
+    sql"""select i.description, i.unit, i.art_by,
+           sum(if(i.unit ='шт', r_i.netto, o_r.quantity * r_i.netto)) as count
+         from orders
+             join order_recipes o_r on orders.id = o_r.order_id
+             join recipes r on o_r.recipe_id = r.id
+             join recipe_ingredients r_i on r.id = r_i.recipe_id
+             join ingredients i on r_i.ingredient_id = i.id
+             where orders.delivery_day = ${dates._1} and orders.delivery_day = ${dates._2}
+             group by i.id""".query[Calculation].to[List].transact(xa).unsafeRunSync()
   }
 
   // --- Change methods ---
@@ -155,7 +167,7 @@ class Dao @Inject()(dS: DoobieStore) {
     (for {
       _ <- deleteBeforeUpdate(date, menuType)
       _ <- list.traverse { o =>
-        insertOrUpdateOffer(o.name, date, menuType, o.price, o.recipes, o.quantityOfRecipes)
+        insertOrUpdateOffer(o.name, date, menuType, o.price, o.recipes, o.multipliepQuantity)
       }
     } yield ()).transact(xa)
   }
