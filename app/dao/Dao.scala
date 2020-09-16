@@ -26,7 +26,7 @@ class Dao @Inject()(dS: DoobieStore) {
     .transact(xa)
 
   def getAllCustomerTableRowsLike(search: String): IO[Seq[Customer]] = (customerSelect ++
-    sql"""where first_name like $search or
+    fr"""where first_name like $search or
            last_name like $search or
             phone like $search or
              phone2 like $search or
@@ -98,13 +98,13 @@ class Dao @Inject()(dS: DoobieStore) {
 
   def getCalculationsOnThisWeek(dates: (Date, Date)): Seq[Calculation] = {
     sql"""select i.description, i.unit, i.art_by,
-           sum(if(i.unit ='шт', r_i.netto, o_r.quantity * r_i.netto)) as count
+           sum(if(i.unit ='шт', r_i.netto, o_r.quantity * r_i.netto)) as count®
          from orders
              join order_recipes o_r on orders.id = o_r.order_id
              join recipes r on o_r.recipe_id = r.id
              join recipe_ingredients r_i on r.id = r_i.recipe_id
              join ingredients i on r_i.ingredient_id = i.id
-             where orders.delivery_day = ${dates._1} and orders.delivery_day = ${dates._2}
+             where orders.delivery_day = ${dates._1} or orders.delivery_day = ${dates._2}
              group by i.id""".query[Calculation].to[List].transact(xa).unsafeRunSync()
   }
 
@@ -194,10 +194,10 @@ class Dao @Inject()(dS: DoobieStore) {
       _ <-
         sql"""update orders set
            address_id = ${o.addressId},
-           inviterId = ${o.inviterId},
+           inviter_id = ${o.inviterId},
             delivery_day = ${o.deliveryDay},
              deliver_from = ${convertStringToMinutes(o.deliverFrom)}, deliver_to = ${convertStringToMinutes(o.deliverTo)},
-              total = ${o.total}, discount = ${o.discount}
+              total = ${o.total}, discount = ${o.discount},
                payment = ${convertPayment(o.payment)},
               out_of_zone_delivery = ${o.offlineDelivery}, delivery_on_monday = ${o.deliveryOnMonday},
               paid = ${o.paid}, delivered = ${o.delivered},

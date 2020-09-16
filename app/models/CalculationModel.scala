@@ -15,4 +15,4 @@ class CalculationModel @Inject()(dao: Dao) {
   }
 }
 
-case class Calculation(description: String, unit: String, artBy: Int, count: Long)
+case class Calculation(description: String, unit: String, artBy: Int, count: Float)
