@@ -57,8 +57,7 @@ create index recipes_type on recipes(menu_type);
 create table recipe_ingredients (
     recipe_id int,
     ingredient_id int,
-    -- was decimal changed to Double because decimal crop all numbers after zero
-    netto double,
+    netto decimal(6,5),
     primary key (recipe_id, ingredient_id)
 );
 
