@@ -6,7 +6,6 @@ import cats.effect.IO
 import cats.implicits._
 import doobie._
 import doobie.implicits._
-import scala.concurrent.ExecutionContext.Implicits.global
 import models._
 import services.SimbaAlias.ID
 import services.SimbaHTMLHelper.stringToAddress
@@ -64,8 +63,9 @@ class Dao @Inject()(dS: DoobieStore) {
     val orderOffers = sql"select distinct offer_id, quantity from order_recipes where order_id = $id".query[(ID, Int)].to[List].transact(xa).unsafeRunSync()
     orderOffers.traverse { case (id: ID, _) =>
       (offerSelect ++ fr"where id = $id").query[Offer].unique
-    }.transact(xa).map { offersList => // TODO: IT's horrible by complexity quick fix but it's works
-      offersList.sortBy(o => o.id).zip(orderOffers.sortBy(t => t._1)).map(t => (t._1, t._2._2))
+    }.transact(xa).map { offersList =>
+      val idToOffer = offersList.groupBy(_.id.head)
+      orderOffers.map{ case (id: ID, quantity: Int) => (idToOffer(id), quantity)}.map(t => (t._1.head, t._2))
     }
   }
 
@@ -150,7 +150,7 @@ class Dao @Inject()(dS: DoobieStore) {
       id <- sql"select last_insert_id()".query[ID].unique
       _ <- insertOrderRecipes(id, recipesIdsAndQuantity)
     } yield ()).transact(xa)
-  } // TODO
+  }
 
   def insertOrUpdateOffers(date: Date, menuType: Int, list: List[InsertOffer]): IO[Unit] = {
     def deleteBeforeUpdate(date: Date, menuType: Int): ConnectionIO[Unit] = {
@@ -212,7 +212,7 @@ class Dao @Inject()(dS: DoobieStore) {
       _ <- sql"delete from order_recipes where order_id = $id".update.run
       _ <- insertOrderRecipes(id, recipesIdsAndQuantity)
     } yield ()).transact(xa)
-  } // TODO
+  }
 
   def updateOffersNameAndPrice(list: List[(Int, (String, Int))]): IO[Unit] = list.traverse { case (id, (name, price)) =>
     sql"update offers set name = $name, price= $price where id= $id".update.run
@@ -221,9 +221,16 @@ class Dao @Inject()(dS: DoobieStore) {
   // --- Private methods ---
 
 
-  private def getAllOffersRecipes(ids: List[Int]): IO[List[(ID, Int, Int, Int)]] = ids.traverse { offerId =>
-    sql"select * from offer_recipes where offer_id = $offerId".query[OfferRecipes].to[List]
-  }.map(_.flatten).transact(xa).map(_.map(o => (o.offerId, o.recipesId, o.menuForPeople))).map(_.groupBy(h => h).map(t => (t._1._1, t._1._2, t._1._3, t._2.length)).toList)
+  private def getAllOffersRecipes(ids: List[ID]): IO[List[(ID, Int, Int, Int)]] = {
+    ids.distinct.traverse { offerId =>
+      sql"select * from offer_recipes where offer_id = $offerId".query[OfferRecipes].to[List]
+    }.transact(xa)
+      .map { r =>
+        val idToQuantity = ids.groupBy(id => id).mapValues(_.size)
+        r.flatten
+          .map(o => (o.offerId, o.recipesId, o.menuForPeople, idToQuantity(o.offerId)))
+      }
+  }
 
   private def insertAddresses(list: List[Address], customerId: ID): ConnectionIO[Unit] = list.traverse { a =>
     sql"""insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes)
@@ -232,9 +239,12 @@ class Dao @Inject()(dS: DoobieStore) {
       .run
   }.void
 
-  private def insertOrderRecipes(orderId: Int, recipesIdsQuantity: List[(Int, Int, Int, Int)]): ConnectionIO[Unit] = recipesIdsQuantity.traverse { rIdQ =>
-    sql"insert into order_recipes (order_id, offer_id, recipe_id, menu_for_people, quantity) value ($orderId, ${rIdQ._1}, ${rIdQ._2}, ${rIdQ._3}, ${rIdQ._4})".update.run
-  }.void
+  private def insertOrderRecipes(orderId: ID, recipesIdsQuantity: List[(Int, Int, Int, Int)]): ConnectionIO[Unit] = {
+    sql"delete from order_recipes where order_id = $orderId".update.run *>
+    recipesIdsQuantity.traverse { rIdQ =>
+      sql"insert into order_recipes (order_id, offer_id, recipe_id, menu_for_people, quantity) value ($orderId, ${rIdQ._1}, ${rIdQ._2}, ${rIdQ._3}, ${rIdQ._4})".update.run
+    }.void
+  }
 
 }
 

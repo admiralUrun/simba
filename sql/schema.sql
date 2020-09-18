@@ -114,5 +114,5 @@ create table order_recipes (
     -- 1 is for 2 people, 2 is for 4 people
     recipe_id int not null,
     quantity int,
-    primary key (order_id, recipe_id)
+    primary key (order_id, offer_id, recipe_id)
 );

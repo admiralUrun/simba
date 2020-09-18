@@ -47,7 +47,10 @@ class OrderModel @Inject()(dao: Dao) {
 
   def insert(o: OrderInput): Boolean = {
     dao.insertOrder(o, convertStringToMinutes, convertPaymentToInt)
-      .redeemWith(_ => IO(false), _ => IO(true))
+      .redeemWith(error => IO{
+        println(error.toString)
+        false
+      }, _ => IO(true))
       .unsafeRunSync()
   }
 
@@ -81,7 +84,10 @@ class OrderModel @Inject()(dao: Dao) {
 
   def edit(id: ID, o: OrderInput): Boolean = {
     dao.editOrder(id, o, convertStringToMinutes, convertPaymentToInt)
-      .redeemWith(_ => IO(false), _ => IO(true))
+      .redeemWith(error => IO{
+        println(error.toString)
+        false
+      }, _ => IO(true))
       .unsafeRunSync()
   }
 
