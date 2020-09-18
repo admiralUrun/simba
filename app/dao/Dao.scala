@@ -6,6 +6,7 @@ import cats.effect.IO
 import cats.implicits._
 import doobie._
 import doobie.implicits._
+import scala.concurrent.ExecutionContext.Implicits.global
 import models._
 import services.SimbaAlias.ID
 import services.SimbaHTMLHelper.stringToAddress
@@ -18,7 +19,7 @@ class Dao @Inject()(dS: DoobieStore) {
   private val addressSelect = sql"select id, customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes from addresses "
   private val orderSelect = sql"select id, customer_id, address_id, inviter_id, order_day, delivery_day, deliver_from, deliver_to, out_of_zone_delivery, delivery_on_monday, total, discount,  payment, paid, delivered, note from orders "
   private val offerSelect = sql"select id, name, price, expiration_date, menu_type from offers "
-  private val recipesSelect = sql"select id, name, menu_type, edited from recipes "
+  private val recipesSelect = sql"select id, name, type, edited from recipes "
 
   def getAllCustomers: IO[Seq[Customer]] = customerSelect
     .query[Customer]
@@ -59,11 +60,13 @@ class Dao @Inject()(dS: DoobieStore) {
     .unique
     .transact(xa)
 
-  def getAllOfferIdByOrder(id: ID): IO[List[Offer]] = {
-    val orderOffers = sql"select distinct offer_id from order_recipes where order_id = $id".query[ID].to[List].transact(xa).unsafeRunSync()
-    orderOffers.traverse { id =>
-      (offerSelect ++ fr"where id = $id").query[Offer].to[List]
-    }.transact(xa).map(_.flatten)
+  def getAllOfferIdByOrder(id: ID): IO[List[(Offer, Int)]] = {
+    val orderOffers = sql"select distinct offer_id, quantity from order_recipes where order_id = $id".query[(ID, Int)].to[List].transact(xa).unsafeRunSync()
+    orderOffers.traverse { case (id: ID, _) =>
+      (offerSelect ++ fr"where id = $id").query[Offer].unique
+    }.transact(xa).map { offersList => // TODO: IT's horrible by complexity quick fix but it's works
+      offersList.sortBy(o => o.id).zip(orderOffers.sortBy(t => t._1)).map(t => (t._1, t._2._2))
+    }
   }
 
   def getOffersByDate(date: String): IO[Seq[Offer]] = {
@@ -98,7 +101,7 @@ class Dao @Inject()(dS: DoobieStore) {
 
   def getCalculationsOnThisWeek(dates: (Date, Date)): Seq[Calculation] = {
     sql"""select i.description, i.unit, i.art_by,
-           sum(if(i.unit ='шт',o_r.quantity * r_i.netto, o_r.quantity * o_r.menu_is_on_number_of_people * r_i.netto)) as count
+           sum(if(i.unit ='шт',o_r.quantity * r_i.netto, o_r.quantity * o_r.menu_for_people * r_i.netto)) as count
          from orders
              join order_recipes o_r on orders.id = o_r.order_id
              join recipes r on o_r.recipe_id = r.id
@@ -150,8 +153,12 @@ class Dao @Inject()(dS: DoobieStore) {
   } // TODO
 
   def insertOrUpdateOffers(date: Date, menuType: Int, list: List[InsertOffer]): IO[Unit] = {
-    def deleteBeforeUpdate(date: Date, menuType: Int): ConnectionIO[Int] = { // TODO: select and delete if needed to fix join table bugs
-      sql"delete from offers where expiration_date = $date and menu_type = $menuType".update.run
+    def deleteBeforeUpdate(date: Date, menuType: Int): ConnectionIO[Unit] = {
+      for {
+        offers <- sql"select id from offers where expiration_date = $date".query[ID].to[List]
+        _ <- offers.traverse(i => sql"delete from offer_recipes where offer_id = $i".update.run)
+        _ <- sql"delete from offers where expiration_date = $date and menu_type = $menuType".update.run
+      } yield()
     }
 
     def insertOrUpdateOffer(name: String, date: Date, menuType: Int, price: Int, recipes: List[Recipe], quantityOfRecipes: Int): ConnectionIO[Unit] = {
@@ -159,7 +166,7 @@ class Dao @Inject()(dS: DoobieStore) {
         _ <- sql"insert into offers (name, price, expiration_date, menu_type) values ($name, $price, $date, $menuType)".update.run
         id <- sql"select last_insert_id()".query[Int].unique
         _ <- recipes.traverse { r =>
-          sql"insert into offer_recipes (offer_id, recipe_id, quantity) values ($id, ${r.id}, $quantityOfRecipes)".update.run
+          sql"insert into offer_recipes (offer_id, recipe_id, menu_for_people) values ($id, ${r.id}, $quantityOfRecipes)".update.run
         }
       } yield ()
     }
@@ -213,9 +220,10 @@ class Dao @Inject()(dS: DoobieStore) {
 
   // --- Private methods ---
 
-  private def getAllOffersRecipes(ids: List[Int]): IO[List[(ID, Int, Int)]] = ids.traverse { offerId =>
+
+  private def getAllOffersRecipes(ids: List[Int]): IO[List[(ID, Int, Int, Int)]] = ids.traverse { offerId =>
     sql"select * from offer_recipes where offer_id = $offerId".query[OfferRecipes].to[List]
-  }.map(_.flatten).transact(xa).map(_.map(o => (o.offerId, o.recipesId, o.quantity)))
+  }.map(_.flatten).transact(xa).map(_.map(o => (o.offerId, o.recipesId, o.menuForPeople))).map(_.groupBy(h => h).map(t => (t._1._1, t._1._2, t._1._3, t._2.length)).toList)
 
   private def insertAddresses(list: List[Address], customerId: ID): ConnectionIO[Unit] = list.traverse { a =>
     sql"""insert into addresses (customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes)
@@ -224,8 +232,8 @@ class Dao @Inject()(dS: DoobieStore) {
       .run
   }.void
 
-  private def insertOrderRecipes(orderId: Int, recipesIdsQuantity: List[(Int, Int, Int)]): ConnectionIO[Unit] = recipesIdsQuantity.traverse { rIdQ =>
-    sql"insert into order_recipes (order_id, offer_id, recipe_id, quantity) value ($orderId, ${rIdQ._1}, ${rIdQ._2}, ${rIdQ._3})".update.run
+  private def insertOrderRecipes(orderId: Int, recipesIdsQuantity: List[(Int, Int, Int, Int)]): ConnectionIO[Unit] = recipesIdsQuantity.traverse { rIdQ =>
+    sql"insert into order_recipes (order_id, offer_id, recipe_id, menu_for_people, quantity) value ($orderId, ${rIdQ._1}, ${rIdQ._2}, ${rIdQ._3}, ${rIdQ._4})".update.run
   }.void
 
 }

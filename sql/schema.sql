@@ -76,7 +76,7 @@ create table offer_recipes (
     offer_id int,
     recipe_id int,
     -- number of servings (for 2 or 4 people)
-    quantity int,
+    menu_for_people int,
     primary key (offer_id, recipe_id)
 );
 
@@ -110,7 +110,7 @@ drop table if exists order_recipes;
 create table order_recipes (
     order_id int not null,
     offer_id int not null,
-    menu_is_on_number_of_people int not null,
+    menu_for_people int not null,
     -- 1 is for 2 people, 2 is for 4 people
     recipe_id int not null,
     quantity int,

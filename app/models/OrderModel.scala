@@ -32,7 +32,7 @@ class OrderModel @Inject()(dao: Dao) {
         inviter <- if (o.inviterId.isDefined) dao.getCustomerBy(o.inviterId.head).map(c => Option(c)) else IO(None)
       } yield OrderForDisplay(o.id, customer, address, inviter,
         o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
-        getAllOfferIdByOrderId(o.id.head).map(_.name).mkString(", "),
+        getAllOfferIdByOrderId(o.id.head).map(t => t._1.name + s"(${t._2})").mkString(", "),
         o.total, o.discount,
         intToPayment(o.payment),
         o.offlineDelivery, o.deliveryOnMonday,
@@ -66,7 +66,7 @@ class OrderModel @Inject()(dao: Dao) {
       OrderInput(o.id, o.customerId, o.addressId, o.inviterId,
         changingDateFormatForPlayForm(o.orderDay), changingDateFormatForPlayForm(o.deliveryDay),
         convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
-        getAllOfferIdByOrderId(o.id.head).map(_.id.head),
+        getAllOfferIdByOrderId(o.id.head).flatMap(t => List.fill(t._2)(t._1.id.head)),
         o.total, o.discount,
         intToPayment(o.payment),
         o.offlineDelivery, o.deliveryOnMonday,
@@ -130,8 +130,9 @@ class OrderModel @Inject()(dao: Dao) {
     replaceWithDoubleZero(m / 60) + ":" + replaceWithDoubleZero(m % 60)
   }
 
-  private def getAllOfferIdByOrderId(id: ID): List[Offer] = {
-    dao.getAllOfferIdByOrder(id).unsafeRunSync()
+  private def getAllOfferIdByOrderId(id: ID): List[(Offer, Int)] = {
+    val x  = dao.getAllOfferIdByOrder(id).unsafeRunSync()
+    x
   }
 
 }
@@ -179,4 +180,4 @@ case class OrderMenuItem(titleOnDisplay: String, value: Int, cost: Int)
 
 case class OrderMenu(titleOnDisplay: String, menuItems: Seq[OrderMenuItem])
 
-case class OrderResepies(orderId: ID, offerId: ID, recipesId: ID, quantity: Int)
+case class OrderResepies(orderId: ID, offerId: ID, recipesId: ID, menuForPeople: Int, quantity: Int)

@@ -104,7 +104,7 @@ case class Offer(id: Option[ID], name: String, price: Int, executionDate: Date, 
 
 case class Recipe(id: Option[ID], name: String, menuType: String, edited: Boolean)
 
-case class OfferRecipes(offerId: ID, recipesId: ID, quantity: Int)
+case class OfferRecipes(offerId: ID, recipesId: ID, menuForPeople: Int)
 
 case class SettingOffer(menuType: Int, executionDate: Date, recipeIds: List[ID])
 
