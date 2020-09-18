@@ -110,6 +110,8 @@ drop table if exists order_recipes;
 create table order_recipes (
     order_id int not null,
     offer_id int not null,
+    menu_is_on_number_of_people int not null,
+    -- 1 is for 2 people, 2 is for 4 people
     recipe_id int not null,
     quantity int,
     primary key (order_id, recipe_id)

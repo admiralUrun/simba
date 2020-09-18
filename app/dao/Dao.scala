@@ -18,7 +18,7 @@ class Dao @Inject()(dS: DoobieStore) {
   private val addressSelect = sql"select id, customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes from addresses "
   private val orderSelect = sql"select id, customer_id, address_id, inviter_id, order_day, delivery_day, deliver_from, deliver_to, out_of_zone_delivery, delivery_on_monday, total, discount,  payment, paid, delivered, note from orders "
   private val offerSelect = sql"select id, name, price, expiration_date, menu_type from offers "
-  private val recipesSelect = sql"select id, name, type, edited from recipes "
+  private val recipesSelect = sql"select id, name, menu_type, edited from recipes "
 
   def getAllCustomers: IO[Seq[Customer]] = customerSelect
     .query[Customer]
@@ -98,7 +98,7 @@ class Dao @Inject()(dS: DoobieStore) {
 
   def getCalculationsOnThisWeek(dates: (Date, Date)): Seq[Calculation] = {
     sql"""select i.description, i.unit, i.art_by,
-           sum(if(i.unit ='шт', r_i.netto, o_r.quantity * r_i.netto)) as count®
+           sum(if(i.unit ='шт',o_r.quantity * r_i.netto, o_r.quantity * o_r.menu_is_on_number_of_people * r_i.netto)) as count
          from orders
              join order_recipes o_r on orders.id = o_r.order_id
              join recipes r on o_r.recipe_id = r.id
@@ -147,7 +147,7 @@ class Dao @Inject()(dS: DoobieStore) {
       id <- sql"select last_insert_id()".query[ID].unique
       _ <- insertOrderRecipes(id, recipesIdsAndQuantity)
     } yield ()).transact(xa)
-  }
+  } // TODO
 
   def insertOrUpdateOffers(date: Date, menuType: Int, list: List[InsertOffer]): IO[Unit] = {
     def deleteBeforeUpdate(date: Date, menuType: Int): ConnectionIO[Int] = { // TODO: select and delete if needed to fix join table bugs
@@ -205,7 +205,7 @@ class Dao @Inject()(dS: DoobieStore) {
       _ <- sql"delete from order_recipes where order_id = $id".update.run
       _ <- insertOrderRecipes(id, recipesIdsAndQuantity)
     } yield ()).transact(xa)
-  }
+  } // TODO
 
   def updateOffersNameAndPrice(list: List[(Int, (String, Int))]): IO[Unit] = list.traverse { case (id, (name, price)) =>
     sql"update offers set name = $name, price= $price where id= $id".update.run
