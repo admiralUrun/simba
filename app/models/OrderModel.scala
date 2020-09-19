@@ -1,5 +1,6 @@
 package models
 
+import play.api.Logger
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
 import dao.Dao
@@ -13,6 +14,7 @@ class OrderModel @Inject()(dao: Dao) {
   private type MenuPrice = Int
   private type MenuTitle = String
   private type Minutes = Int
+  private val logger = Logger("OrderModelLogger")
 
   private val paymentToInt = Map(
     "Готівка" -> 1,
@@ -42,19 +44,26 @@ class OrderModel @Inject()(dao: Dao) {
 
     dao.getAllOrders // TODO maybe get it all under one .unsafeRunSync
       .map(_.map(orderToOrderForDisplay).groupBy(_.deliveryDay))
+      .redeemWith(t => {
+        logger.error("", t) // TODO: Think about message here that give clear explanation of what could happen
+        IO{
+          val emptyMap: Map[Date, Seq[OrderForDisplay]] = Map()
+          emptyMap
+        }
+      }, s => IO(s))
       .unsafeRunSync
   }
 
   def insert(o: OrderInput): Boolean = {
     dao.insertOrder(o, convertStringToMinutes, convertPaymentToInt)
-      .redeemWith(error => IO{
-        println(error.toString)
-        false
+      .redeemWith(t => {
+        logger.error("Can't insert given OrderInput", t)
+        IO(false)
       }, _ => IO(true))
       .unsafeRunSync()
   }
 
-  def findBy(id: ID): OrderInput = {
+  def findBy(id: ID): Option[OrderInput] = {
     def orderToOrderForEditAndCreate(o: Order): OrderInput = {
       /**
        * Have to use is operation on java.util.Date that was parsed from "yyyy-MM-dd" format
@@ -79,14 +88,18 @@ class OrderModel @Inject()(dao: Dao) {
 
     dao.getOrderBy(id)
       .map(orderToOrderForEditAndCreate)
+      .redeemWith(t => {
+        logger.error(s"Can't find order by ID = $id", t) // TODO: What return in such cases None ?
+        IO(None)
+      }, s => IO(Option(s)))
       .unsafeRunSync()
   }
 
   def edit(id: ID, o: OrderInput): Boolean = {
     dao.editOrder(id, o, convertStringToMinutes, convertPaymentToInt)
-      .redeemWith(error => IO{
-        println(error.toString)
-        false
+      .redeemWith(t => {
+        logger.error(s"Can't edit order with given ID = $id", t)
+        IO(false)
       }, _ => IO(true))
       .unsafeRunSync()
   }
@@ -120,6 +133,10 @@ class OrderModel @Inject()(dao: Dao) {
     val sundayOnCurrentWeek = c.getTime
     val format = new SimpleDateFormat("yyyy-MM-dd")
     dao.getOffersByDate(format.format(sundayOnCurrentWeek))
+      .redeemWith(t => {
+        logger.error(s"Can't get Offers by this date ${format.format(sundayOnCurrentWeek)}", t)
+        IO(List())
+      }, s => IO(s))
       .unsafeRunSync()
   }
 
@@ -137,8 +154,12 @@ class OrderModel @Inject()(dao: Dao) {
   }
 
   private def getAllOfferIdByOrderId(id: ID): List[(Offer, Int)] = {
-    val x  = dao.getAllOfferIdByOrder(id).unsafeRunSync()
-    x
+    dao.getAllOfferIdByOrder(id)
+      .redeemWith(t => {
+        logger.error(s"Can't get Offers by Order ID = $id", t)
+        IO(List())
+      }, s => IO(s))
+      .unsafeRunSync()
   }
 
 }
@@ -186,4 +207,4 @@ case class OrderMenuItem(titleOnDisplay: String, value: Int, cost: Int)
 
 case class OrderMenu(titleOnDisplay: String, menuItems: Seq[OrderMenuItem])
 
-case class OrderResepies(orderId: ID, offerId: ID, recipesId: ID, menuForPeople: Int, quantity: Int)
+case class OrderRecipes(orderId: ID, offerId: ID, recipesId: ID, menuForPeople: Int, quantity: Int)

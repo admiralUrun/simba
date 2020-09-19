@@ -1,5 +1,6 @@
 package models
 
+import play.api.Logger
 import java.util.Date
 import cats.effect.IO
 import dao.Dao
@@ -9,9 +10,15 @@ import services.SimbaAlias._
 
 @Singleton
 class OfferModel @Inject()(dao: Dao) {
+  private val logger = Logger("OfferModelLogger")
 
   def getOfferPreferencesByMenuType(menuType: Int, executionDate: Date): EditOffer = {
-    val offers = dao.getOfferByDateAndMenuType(executionDate, menuType).unsafeRunSync().toList
+    val offers = dao.getOfferByDateAndMenuType(executionDate, menuType)
+      .redeemWith(t => {
+        logger.error(s"Can't get Offers by given Date = $executionDate and menuType = $menuType", t)
+        IO(List())
+      }, s => IO(s))
+      .unsafeRunSync().toList
     EditOffer(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), executionDate, menuType)
   }
 
@@ -72,26 +79,46 @@ class OfferModel @Inject()(dao: Dao) {
 
     if (!validationError(menuType, sO.recipeIds.length)) false
     else {
-      val recipes = dao.getRecipesBy(sO.recipeIds).unsafeRunSync().toList
+      val recipes = dao.getRecipesBy(sO.recipeIds)
+        .redeemWith(t => {
+          logger.error(s"Can't get Recipes by list of given  IDs ${sO.recipeIds.toString()}", t)
+          IO(List())
+        }, s => IO(s))
+        .unsafeRunSync().toList
       val insertOffers = {
         if (menuType == 4 || menuType == 5) sideMenuTypeInsets(recipes)
         else if (menuType == 6) promoMenuTypeInsets(recipes)
         else primeMenuTypeInsets(menuType, recipes)
       }
 
-      dao.insertOrUpdateOffers(sO.executionDate, menuType, insertOffers).redeemWith(_ => IO(false), _ => IO(true)).unsafeRunSync()
+      dao.insertOrUpdateOffers(sO.executionDate, menuType, insertOffers)
+        .redeemWith(t => {
+        logger.error("Can't insert or Update Offers ", t)
+        IO(false)
+      }, _ => IO(true))
+        .unsafeRunSync()
     }
   }
 
   def setOfferPreferences(editOffer: EditOffer): Boolean = {
     if (editOffer.ids.length != editOffer.prices.length || editOffer.ids.length != editOffer.names.length) false
     else {
-      dao.updateOffersNameAndPrice(editOffer.ids.zip(editOffer.names.zip(editOffer.prices))).redeemWith(_ => IO(false), _ => IO(true)).unsafeRunSync()
+      dao.updateOffersNameAndPrice(editOffer.ids.zip(editOffer.names.zip(editOffer.prices)))
+        .redeemWith(t => {
+          logger.error("Can't set Offer Preferences", t)
+          IO(false)
+        }, _ => IO(true)
+      ).unsafeRunSync()
     }
   }
 
   def getRecipesByName(name: String): Seq[Recipe] = {
-    dao.getRecipesLike(name).unsafeRunSync()
+    dao.getRecipesLike(name)
+      .redeemWith(t =>{
+        logger.error(s"Can't get Recipes by name = $name", t)
+        IO(List())
+      }, s => IO(s))
+      .unsafeRunSync()
   }
 
   def getAllRecipesOnThisWeek(date: Date): List[Recipe] = { // TODO

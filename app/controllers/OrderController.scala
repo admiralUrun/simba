@@ -32,12 +32,15 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   def toOrderEditPage(id: Int): PlayAction = Action { implicit request =>
-    Ok(views.html.editOrder(id,
-      orderForm.fill(orderModel.findBy(id)),
-      orderModel.getMenusToolsForAddingToOrder,
-      orderModel.getInOrderToTextWithCostMap,
-      orderModel.getPayments
-    ))
+    orderModel.findBy(id) match {
+      case None => orderFeedPage.flashing("error" -> "Не зміг знайти замовлення")
+      case Some(value) => Ok(views.html.editOrder(id,
+        orderForm.fill(value),
+        orderModel.getMenusToolsForAddingToOrder,
+        orderModel.getInOrderToTextWithCostMap,
+        orderModel.getPayments
+      ))
+    }
   }
 
   def toOrderCreatePage: PlayAction = Action { implicit request =>
