@@ -54,6 +54,11 @@ class Dao @Inject()(dS: DoobieStore) {
     .to[List]
     .transact(xa)
 
+  def getAllOrdersWhere(deliveryDay: Date): IO[Seq[Order]] = (orderSelect ++ fr"where delivery_day = $deliveryDay")
+    .query[Order]
+    .to[List]
+    .transact(xa)
+
   def getOrderBy(id: ID): IO[Order] = (orderSelect ++ fr"where id = $id")
     .query[Order]
     .unique

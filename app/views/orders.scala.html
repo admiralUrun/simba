@@ -1,10 +1,13 @@
 @import services.SimbaHTMLHelper._
 @import java.util.Date
-@(orders:Map[Date, Seq[OrderForDisplay]], search:String)(implicit request: MessagesRequestHeader)
+@(orders:Map[Date, Seq[OrderForDisplay]], search:String, errorMessage: Option[String] = None)(implicit request: MessagesRequestHeader)
 
     @getDateRow(d: Date) = {
-        <div class="row  container-fluid">
-            <h4>@formattingDateForDisplay(d)</h4>
+        <div class=" clearfix">
+            <h4 class="float-left">@formattingDateForDisplay(d)</h4>
+            <div class="float-lg-right">
+                <button class="btn btn-info disabled">Стікери Для Курієрів</button>
+            </div>
         </div>
     }
 
@@ -23,9 +26,11 @@
     }
 
 @main("Замовлення") {
-
-    @getFlash()
-
+    @if(errorMessage.isDefined) {
+        <div class="alert-danger">
+            @errorMessage.head
+        </div>
+    }
     @getStandardSearchDiv(Option(routes.OrderController.toOrderFeedPage("")), None, Option(routes.OrderController.toOrderCreatePage()), withSideJS = false)
 
     <div id="table">

@@ -52,7 +52,8 @@ object SimbaHTMLHelper {
       else SHTML("")
     }
 
-    (getFlash(request.flash.get("success"), "success") + getFlash(request.flash.get("error"), "danger")).toPlayHTML
+    (getFlash(request.flash.get("success"), "success")
+      + getFlash(request.flash.get("error"), "danger")).toPlayHTML
   }
 
   def createInputForForm[T](form: Form[T], keyInForm: String, label: String, layoutClass: String = "", inputLimit: Int, errorMessage: String = ""): Html = {
@@ -225,18 +226,17 @@ object SimbaHTMLHelper {
     val dropdownDiv = if (dropdownHead.isDefined) getSHtmlInDiv("searchMenu", "dropdown-menu", SHTML(s"<span class=${inDQ("dropdown-header")}>${dropdownHead.getOrElse("")}</span>")) else SHTML("")
 
     val mainContent: SHTML = {
-      SHTML(s"<form action=${inDQ(formAction)} method=${inDQ(formMethod)} class=${inDQ("colFirst form-inline md-form mr-auto mb-4")}>") +
+      SHTML(s"<form action=${inDQ(formAction)} method=${inDQ(formMethod)} class=${inDQ("colFirst form-inline md-form mr-auto mb-4 float-left")}>") +
         getSHtmlInDiv(layoutClass = "input-group", content = {
           SHTML(s"<input id=${inDQ("search")} name=${inDQ("search")} type=${inDQ("search")} class=${inDQ("form-control mr-sm-4 dropdown-toggle")} data-toggle=${inDQ("dropdown")} aria-haspopup=${inDQ("true")} aria-expanded=${inDQ("false")}>") +
             dropdownDiv +
-            SHTML(s"<input type=${if (withSideJS) inDQ("button") else inDQ("submit")} id=${inDQ("searchSubmit")} value=${inDQ("Пошук")} class=${inDQ("btn btn-primary btn-rounded btn-sm my-0")}>")
+            SHTML(s"<input type=${if (withSideJS) inDQ("button") else inDQ("submit")} id=${inDQ("searchSubmit")} value=${inDQ("Пошук")} class=${inDQ("btn btn-primary btn-rounded btn-sm ")}>")
         }) +
         SHTML("</form>") +
-        getSHtmlInDiv(layoutClass = "col", content = SHTML("")) +
-        getSHtmlInDiv(layoutClass = "colLast", content = SHTML(s"<a class= ${inDQ(" colLast btn btn-success")} href=${inDQ(sideButtonAction)} >Додати</a>"))
+        getSHtmlInDiv(layoutClass = "float-right", content = SHTML(s"<a class= ${inDQ(" colLast btn btn-success")} href=${inDQ(sideButtonAction)} >Додати</a>"))
     }
 
-    getSHtmlInDiv("searchDIV", "row container-fluid", mainContent).toPlayHTML
+    getSHtmlInDiv("searchDIV", "clearfix", mainContent).toPlayHTML
   }
 
   /**

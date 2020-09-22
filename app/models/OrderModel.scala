@@ -1,5 +1,6 @@
 package models
 
+import java.io.{File, PrintWriter}
 import play.api.Logger
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
@@ -26,7 +27,7 @@ class OrderModel @Inject()(dao: Dao) {
     3 -> "Бартер")
   private val payments = List("Готівка", "Карткою", "Бартер")
 
-  def getAllTableRows: Map[Date, Seq[OrderForDisplay]] = {
+  def getAllTableRows: IO[Map[Date, Seq[OrderForDisplay]]] = {
     def orderToOrderForDisplay(o: Order): OrderForDisplay = {
       (for {
         customer <- dao.getCustomerBy(o.customerId)
@@ -44,14 +45,6 @@ class OrderModel @Inject()(dao: Dao) {
 
     dao.getAllOrders // TODO maybe get it all under one .unsafeRunSync
       .map(_.map(orderToOrderForDisplay).groupBy(_.deliveryDay))
-      .redeemWith(t => {
-        logger.error("", t) // TODO: Think about message here that give clear explanation of what could happen
-        IO{
-          val emptyMap: Map[Date, Seq[OrderForDisplay]] = Map()
-          emptyMap
-        }
-      }, s => IO(s))
-      .unsafeRunSync
   }
 
   def insert(o: OrderInput): Boolean = {
@@ -63,10 +56,10 @@ class OrderModel @Inject()(dao: Dao) {
       .unsafeRunSync()
   }
 
-  def findBy(id: ID): Option[OrderInput] = {
+  def findBy(id: ID): IO[OrderInput] = {
     def orderToOrderForEditAndCreate(o: Order): OrderInput = {
       /**
-       * Have to use is operation on java.util.Date that was parsed from "yyyy-MM-dd" format
+       * Have to use is operation on java.util.Date that was parseCan't get Offers by this dated from "yyyy-MM-dd" format
        * otherwise play.api.data.Form will throw [UnsupportedOperationException: null] from java.sql.Date.toInstant
        * However if you parsed java.util.Date form "EEE MMM dd HH:mm:ss zzz yyyy" format or use { new java.util.Date() } it will work
        **/
@@ -86,13 +79,7 @@ class OrderModel @Inject()(dao: Dao) {
         o.note)
     }
 
-    dao.getOrderBy(id)
-      .map(orderToOrderForEditAndCreate)
-      .redeemWith(t => {
-        logger.error(s"Can't find order by ID = $id", t) // TODO: What return in such cases None ?
-        IO(None)
-      }, s => IO(Option(s)))
-      .unsafeRunSync()
+    dao.getOrderBy(id).map(orderToOrderForEditAndCreate)
   }
 
   def edit(id: ID, o: OrderInput): Boolean = {
@@ -126,6 +113,31 @@ class OrderModel @Inject()(dao: Dao) {
   }
 
   def getPayments: List[String] = payments
+
+  def generateCourierStickers(date: Date): IO[File] = {
+    def orderToCourierSticker(o: Order): CourierSticker = {
+      (for {
+        address <- dao.getAddressBy(o.addressId)
+      } yield CourierSticker(address,
+        convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
+        inOrder = getAllOfferIdByOrderId(o.id.head).flatMap(t => List.fill(t._2)(t._1.id.head)).mkString(" + "))).unsafeRunSync()
+    }
+    val stickers = dao.getAllOrdersWhere(date).map(_.map(orderToCourierSticker))
+    val fileName = ""
+    val printer = new PrintWriter(fileName)
+    stickers.map{ ss =>
+      ss.foreach(s => printer.write(s"""
+           ${if (s.address.city != "Київ \n") s.address.city else ""}
+           ${s.address.address} ${s.address.entrance} ${s.address.floor} ${s.address.flat}
+            ${s.deliverFrom}-${s.deliverTo}
+            ${s.inOrder}
+            \n
+            \n
+          """))
+      printer.close()
+      new File(fileName)
+    }
+  }
 
   private def getAllOffersOnThisWeek: Seq[Offer] = {
     val c = Calendar.getInstance
@@ -202,6 +214,8 @@ case class OrderInput(id: Option[ID],
                       payment: String,
                       offlineDelivery: Boolean, deliveryOnMonday: Boolean,
                       paid: Boolean, delivered: Boolean, note: Option[String])
+
+case class CourierSticker(address: Address, deliverFrom: String, deliverTo: String, inOrder: String)
 
 case class OrderMenuItem(titleOnDisplay: String, value: Int, cost: Int)
 

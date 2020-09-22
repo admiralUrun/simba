@@ -2,10 +2,8 @@ package services.importer
 
 import java.io.{File, PrintWriter}
 import java.util.regex.Pattern
-
 import com.github.tototoshi.csv.CSVReader
 import models.{Address, Customer}
-
 import scala.annotation.tailrec
 
 class CustomerImporter extends Importer {
