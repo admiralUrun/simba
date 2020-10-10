@@ -1,12 +1,15 @@
 package models
 
-import java.io.{File, PrintWriter}
-import play.api.Logger
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.{Calendar, Date}
-import dao.Dao
-import cats.effect.IO
 import javax.inject._
+import play.api.Logger
+import cats.effect.IO
+import cats.implicits._
+import com.itextpdf.text.{Document, Font, Paragraph}
+import com.itextpdf.text.pdf.{BaseFont, PdfPCell, PdfPTable, PdfWriter}
+import dao.Dao
 import services.SimbaAlias._
 import services.SimbaHTMLHelper._
 
@@ -28,23 +31,24 @@ class OrderModel @Inject()(dao: Dao) {
   private val payments = List("Готівка", "Карткою", "Бартер")
 
   def getAllTableRows: IO[Map[Date, Seq[OrderForDisplay]]] = {
-    def orderToOrderForDisplay(o: Order): OrderForDisplay = {
-      (for {
+    def orderToOrderForDisplay(o: Order): IO[OrderForDisplay] = {
+      for {
         customer <- dao.getCustomerBy(o.customerId)
         address <- dao.getAddressBy(o.addressId)
         inviter <- if (o.inviterId.isDefined) dao.getCustomerBy(o.inviterId.head).map(c => Option(c)) else IO(None)
+        offers <- getAllOfferIdByOrderId(o.id.head)
       } yield OrderForDisplay(o.id, customer, address, inviter,
         o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
-        getAllOfferIdByOrderId(o.id.head).map(t => t._1.name + s"(${t._2})").mkString(", "),
+        offers.map(t => t._1.name + s"(${t._2})").mkString(", "),
         o.total, o.discount,
         intToPayment(o.payment),
         o.offlineDelivery, o.deliveryOnMonday,
         o.paid, o.delivered,
-        o.note)).unsafeRunSync()
+        o.note)
     }
-
-    dao.getAllOrders // TODO maybe get it all under one .unsafeRunSync
-      .map(_.map(orderToOrderForDisplay).groupBy(_.deliveryDay))
+    dao.getAllOrders.flatMap{ orders =>
+      orders.map(orderToOrderForDisplay).sequence.map(_.groupBy(_.deliveryDay))
+    }
   }
 
   def insert(o: OrderInput): Boolean = {
@@ -57,29 +61,28 @@ class OrderModel @Inject()(dao: Dao) {
   }
 
   def findBy(id: ID): IO[OrderInput] = {
-    def orderToOrderForEditAndCreate(o: Order): OrderInput = {
-      /**
-       * Have to use is operation on java.util.Date that was parseCan't get Offers by this dated from "yyyy-MM-dd" format
-       * otherwise play.api.data.Form will throw [UnsupportedOperationException: null] from java.sql.Date.toInstant
-       * However if you parsed java.util.Date form "EEE MMM dd HH:mm:ss zzz yyyy" format or use { new java.util.Date() } it will work
-       **/
-      def changingDateFormatForPlayForm(date: Date): Date = {
-        val formatForFillInForm = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")
-        formatForFillInForm.parse(formatForFillInForm.format(date))
-      }
-
-      OrderInput(o.id, o.customerId, o.addressId, o.inviterId,
-        changingDateFormatForPlayForm(o.orderDay), changingDateFormatForPlayForm(o.deliveryDay),
-        convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
-        getAllOfferIdByOrderId(o.id.head).flatMap(t => List.fill(t._2)(t._1.id.head)),
-        o.total, o.discount,
-        intToPayment(o.payment),
-        o.offlineDelivery, o.deliveryOnMonday,
-        o.paid, o.delivered,
-        o.note)
+    /**
+     * Have to use is operation on java.util.Date that was parsed. Can't get Offers by this dated with "yyyy-MM-dd" format
+     * otherwise play.api.data.Form will throw [UnsupportedOperationException: null] from java.sql.Date.toInstant
+     * However if you parsed java.util.Date form "EEE MMM dd HH:mm:ss zzz yyyy" format or use { new java.util.Date() } it will work
+     **/
+    def changingDateFormatForPlayForm(date: Date): Date = {
+      val formatForFillInForm = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")
+      formatForFillInForm.parse(formatForFillInForm.format(date))
     }
 
-    dao.getOrderBy(id).map(orderToOrderForEditAndCreate)
+    for {
+      order <- dao.getOrderBy(id)
+      offers <- getAllOfferIdByOrderId(order.id.head)
+    } yield OrderInput(order.id, order.customerId, order.addressId, order.inviterId,
+      changingDateFormatForPlayForm(order.orderDay), changingDateFormatForPlayForm(order.deliveryDay),
+      convertMinutesToString(order.deliverFrom), convertMinutesToString(order.deliverTo),
+      offers.flatMap(t =>  List.fill(t._2)(t._1.id.head)),
+      order.total, order.discount,
+      intToPayment(order.payment),
+      order.offlineDelivery, order.deliveryOnMonday,
+      order.paid, order.delivered,
+      order.note)
   }
 
   def edit(id: ID, o: OrderInput): Boolean = {
@@ -114,28 +117,54 @@ class OrderModel @Inject()(dao: Dao) {
 
   def getPayments: List[String] = payments
 
-  def generateCourierStickers(date: Date): IO[File] = {
+  def generateCourierStickers(date: Date): IO[Array[Byte]] = {
     def orderToCourierSticker(o: Order): CourierSticker = {
       (for {
         address <- dao.getAddressBy(o.addressId)
+        offers <- dao.getAllOfferIdByOrder(o.id.head)
       } yield CourierSticker(address,
         convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
-        inOrder = getAllOfferIdByOrderId(o.id.head).flatMap(t => List.fill(t._2)(t._1.id.head)).mkString(" + "))).unsafeRunSync()
+        inOrder = offers.map(t =>  t._1.name + (if(t._2 > 1) s"(${t._2})" else "")).mkString("+"))).unsafeRunSync()
     }
-    val stickers = dao.getAllOrdersWhere(date).map(_.map(orderToCourierSticker))
-    val fileName = ""
-    val printer = new PrintWriter(fileName)
+    def getParagraphWithFont(text: String, font: Font): Paragraph = {
+      new Paragraph(text, font)
+    }
+    def getStingFromOptional(option: Option[String], needComa: Boolean = true): String = option match {
+      case Some(value) => value + (if(needComa) "," else "")
+      case None => ""
+    }
+
+    val stickers = dao.getAllOrdersWhere(date).map(_.map(orderToCourierSticker).toArray)
+
     stickers.map{ ss =>
-      ss.foreach(s => printer.write(s"""
-           ${if (s.address.city != "Київ \n") s.address.city else ""}
-           ${s.address.address} ${s.address.entrance} ${s.address.floor} ${s.address.flat}
-            ${s.deliverFrom}-${s.deliverTo}
-            ${s.inOrder}
-            \n
-            \n
-          """))
-      printer.close()
-      new File(fileName)
+      val document = new Document()
+      val byteArrayOutputStream = new ByteArrayOutputStream()
+      val bf = BaseFont.createFont("resourses/arialun.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
+      val mainFont = new Font(bf, 14)
+      val table = new PdfPTable(3)
+
+      PdfWriter.getInstance(document, byteArrayOutputStream)
+      document.open()
+      table.setTotalWidth(Array(198.425f, 198.425f, 198.425f))
+      table.setLockedWidth(true)
+
+      ss.foreach{ sticker =>
+        val cell = new PdfPCell(getParagraphWithFont(s"""
+           ${if (!sticker.address.city.contains("Київ")) sticker.address.city else ""}
+           ${sticker.address.address}
+           ${getStingFromOptional(sticker.address.entrance)} ${getStingFromOptional(sticker.address.floor)} ${getStingFromOptional(sticker.address.flat, needComa = false)}
+           ${sticker.deliverFrom}-${sticker.deliverTo}
+           ${sticker.inOrder}
+          """, font = mainFont))
+        cell.setFixedHeight(172.913f)
+        table.addCell(cell)
+      }
+      // Adding empty cells
+      (0 to ss.length % 3).foreach(_ => table.addCell(""))
+
+      document.add(table)
+      document.close()
+      byteArrayOutputStream.toByteArray
     }
   }
 
@@ -165,13 +194,12 @@ class OrderModel @Inject()(dao: Dao) {
     replaceWithDoubleZero(m / 60) + ":" + replaceWithDoubleZero(m % 60)
   }
 
-  private def getAllOfferIdByOrderId(id: ID): List[(Offer, Int)] = {
+  private def getAllOfferIdByOrderId(id: ID): IO[List[(Offer, Int)]] = {
     dao.getAllOfferIdByOrder(id)
       .redeemWith(t => {
         logger.error(s"Can't get Offers by Order ID = $id", t)
         IO(List())
       }, s => IO(s))
-      .unsafeRunSync()
   }
 
 }

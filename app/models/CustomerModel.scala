@@ -1,10 +1,10 @@
 package models
 
 import java.util.Date
-
 import org.joda.time.{DateTime, DateTimeConstants}
 import dao.Dao
 import cats.effect.IO
+import cats.implicits._
 import javax.inject._
 import services.SimbaAlias._
 import services.SimbaHTMLHelper.addressToString
@@ -13,20 +13,18 @@ import services.SimbaHTMLHelper.addressToString
 class CustomerModel @Inject()(dao: Dao) {
   private val discountForInviteNewCustomers = 100
 
-  def getAllCustomerTableRows: Seq[Customer] = {
-    dao.getAllCustomers.unsafeRunSync()
+  def getAllCustomerTableRows: IO[Seq[Customer]] = dao.getAllCustomers
+
+  def getAllCustomerTableRowsLike(search: String): IO[Seq[Customer]] = {
+    dao.getAllCustomerTableRowsLike(search)
   }
 
-  def getAllCustomerTableRowsLike(search: String): Seq[Customer] = {
-    dao.getAllCustomerTableRowsLike(search).unsafeRunSync
+  def insert(c: CustomerInput): IO[(Boolean, ID)] = {
+    dao.insertCustomer(c).redeemWith(_ => IO(false, -1), b => IO(true, b))
   }
 
-  def insert(c: CustomerInput): (Boolean, ID) = {
-    dao.insertCustomer(c).redeemWith(_ => IO(false, -1), b => IO(true, b)).unsafeRunSync()
-  }
-
-  def findBy(id: ID): CustomerInput = {
-    (for {
+  def findBy(id: ID): IO[CustomerInput] = {
+    for {
       c <- dao.getCustomerBy(id)
       addresses <- dao.getAllCustomersAddresses(c.id.head).map(_.map(addressToString))
     } yield CustomerInput(
@@ -34,11 +32,11 @@ class CustomerModel @Inject()(dao: Dao) {
       c.phone, c.phoneNote,
       c.phone2, c.phoneNote2,
       c.instagram, c.preferences, c.notes,
-      addresses.toList)).unsafeRunSync()
+      addresses.toList)
   }
 
-  def editCustomer(id: ID, c: CustomerInput): Boolean = {
-    dao.editCustomer(id, c).redeemWith(_ => IO(false), _ => IO(true)).unsafeRunSync()
+  def editCustomer(id: ID, c: CustomerInput): IO[Boolean] = {
+    dao.editCustomer(id, c).redeemWith(_ => IO(false), _ => IO(true))
   }
 
   def getDataForJsonToDisplayInOrderBy(id: ID): IO[CustomerAddressesForJson] = {
@@ -56,17 +54,18 @@ class CustomerModel @Inject()(dao: Dao) {
   }
 
   def getDataForJsonToDisplayInOrder(search: String): IO[Seq[CustomerAddressesForJson]] = {
-    IO(getAllCustomerTableRowsLike(search).map { c =>
-      (for {
+    def customerToJsonToDisplayInOrder(c: Customer): IO[CustomerAddressesForJson] = {
+      for {
         addresses <- dao.getAllCustomersAddresses(c.id.head)
         discount <- dao.getDiscountFormCustomerBy(c.id.head, getLastSundayAndMonday)
-      } yield CustomerAddressesForJson(c, addresses, discount  * discountForInviteNewCustomers)).unsafeRunSync()
-    })
+      } yield CustomerAddressesForJson(c, addresses, discount  * discountForInviteNewCustomers)
+    }
+
+    dao.getAllCustomerTableRowsLike(search).flatMap(_.map(customerToJsonToDisplayInOrder).sequence)
   }
 
-  def getInviterForJsonToDisplayInOrder(search: String): Seq[Customer] = {
-    dao.getAllCustomerTableRowsLike(search).unsafeRunSync()
-  }
+  def getInviterForJsonToDisplayInOrder(search: String): IO[Seq[Customer]] = dao.getAllCustomerTableRowsLike(search)
+
 
   private def getLastSundayAndMonday: (Date, Date) = {
     val today = DateTime.now

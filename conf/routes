@@ -22,6 +22,7 @@ GET         /orders                                 controllers.OrderController.
 GET         /createOrder                            controllers.OrderController.toOrderCreatePage
 GET         /createOrderWithCustomer/:id            controllers.OrderController.toOrderCreatePageWithCustomerId(id: Int)
 GET         /editOrder/:id                          controllers.OrderController.toOrderEditPage(id: Int)
+GET         /getStickers/:date                      controllers.OrderController.generateCourierStickers(date: String)
 POST        /newOrder                               controllers.OrderController.createOrder
 POST        /updateOrder/:id                        controllers.OrderController.updateOrder(id: Int)
 

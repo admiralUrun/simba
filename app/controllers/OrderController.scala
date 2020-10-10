@@ -1,14 +1,17 @@
 package controllers
 
+import java.text.SimpleDateFormat
 import java.util.Date
-import cats.effect.IO
 import javax.inject._
-import models.{OrderForDisplay, OrderInput, OrderModel}
 import play.api.Logger
+import play.api.http.HttpEntity
 import play.api.data.Forms._
 import play.api.data.Form
 import play.api.mvc._
+import cats.effect.IO
+import akka.util.ByteString
 import services.SimbaAlias._
+import models.{OrderForDisplay, OrderInput, OrderModel}
 
 @Singleton
 class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
@@ -113,7 +116,11 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   def generateCourierStickers(date: String): PlayAction = Action { implicit request =>
-    Ok("")
+    val format = new SimpleDateFormat("yyyy-MM-dd")
+    Result(
+      header = ResponseHeader(200),
+      body = HttpEntity.Strict(ByteString(orderModel.generateCourierStickers(format.parse(date)).unsafeRunSync()), Some("application/pdf"))
+    )
   }
 
   private def resultWithFlash(result: Result, modelResponse: Boolean, successFlash: String, errorFlash: String = "Щось пішло не так ;("): Result = {

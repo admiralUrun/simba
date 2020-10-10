@@ -18,8 +18,8 @@ libraryDependencies ++= Seq(jdbc, ehcache, ws, specs2 % Test, guice,
   "org.webjars" % "bootstrap" % "4.4.1",
   "com.github.tototoshi" %% "scala-csv" % "1.3.6",
   "org.apache.poi" % "poi" % "3.17",
-  "org.apache.poi" % "poi-ooxml" % "3.17"
+  "org.apache.poi" % "poi-ooxml" % "3.17",
+  "com.itextpdf" % "itextpdf" % "5.5.13.2"
 )
-
 unmanagedResourceDirectories in Test <+= baseDirectory(_ / "target/web/public/test")
 

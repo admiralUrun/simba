@@ -1,13 +1,13 @@
 package controllers
 
 import javax.inject._
-import models._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.functional.syntax.unlift
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{JsPath, Json}
 import play.api.mvc._
+import models._
 import services.SimbaAlias._
 
 @Singleton
@@ -65,7 +65,7 @@ class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesCo
   def toCustomersListPage(search: String): PlayAction = Action { implicit request =>
     val rows = if (search.isEmpty) customerModel.getAllCustomerTableRows else customerModel.getAllCustomerTableRowsLike(search)
 
-    Ok(views.html.customers(rows, search))
+    Ok(views.html.customers(rows.unsafeRunSync(), search))
   }
 
   def toCreateCustomerPage: PlayAction = Action { implicit request =>
@@ -76,10 +76,11 @@ class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesCo
     Ok(views.html.createCustomer(customerForm, routes.CustomerController.createCustomerThenToOrder(), toOrderCreatePage))
   }
 
-  def toEditCustomerPage(id: Int): PlayAction = Action { implicit request =>
-    val customer = customerModel.findBy(id)
-    Ok(views.html.editCustomer(id, customerForm.fill(customer), customer.firstName))
-  }
+  def toEditCustomerPage(id: Int): PlayAction = customerModel.findBy(id).map { customer =>
+    Action { implicit request =>
+      Ok(views.html.editCustomer(id, customerForm.fill(customer), customer.firstName))
+    }
+  }.unsafeRunSync()
 
   def getCustomersForOrderSearch(search: String): PlayAction = Action {
     Ok(Json.toJson(customerModel.getDataForJsonToDisplayInOrder(search).unsafeRunSync()))
@@ -90,14 +91,14 @@ class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesCo
   }
 
   def getCustomersInviterForOrder(search: String): PlayAction = Action {
-    Ok(Json.toJson(customerModel.getInviterForJsonToDisplayInOrder(search)))
+    Ok(Json.toJson(customerModel.getInviterForJsonToDisplayInOrder(search).unsafeRunSync()))
   }
 
   def update(id: Int): PlayAction = Action { implicit request =>
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.editCustomer(id, formWithErrors, formWithErrors.data("firstName"))),
       customer => {
-        resultWithFlash(customerListPage, customerModel.editCustomer(id, customer), "Клієнта змінено, мяу")
+        resultWithFlash(customerListPage, customerModel.editCustomer(id, customer).unsafeRunSync(), "Клієнта змінено, мяу")
       }
     )
   }
@@ -106,7 +107,7 @@ class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesCo
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.createCustomer(formWithErrors, routes.CustomerController.createCustomer(), toCustomerListPage)),
       newCustomer => {
-        resultWithFlash(customerListPage, customerModel.insert(newCustomer)._1, "Клієнта додано, мяу")
+        resultWithFlash(customerListPage, customerModel.insert(newCustomer).unsafeRunSync()._1, "Клієнта додано, мяу")
       }
     )
   }
@@ -115,7 +116,7 @@ class CustomerController @Inject()(customerModel: CustomerModel, mcc: MessagesCo
     customerForm.bindFromRequest.fold(
       formWithErrors => BadRequest(views.html.createCustomer(formWithErrors, routes.CustomerController.createCustomerThenToOrder(), toOrderCreatePage)),
       newCustomer => {
-        val modelResponse: (Boolean, Int) = customerModel.insert(newCustomer)
+        val modelResponse: (Boolean, Int) = customerModel.insert(newCustomer).unsafeRunSync()
         resultWithFlash(Redirect(routes.OrderController.toOrderCreatePageWithCustomerId(modelResponse._2)), modelResponse._1, "Клієнта додано, мяу")
       }
     )

@@ -69,16 +69,16 @@ class CustomerImporter extends Importer {
       rowsToCommands(lines, startWithID, Seq())
     }
 
-    val linesWithSeparatedAddress = CSVReader.open(new File("/Users/andrewyakovenko/Downloads/First Part.csv"))
+//    val linesWithSeparatedAddress = CSVReader.open(new File("/Users/andrewyakovenko/Downloads/import.csv"))
+//      .all()
+//      .map(_.toArray)
+    val linesWithOutSeparatedAddress = CSVReader.open(new File("/Users/andrewyakovenko/Downloads/import.csv"))
       .all()
       .map(_.toArray)
-    val linesWithOutSeparatedAddress = CSVReader.open(new File("/Users/andrewyakovenko/Downloads/Second Part.csv"))
-      .all()
-      .map(_.toArray)
-    val firstPart = importRows(linesWithSeparatedAddress, 1, getAddressWithSeparation)
-    val secondPart = importRows(linesWithOutSeparatedAddress, linesWithSeparatedAddress.length, getAddressWithOutSeparation)
+//    val firstPart = importRows(linesWithSeparatedAddress, 1, getAddressWithSeparation)
+    val secondPart = importRows(linesWithOutSeparatedAddress, 3000, getAddressWithOutSeparation)
     val printer = new PrintWriter("customer.sql")
-    firstPart.foreach(printer.write)
+//    firstPart.foreach(printer.write)
     secondPart.foreach(printer.write)
     printer.close()
   }

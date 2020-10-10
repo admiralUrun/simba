@@ -18,14 +18,14 @@ class Dao @Inject()(dS: DoobieStore) {
   private val addressSelect = sql"select id, customer_id, city, residential_complex, address, entrance, floor, flat, delivery_notes from addresses "
   private val orderSelect = sql"select id, customer_id, address_id, inviter_id, order_day, delivery_day, deliver_from, deliver_to, out_of_zone_delivery, delivery_on_monday, total, discount,  payment, paid, delivered, note from orders "
   private val offerSelect = sql"select id, name, price, expiration_date, menu_type from offers "
-  private val recipesSelect = sql"select id, name, type, edited from recipes "
+  private val recipesSelect = sql"select id, name, menu_type, edited from recipes "
 
   def getAllCustomers: IO[Seq[Customer]] = customerSelect
     .query[Customer]
     .to[List]
     .transact(xa)
 
-  def getAllCustomerTableRowsLike(search: String): IO[Seq[Customer]] = (customerSelect ++
+  def getAllCustomerTableRowsLike(search: String): IO[List[Customer]] = (customerSelect ++
     fr"""where first_name like $search or
            last_name like $search or
             phone like $search or
@@ -49,7 +49,7 @@ class Dao @Inject()(dS: DoobieStore) {
     .unique
     .transact(xa)
 
-  def getAllOrders: IO[Seq[Order]] = orderSelect
+  def getAllOrders: IO[List[Order]] = orderSelect
     .query[Order]
     .to[List]
     .transact(xa)
