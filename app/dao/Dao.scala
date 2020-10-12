@@ -25,14 +25,17 @@ class Dao @Inject()(dS: DoobieStore) {
     .to[List]
     .transact(xa)
 
-  def getAllCustomerTableRowsLike(search: String): IO[List[Customer]] = (customerSelect ++
-    fr"""where first_name like $search or
+  def getAllCustomerTableRowsLike(s: String): IO[List[Customer]] = {
+    val search = '%' + s + '%'
+    (customerSelect ++
+      sql"""where first_name like $search or
            last_name like $search or
             phone like $search or
              phone2 like $search or
               instagram like $search""").query[Customer]
-    .to[List]
-    .transact(xa)
+      .to[List]
+      .transact(xa)
+  }
 
   def getAllCustomersAddresses(customerId: ID): IO[Seq[Address]] = (addressSelect ++ fr"where customer_id = $customerId")
     .query[Address]
@@ -86,10 +89,13 @@ class Dao @Inject()(dS: DoobieStore) {
     .to[List]
     .transact(xa)
 
-  def getRecipesLike(name: String): IO[Seq[Recipe]] = (recipesSelect ++ fr"where name like $name")
-    .query[Recipe]
-    .to[Seq]
-    .transact(xa)
+  def getRecipesLike(s: String): IO[Seq[Recipe]] = {
+    val search = '%' + s + '%'
+    (recipesSelect ++ fr"where name like $search")
+      .query[Recipe]
+      .to[Seq]
+      .transact(xa)
+  }
 
   def getRecipesBy(ids: List[ID]): IO[Seq[Recipe]] = ids.traverse { id =>
     (recipesSelect ++ fr"where id = $id")

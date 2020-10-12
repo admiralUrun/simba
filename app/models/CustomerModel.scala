@@ -5,6 +5,7 @@ import org.joda.time.{DateTime, DateTimeConstants}
 import dao.Dao
 import cats.effect.IO
 import cats.implicits._
+import cats.effect.implicits._
 import javax.inject._
 import services.SimbaAlias._
 import services.SimbaHTMLHelper.addressToString
@@ -58,10 +59,14 @@ class CustomerModel @Inject()(dao: Dao) {
       for {
         addresses <- dao.getAllCustomersAddresses(c.id.head)
         discount <- dao.getDiscountFormCustomerBy(c.id.head, getLastSundayAndMonday)
-      } yield CustomerAddressesForJson(c, addresses, discount  * discountForInviteNewCustomers)
+      } yield CustomerAddressesForJson(c, addresses, discount * discountForInviteNewCustomers)
     }
 
-    dao.getAllCustomerTableRowsLike(search).flatMap(_.map(customerToJsonToDisplayInOrder).sequence)
+    dao.getAllCustomerTableRowsLike(search).flatMap {l =>
+     val listOfIO = l.map(customerToJsonToDisplayInOrder)
+      val IoOfList = listOfIO.sequence
+      IoOfList
+    }
   }
 
   def getInviterForJsonToDisplayInOrder(search: String): IO[Seq[Customer]] = dao.getAllCustomerTableRowsLike(search)
