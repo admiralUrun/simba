@@ -6,14 +6,14 @@
         <div class=" clearfix">
             <h4 class="float-left">@formattingDateForDisplay(d)</h4>
             <div class="float-lg-right">
-                <a class="btn btn-info" link="http://localhost:9000@routes.OrderController.generateCourierStickers(d.toString)">Стікери Для Курієрів</a>
+                <a class="btn btn-info" url="http://localhost:9000@routes.OrderController.generateCourierStickers(d.toString)">Стікери Для Курієрів</a>
             </div>
         </div>
     }
 
     @getCustomerDataForView(c: Customer) = @{
-        def getSecondPhoneOrCloseBrace: String = if(c.phone2.nonEmpty)s", ${c.phone2.getOrElse("")})" else ")"
-        s"${c.id.head}- ${c.firstName} ${c.lastName.getOrElse("")} (${c.phone}" + getSecondPhoneOrCloseBrace
+        def getSecondPhoneOrCloseBrace: String = if(c.phone2.nonEmpty)s", ${changePhoneFormat(c.phone2).getOrElse("")})" else ")"
+        s"${c.id.head}- ${c.firstName} ${c.lastName.getOrElse("")} (${changePhoneFormat(Option(c.phone)).head}" + getSecondPhoneOrCloseBrace
     }
 
     @getAddressForView(a: Address) = @{
@@ -39,7 +39,7 @@
                 @getDateRow(t._1)
                 <table class="table table-striped table-bordered">
                     <thead>
-                        <tr>@tableHeaders(List("id", "Замовник", "Адреса", "Дата Замовлення", "Дата та Час Доставки", "У заміовлені", "Сума", "Знижка", "Оплата", "Статус", "Нотатка"), darkHead = true)</tr>
+                        <tr>@tableHeaders(List("id", "Замовник", "Адреса", "Дата та Час Доставки", "У заміовлені", "Сума", "Оплата", "Статус", "Нотатка"), darkHead = true)</tr>
                     </thead>
                     <tbody>
               @t._2.map{ o =>
@@ -47,17 +47,14 @@
                       <td><a href="@routes.OrderController.toOrderEditPage(o.id.head)">@o.id</a></td>
                       <td>@getCustomerDataForView(o.customer)</td>
                       <td>@getAddressForView(o.address)</td>
-                      <td>@formattingDateForDisplay(o.orderDay)</td>
                       <td>
-                      @formattingDateForDisplay(o.deliveryDay) –
                           З @o.deliverFrom по @o.deliverTo
                           @if(o.deliveryOnMonday) {
                               Доставка у Понеділок
                           }
                       </td>
                       <td>@o.inOrder</td>
-                      <td>@o.total</td>
-                      <td>@o.discount.getOrElse("-")</td>
+                      <td>@{(o.total - o.discount.getOrElse(0))}</td>
                       <td class="">@formatBoolean(o.paid, "Оплаченно", "Не оплаченно")</td>
                       <td>@formatBoolean(o.delivered, "Доставленно", "Не Доставленно")</td>
                       <td>@o.note.getOrElse("-")</td>
