@@ -5,6 +5,7 @@ import org.joda.time.{DateTime, DateTimeConstants}
 import dao.Dao
 import cats.effect.IO
 import cats.implicits._
+// IDEA doesn't see where it used
 import cats.effect.implicits._
 import javax.inject._
 import services.SimbaAlias._
@@ -70,7 +71,6 @@ class CustomerModel @Inject()(dao: Dao) {
   }
 
   def getInviterForJsonToDisplayInOrder(search: String): IO[Seq[Customer]] = dao.getAllCustomerTableRowsLike(search)
-
 
   private def getLastSundayAndMonday: (Date, Date) = {
     val today = DateTime.now

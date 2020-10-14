@@ -7,7 +7,7 @@ import javax.inject._
 import play.api.Logger
 import cats.effect.IO
 import cats.implicits._
-import com.itextpdf.text.{Document, Font, Paragraph}
+import com.itextpdf.text.{Document, Font, Paragraph, Element}
 import com.itextpdf.text.pdf.{BaseFont, PdfPCell, PdfPTable, PdfWriter}
 import dao.Dao
 import services.SimbaAlias._
@@ -39,7 +39,7 @@ class OrderModel @Inject()(dao: Dao) {
         offers <- getAllOfferIdByOrderId(o.id.head)
       } yield OrderForDisplay(o.id, customer, address, inviter,
         o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
-        offers.map(t => t._1.name + s"(${t._2})").mkString(", "),
+        inOrderToString(offers, ", "),
         o.total, o.discount,
         intToPayment(o.payment),
         o.offlineDelivery, o.deliveryOnMonday,
@@ -109,7 +109,7 @@ class OrderModel @Inject()(dao: Dao) {
     getAllMenuToolsForAddingOrder(getAllOffersOnThisWeek)
   }
 
-  def getInOrderToTextWithCostMap: Map[String, (ID, MenuTitle, MenuPrice)] = { // TODO aks supervisor's opinion maybe there is better way to make it done
+  def getInOrderToTextWithCostMap: Map[String, (ID, MenuTitle, MenuPrice)] = {
     getAllOffersOnThisWeek.groupBy(_.id.head.toString).map { t =>
       t._1 -> t._2.map(offer => (t._1.toInt, offer.name, offer.price)).head
     }
@@ -124,7 +124,7 @@ class OrderModel @Inject()(dao: Dao) {
         offers <- dao.getAllOfferIdByOrder(o.id.head)
       } yield CourierSticker(address,
         convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
-        inOrder = offers.map(t =>  t._1.name + (if(t._2 > 1) s"(${t._2})" else "")).mkString("+"))).unsafeRunSync()
+        inOrder = inOrderToString(offers, "+") )).unsafeRunSync()
     }
     def getParagraphWithFont(text: String, font: Font): Paragraph = {
       new Paragraph(text, font)
@@ -134,19 +134,21 @@ class OrderModel @Inject()(dao: Dao) {
       case None => ""
     }
 
-    val stickers = dao.getAllOrdersWhere(date).map(_.map(orderToCourierSticker).toArray)
-
-    stickers.map{ ss =>
+    dao.getAllOrdersWhere(date)
+      .map(_.map(orderToCourierSticker).toArray)
+      .map{ ss =>
       val document = new Document()
       val byteArrayOutputStream = new ByteArrayOutputStream()
       val bf = BaseFont.createFont("resourses/arialun.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
       val mainFont = new Font(bf, 14)
       val table = new PdfPTable(3)
+      val writer = PdfWriter.getInstance(document, byteArrayOutputStream)
 
-      PdfWriter.getInstance(document, byteArrayOutputStream)
       document.open()
       table.setTotalWidth(Array(198.425f, 198.425f, 198.425f))
       table.setLockedWidth(true)
+      val canvas = writer.getDirectContent
+      table.writeSelectedRows(0, 0, document.left() + table.getTotalWidth, document.top(), canvas)
 
       ss.foreach{ sticker =>
         val cell = new PdfPCell(getParagraphWithFont(s"""
@@ -166,6 +168,10 @@ class OrderModel @Inject()(dao: Dao) {
       document.close()
       byteArrayOutputStream.toByteArray
     }
+  }
+
+  private def inOrderToString(inOrder: List[(Offer, Int)], separator: String): String = {
+    inOrder.map(t => t._1.name + (if(t._2 > 1) s"(${t._2})" else "")).mkString(separator)
   }
 
   private def getAllOffersOnThisWeek: Seq[Offer] = {
