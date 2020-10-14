@@ -15,6 +15,19 @@ object SimbaHTMLHelper {
     o.map(p => p + n.map(n => s"($n)").getOrElse("")).getOrElse("")
   }
 
+  def changePhoneFormat(phone: Option[String]): Option[String] = phone match {
+      case Some(value) =>
+        if (value.length == 10) {
+          Option(value.toCharArray
+            .patch(3, Array(' '), 0)
+            .patch(7, Array(' '), 0)
+            .patch(10, Array(' '), 0).mkString(""))
+        }
+        else Option(value)
+      case None => Option("-")
+    }
+
+
   def getStringOrDash(s: Option[String]): String = {
     if (s.isEmpty) "-"
     else s.getOrElse("-")

@@ -18,8 +18,8 @@
                     <td><a href="@routes.CustomerController.toEditCustomerPage(c.id.head)">@c.id</a></td>
                     <td>@c.firstName</td>
                     <td>@getStringOrDash(c.lastName)</td>
-                    <td>@formatString(Option(c.phone), c.phoneNote)</td>
-                    <td>@formatString(c.phone2, c.phoneNote2)</td>
+                    <td>@formatString(changePhoneFormat(Option(c.phone)), c.phoneNote)</td>
+                    <td>@formatString(changePhoneFormat(c.phone2), c.phoneNote2)</td>
                     <td>@getStringOrDash(c.instagram)</td>
                     <td>@getStringOrDash(c.preferences)</td>
                     <td class="overflow-auto">@getStringOrDash(c.notes)</td>
