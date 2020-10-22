@@ -38,7 +38,7 @@ GET         /offerPreferance/:title/:menuType       controllers.OfferController.
 GET         /recipesOnThisWeek                      controllers.OfferController.toRecipesOnThisWeekPage()
 POST        /editOffer                              controllers.OfferController.editOffer
 POST        /setOffer/:menuType                     controllers.OfferController.setOffer(menuType: Int)
-GET         /searchResipeForOffer                   controllers.OfferController.getRecipesForOfferSearch(name)
+GET         /searchResipeForOffer/:name/:menuType   controllers.OfferController.getRecipesForOfferSearch(name, menuType: Int)
 
 GET         /calculations                           controllers.CalculationController.toCalculationsView
 

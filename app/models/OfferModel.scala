@@ -100,7 +100,7 @@ class OfferModel @Inject()(dao: Dao) {
       recipes.map(r => InsertOffer(r.name, 249, List(r), 1))
     }
 
-    def promoMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = {
+    def promoMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = { // TODO promo prices + default menus
       List(
         InsertOffer("Промо на 2", 0, recipes, 1),
         InsertOffer("Промо на 4", 0, recipes, 2)
@@ -144,8 +144,8 @@ class OfferModel @Inject()(dao: Dao) {
     }
   }
 
-  def getRecipesByName(name: String): Seq[Recipe] = {
-    dao.getRecipesLike(name)
+  def getRecipesByName(name: String, menuType: Int): Seq[Recipe] = {
+    dao.getRecipesLike(name, menuType)
       .redeemWith(t =>{
         logger.error(s"Can't get Recipes by name = $name", t)
         IO(List())

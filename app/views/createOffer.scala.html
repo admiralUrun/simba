@@ -6,7 +6,7 @@
 
 @getSearchForRecipes = {
     <div id="searchDIV">
-        <form class="form-inline md-form mr-auto mb-4 input-group">
+        <form class="form-inline md-form mr-auto mb-4 input-group" onsubmit="return false;">
             <input id="search" class="form-control mr-sm-2 dropdown-toggle" type="search" placeholder="Пошук" aria-label="Search" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             <button id="searchSubmit" class="btn btn-primary btn-rounded btn-sm my-0" type="button">Пошук</button>
             <div id="searchMenu" class="dropdown-menu">
@@ -34,10 +34,18 @@
             $(document).ready(function () {
                 $('#searchSubmit').click(function () {
                     let searchParams = $("#search").val()
-                    $.get("/searchResipeForOffer?name=" + searchParams, function (json) {
+                    $.get("/searchResipeForOffer/" + searchParams + "/" + @menuType, function (json) {
                         takeRecipesJSONAddToDropDown(json)
                     })
                 })
+                $("input").keypress(function (e) {
+                    if (e.which === 13) {
+                        let searchParams = $("#search").val()
+                        $.get("/searchResipeForOffer/" + searchParams + "/" + @menuType function (json) {
+                            takeRecipesJSONAddToDropDown(json)
+                        })
+                    }
+                });
 
                 $("#search").keyup(function () {
                     let searchParams = $("#search").val()

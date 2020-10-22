@@ -45,7 +45,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
     ) (unlift(Recipe.unapply))
 
   private val offersPage = Redirect(routes.OfferController.toOffersPage())
-  private val errorRedirect = Redirect(routes.HomeController.index()).flashing("error" -> "Якщо чесно я сам не зрозумів що тільки що сталось... Мяу.")
+  private val errorRedirect = Redirect(routes.HomeController.index()).flashing("error" -> "Не відома помилка... Мяу.")
 
   def toOffersPage: PlayAction = Action { implicit request =>
     Ok(views.html.offers())
@@ -100,8 +100,8 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
     )
   }
 
-  def getRecipesForOfferSearch(name: String): PlayAction = Action {
-    Ok(Json.toJson(offerModel.getRecipesByName(name)))
+  def getRecipesForOfferSearch(name: String, menuType: Int): PlayAction = Action {
+    Ok(Json.toJson(offerModel.getRecipesByName(name, menuType)))
   }
 
   def setOffer(menuType: Int): PlayAction = Action { implicit request =>

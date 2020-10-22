@@ -91,9 +91,9 @@ class Dao @Inject()(dS: DoobieStore) {
     .to[List]
     .transact(xa)
 
-  def getRecipesLike(s: String): IO[Seq[Recipe]] = {
+  def getRecipesLike(s: String, menuType: Int): IO[Seq[Recipe]] = {
     val search = '%' + s + '%'
-    (recipesSelect ++ fr"where name like $search")
+    (recipesSelect ++ fr"where menu_type = $menuType and name like $search")
       .query[Recipe]
       .to[Seq]
       .transact(xa)
