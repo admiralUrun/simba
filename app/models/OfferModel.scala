@@ -36,6 +36,30 @@ class OfferModel @Inject()(dao: Dao) {
       "5 на 2 Сніданок" -> 849,
       "3 на 2 Сніданок" -> 549,
       "3 на 4 Сніданок" -> 989,
+
+      "Класичне 1 на 4" -> 600,
+      "Класичне 2 на 4" -> 600,
+      "Класичне 3 на 4" -> 600,
+      "Класичне 4 на 4" -> 700,
+      "Класичне 5 на 4" -> 700,
+
+      "Класичне 1 на 2" -> 300,
+      "Класичне 2 на 2" -> 300,
+      "Класичне 3 на 2" -> 300,
+      "Класичне 4 на 2" -> 350,
+      "Класичне 5 на 2" -> 350,
+
+      "Сніданок 1 на 4" -> 366,
+      "Сніданок 2 на 4" -> 366,
+      "Сніданок 3 на 4" -> 366,
+      "Сніданок 4 на 4" -> 367,
+      "Сніданок 5 на 4" -> 367,
+
+      "Сніданок 1 на 2" -> 183,
+      "Сніданок 2 на 2" -> 183,
+      "Сніданок 3 на 2" -> 183,
+      "Сніданок 4 на 2" -> 183,
+      "Сніданок 5 на 2" -> 183,
     )
 
     def validationError(menuType: Int, howManyIds: Int): Boolean = Map(
@@ -48,13 +72,21 @@ class OfferModel @Inject()(dao: Dao) {
     )(menuType)
 
     def primeMenuTypeInsets(menuType: Int, recipes: List[Recipe]): List[InsertOffer] = {
-      val recipesWithIndex = recipes.zipWithIndex
-      val allRecipesOnFour = recipesWithIndex.map { case (r, i) =>
-        InsertOffer(s"${convertMenuTypeToString(menuType)} ${i + 1} на 4", 0, List(r), 2)
-      }
-      val allRecipesOnTwo = recipesWithIndex.map { case (r, i) =>
-        InsertOffer(s"${convertMenuTypeToString(menuType)} ${i + 1} на 2", 0, List(r), 1)
-      }
+      val recipesWithIndex = recipes.toArray
+      val allRecipesOnFour = List(
+        InsertOffer(s"${convertMenuTypeToString(menuType)} 1 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 1 на 4"), List(recipesWithIndex(0)), 2),
+        InsertOffer(s"${convertMenuTypeToString(menuType)} 2 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 2 на 4"), List(recipesWithIndex(1)), 2),
+        InsertOffer(s"${convertMenuTypeToString(menuType)} 3 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 3 на 4"), List(recipesWithIndex(2)), 2),
+        InsertOffer(s"${convertMenuTypeToString(menuType)} 4 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 4 на 4"), List(recipesWithIndex(3)), 2),
+        InsertOffer(s"${convertMenuTypeToString(menuType)} 5 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 5 на 4"), List(recipesWithIndex(4)), 2)
+      )
+      val allRecipesOnTwo = List(
+        InsertOffer(s"${convertMenuTypeToString(menuType)} 1 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 1 на 2"), List(recipesWithIndex(0)), 2),
+        InsertOffer(s"${convertMenuTypeToString(menuType)} 2 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 2 на 2"), List(recipesWithIndex(1)), 2),
+        InsertOffer(s"${convertMenuTypeToString(menuType)} 3 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 3 на 2"), List(recipesWithIndex(2)), 2),
+        InsertOffer(s"${convertMenuTypeToString(menuType)} 4 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 4 на 2"), List(recipesWithIndex(3)), 2),
+        InsertOffer(s"${convertMenuTypeToString(menuType)} 5 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 5 на 2"), List(recipesWithIndex(4)), 2)
+      )
 
       List( // TODO: Think of something better
         InsertOffer(s"5 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 4 ${convertMenuTypeToString(menuType)}"), recipes, 2),
@@ -65,7 +97,7 @@ class OfferModel @Inject()(dao: Dao) {
     }
 
     def sideMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = {
-      recipes.map(r => InsertOffer(r.name, 0, List(r), 1))
+      recipes.map(r => InsertOffer(r.name, 249, List(r), 1))
     }
 
     def promoMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = {
