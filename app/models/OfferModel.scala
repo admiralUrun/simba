@@ -89,10 +89,10 @@ class OfferModel @Inject()(dao: Dao) {
       )
 
       List( // TODO: Think of something better
-        InsertOffer(s"5 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 4 ${convertMenuTypeToString(menuType)}"), recipes, 2),
         InsertOffer(s"5 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 2 ${convertMenuTypeToString(menuType)}"), recipes, 1),
-        InsertOffer(s"3 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 4 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 2),
-        InsertOffer(s"3 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 2 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 1)
+        InsertOffer(s"3 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 2 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 1),
+        InsertOffer(s"5 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 4 ${convertMenuTypeToString(menuType)}"), recipes, 2),
+        InsertOffer(s"3 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 4 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 2)
       ) ::: allRecipesOnTwo ::: allRecipesOnFour
     }
 
