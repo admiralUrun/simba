@@ -18,7 +18,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
   private val setOfferForm = Form(
     mapping(
       "menuType" -> number,
-      "executionDate" -> date,
+      "executionDate" -> optional(date),
       "recipesId" -> list(number).verifying(_.nonEmpty)
     )(SettingOffer.apply)(SettingOffer.unapply)
   )
@@ -27,7 +27,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
       "id" -> list(number),
       "name" -> list(nonEmptyText),
       "price" -> list(number),
-      "date" -> date,
+      "date" -> optional(date),
       "menuType" -> number
     )(EditOffer.apply)(EditOffer.unapply)
   )
@@ -67,27 +67,33 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
 
   def toOfferPage(title: String, menuType: Int): PlayAction = Action { implicit request =>
     passDateForm.bindFromRequest.fold(
-      _ => errorRedirect,
-      Date => Ok(views.html.offer(title, Date.date, menuType))
+      _ => if(menuType == 6 ) Ok(views.html.offer(title, None, menuType))
+          else errorRedirect,
+      Date => Ok(views.html.offer(title, Option(Date.date), menuType))
     )
   }
 
   def toOfferPageWithOutForm(title: String, menuType: Int, date: String): PlayAction = Action { implicit request =>
-      val formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")
-      Ok(views.html.offer(title, formatter.parse(date), menuType))
+    val formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")
+      Ok(views.html.offer(title, {
+        if(date == "None") None
+        else Option(formatter.parse(date))
+      }, menuType))
   }
 
   def toCreateOfferPage(menuType: Int): PlayAction = Action { implicit request =>
     passDateForm.bindFromRequest.fold(
-      _ => errorRedirect,
-      Date => Ok(views.html.createOffer(menuType, Date.date, setOfferForm))
+      _ => if(menuType == 6) Ok(views.html.createOffer(menuType, None, setOfferForm))
+        else errorRedirect,
+      Date => Ok(views.html.createOffer(menuType, Option(Date.date), setOfferForm))
     )
   }
 
   def toOfferPreferencePage(title: String, menuType: Int): PlayAction = Action { implicit request =>
     passDateForm.bindFromRequest.fold(
-      _ => errorRedirect,
-      Date => Ok(views.html.editOffer(title, Date.date, menuType,
+      _ => if(menuType == 6) Ok(views.html.editOffer(title, None, menuType, editOfferForm))
+      else errorRedirect,
+      Date => Ok(views.html.editOffer(title, Option(Date.date), menuType,
         editOfferForm.fill(offerModel.getOfferPreferencesByMenuType(menuType, Date.date)))
       )
     )
@@ -110,7 +116,7 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
         val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
         val executionDateFromFiled = formWithErrors("executionDate").value.head
         BadRequest(views.html.createOffer(menuType,
-          dateFormat.parse(executionDateFromFiled),
+          Option(dateFormat.parse(executionDateFromFiled)),
           formWithErrors))
       },
       settingOffer => {

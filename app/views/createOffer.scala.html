@@ -2,7 +2,7 @@
 @import services.SimbaHTMLHelper._
 @import java.util.Date
 
-@(menuType: Int, executionDate: Date, oF: Form[SettingOffer])(implicit requestHeader: MessagesRequestHeader)
+@(menuType: Int, executionDate: Option[Date], oF: Form[SettingOffer])(implicit requestHeader: MessagesRequestHeader)
 
 @getSearchForRecipes = {
     <div id="searchDIV">
@@ -25,7 +25,7 @@
     @form(routes.OfferController.setOffer(menuType)) {
         @CSRF.formField
         <input name="menuType" value="@menuType" style="display: none">
-        <input name="executionDate" type="date" value="@formattingDateForForm(executionDate)" style="display: none">
+        <input name="executionDate" type="date" value="@formattingOptionDateForForm(executionDate)" style="display: none">
         <ul id="inOffer"></ul>
         <input class="btn btn-primary" type="submit" value="Встановити">
     }
@@ -41,7 +41,7 @@
                 $("input").keypress(function (e) {
                     if (e.which === 13) {
                         let searchParams = $("#search").val()
-                        $.get("/searchResipeForOffer/" + searchParams + "/" + @menuType function (json) {
+                        $.get("/searchResipeForOffer/" + searchParams + "/" + @menuType, function (json) {
                             takeRecipesJSONAddToDropDown(json)
                         })
                     }

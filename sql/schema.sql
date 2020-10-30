@@ -61,6 +61,13 @@ create table recipe_ingredients (
     primary key (recipe_id, ingredient_id)
 );
 
+-- menu_type
+-- 1 for classic
+-- 2 for breakfast
+-- 3 for lite
+-- 4 for desert
+-- 5 for soup
+-- 6 for promo
 drop table if exists offers;
 create table offers (
     id int primary key auto_increment,

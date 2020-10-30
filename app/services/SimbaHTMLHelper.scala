@@ -15,6 +15,28 @@ object SimbaHTMLHelper {
     o.map(p => p + n.map(n => s"($n)").getOrElse("")).getOrElse("")
   }
 
+  def formattingDate(d: String): String = {
+    val monthsTranslate = Map(
+      1 -> "Січень",
+      2 -> "Лютий",
+      3 -> "Березень",
+      4 -> "Квітень",
+      5 -> "Травень",
+      6 -> "Червень",
+      7 -> "Липень",
+      8 -> "Серпень",
+      9 -> "Вересень",
+      10 -> "Жовтень",
+      11 -> "Листопад",
+      12 -> "Грудень",
+    )
+    val cal = Calendar.getInstance
+    cal.setTime(formatter.parse(d))
+    val week = cal.get(Calendar.WEEK_OF_YEAR)
+    val dateArray = d.split("-")
+    s"${dateArray(2)} ${monthsTranslate(dateArray(1).toInt)} ${dateArray(0)}, $week - тиждень"
+  }
+
   def changePhoneFormat(phone: Option[String]): Option[String] = phone match {
       case Some(value) =>
         if (value.length == 10) {
@@ -26,7 +48,6 @@ object SimbaHTMLHelper {
         else Option(value)
       case None => Option("-")
     }
-
 
   def getStringOrDash(s: Option[String]): String = {
     if (s.isEmpty) "-"
@@ -122,7 +143,12 @@ object SimbaHTMLHelper {
   * */
   def formattingDateForForm(d: Date): String = formatter.format(d)
 
-  def  getNextSundayFromCornetWeek: String = {
+  def formattingOptionDateForForm(option: Option[Date]): String = option match {
+    case Some(value) => formatter.format(value)
+    case None => ""
+  }
+
+  def getNextSundayFromCornetWeek: String = {
     val c = Calendar.getInstance
     c.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
     formattingDateForForm(c.getTime)
@@ -239,7 +265,7 @@ object SimbaHTMLHelper {
     val dropdownDiv = if (dropdownHead.isDefined) getSHtmlInDiv("searchMenu", "dropdown-menu", SHTML(s"<span class=${inDQ("dropdown-header")}>${dropdownHead.getOrElse("")}</span>")) else SHTML("")
 
     val mainContent: SHTML = {
-      SHTML(s"<form action=${inDQ(formAction)} method=${inDQ(formMethod)} class=${inDQ("colFirst form-inline md-form mr-auto mb-4 float-left")}>") +
+      SHTML(s"<form action=${inDQ(formAction)} method=${inDQ(formMethod)} onsubmit=${inDQ("return false;")} class=${inDQ("colFirst form-inline md-form mr-auto mb-4 float-left")}>") +
         getSHtmlInDiv(layoutClass = "input-group", content = {
           SHTML(s"<input id=${inDQ("search")} name=${inDQ("search")} type=${inDQ("search")} class=${inDQ("form-control mr-sm-4 dropdown-toggle")} data-toggle=${inDQ("dropdown")} aria-haspopup=${inDQ("true")} aria-expanded=${inDQ("false")}>") +
             dropdownDiv +

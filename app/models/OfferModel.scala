@@ -19,7 +19,7 @@ class OfferModel @Inject()(dao: Dao) {
         IO(List())
       }, s => IO(s))
       .unsafeRunSync().toList
-    EditOffer(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), executionDate, menuType)
+    EditOffer(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), Option(executionDate), menuType)
   }
 
   def setOffer(sO: SettingOffer): Boolean = {
@@ -159,16 +159,16 @@ class OfferModel @Inject()(dao: Dao) {
 
 }
 
-case class Offer(id: Option[ID], name: String, price: Int, executionDate: Date, menuType: Int)
+case class Offer(id: Option[ID], name: String, price: Int, executionDate: Option[Date], menuType: Int)
 
 case class Recipe(id: Option[ID], name: String, menuType: String, edited: Boolean)
 
 case class OfferRecipes(offerId: ID, recipesId: ID, menuForPeople: Int)
 
-case class SettingOffer(menuType: Int, executionDate: Date, recipeIds: List[ID])
+case class SettingOffer(menuType: Int, executionDate: Option[Date], recipeIds: List[ID])
 
-case class EditOffer(ids: List[ID], names: List[String], prices: List[Int], executionDate: Date, menuType: Int)
+case class EditOffer(ids: List[ID], names: List[String], prices: List[Int], executionDate: Option[Date], menuType: Int)
 
 case class PassingDate(date: Date)
 
-case class InsertOffer(name: String, price: Int, recipes: List[Recipe], multipliepQuantity: Int)
+case class InsertOffer(name: String, price: Int, recipes: List[Recipe], multipliedQuantity: Int)

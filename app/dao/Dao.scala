@@ -1,6 +1,7 @@
 package dao
 
 import java.util.Date
+
 import javax.inject.Inject
 import cats.effect.IO
 import cats.implicits._
@@ -8,6 +9,7 @@ import doobie._
 import doobie.implicits._
 import models._
 import services.SimbaAlias.ID
+import services.SimbaHTMLHelper
 import services.SimbaHTMLHelper.stringToAddress
 
 
@@ -80,7 +82,7 @@ class Dao @Inject()(dS: DoobieStore) {
   }
 
   def getOffersByDate(date: String): IO[Seq[Offer]] = {
-    (offerSelect ++ fr"where expiration_date = $date")
+    (offerSelect ++ fr"where expiration_date = $date or expiration_date is null")
       .query[Offer]
       .to[List]
       .transact(xa)
@@ -93,7 +95,7 @@ class Dao @Inject()(dS: DoobieStore) {
 
   def getRecipesLike(s: String, menuType: Int): IO[Seq[Recipe]] = {
     val search = '%' + s + '%'
-    (recipesSelect ++ fr"where menu_type = $menuType and name like $search")
+    (recipesSelect ++ ( if(menuType == 2 || menuType == 4 || menuType == 5) fr"where menu_type = $menuType and name like $search" else fr"where name like $search"))
       .query[Recipe]
       .to[Seq]
       .transact(xa)
@@ -165,8 +167,8 @@ class Dao @Inject()(dS: DoobieStore) {
     } yield ()).transact(xa)
   }
 
-  def insertOrUpdateOffers(date: Date, menuType: Int, list: List[InsertOffer]): IO[Unit] = {
-    def deleteBeforeUpdate(date: Date, menuType: Int): ConnectionIO[Unit] = {
+  def insertOrUpdateOffers(date: Option[Date], menuType: Int, list: List[InsertOffer]): IO[Unit] = {
+    def deleteBeforeUpdate(date: Option[Date], menuType: Int): ConnectionIO[Unit] = {
       for {
         offers <- sql"select id from offers where expiration_date = $date".query[ID].to[List]
         _ <- offers.traverse(i => sql"delete from offer_recipes where offer_id = $i".update.run)
@@ -174,7 +176,7 @@ class Dao @Inject()(dS: DoobieStore) {
       } yield()
     }
 
-    def insertOrUpdateOffer(name: String, date: Date, menuType: Int, price: Int, recipes: List[Recipe], quantityOfRecipes: Int): ConnectionIO[Unit] = {
+    def insertOrUpdateOffer(name: String, date: Option[Date], menuType: Int, price: Int, recipes: List[Recipe], quantityOfRecipes: Int): ConnectionIO[Unit] = {
       for {
         _ <- sql"insert into offers (name, price, expiration_date, menu_type) values ($name, $price, $date, $menuType)".update.run
         id <- sql"select last_insert_id()".query[Int].unique
@@ -183,13 +185,18 @@ class Dao @Inject()(dS: DoobieStore) {
         }
       } yield ()
     }
-
     (for {
-      _ <- deleteBeforeUpdate(date, menuType)
+      _ <- {
+        if(menuType == 6) {
+          val currentExpirationDate = SimbaHTMLHelper.formattingDateForForm(new Date())
+          sql"update offers set expiration_date = ${currentExpirationDate} where expiration_date is null and menu_type = 6".update.run
+        } else deleteBeforeUpdate(date, menuType)
+      }
       _ <- list.traverse { o =>
-        insertOrUpdateOffer(o.name, date, menuType, o.price, o.recipes, o.multipliepQuantity)
+        insertOrUpdateOffer(o.name, date, menuType, o.price, o.recipes, o.multipliedQuantity)
       }
     } yield ()).transact(xa)
+
   }
 
   def editCustomer(id: ID, c: CustomerInput): IO[Unit] = {
