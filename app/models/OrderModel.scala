@@ -7,7 +7,7 @@ import javax.inject._
 import play.api.Logger
 import cats.effect.IO
 import cats.implicits._
-import com.itextpdf.text.{Document, Font, Paragraph, Element}
+import com.itextpdf.text.{Document, Font, Paragraph}
 import com.itextpdf.text.pdf.{BaseFont, PdfPCell, PdfPTable, PdfWriter}
 import dao.Dao
 import services.SimbaAlias._
@@ -30,24 +30,19 @@ class OrderModel @Inject()(dao: Dao) {
     3 -> "Бартер")
   private val payments = List("Готівка", "Карткою", "Бартер")
 
-  def getAllTableRows: IO[Map[Date, Seq[OrderForDisplay]]] = {
-    def orderToOrderForDisplay(o: Order): IO[OrderForDisplay] = {
-      for {
-        customer <- dao.getCustomerBy(o.customerId)
-        address <- dao.getAddressBy(o.addressId)
-        inviter <- if (o.inviterId.isDefined) dao.getCustomerBy(o.inviterId.head).map(c => Option(c)) else IO(None)
-        offers <- getAllOfferIdByOrderId(o.id.head)
-      } yield OrderForDisplay(o.id, customer, address, inviter,
-        o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
-        inOrderToString(offers, ", "),
-        o.total, o.discount,
-        intToPayment(o.payment),
-        o.offlineDelivery, o.deliveryOnMonday,
-        o.paid, o.delivered,
-        o.note)
+  def getAllTableRows: IO[Seq[OrderForDisplay]] = {
+    dao.getAllOrders.flatMap { orders =>
+      val listOfIO: List[IO[OrderForDisplay]] = orders.map(orderToOrderForDisplay)
+      val IoOfList: IO[List[OrderForDisplay]] = listOfIO.sequence
+      IoOfList
     }
-    dao.getAllOrders.flatMap{ orders =>
-      orders.map(orderToOrderForDisplay).sequence.map(_.groupBy(_.deliveryDay))
+  }
+
+  def getAllOrdersWhere(date: Date): IO[Seq[OrderForDisplay]] = {
+    dao.getAllOrdersWhere(date).flatMap { orders =>
+      val listOfIO: List[IO[OrderForDisplay]] = orders.toList.map(orderToOrderForDisplay)
+      val IoOfList: IO[List[OrderForDisplay]] = listOfIO.sequence
+      IoOfList
     }
   }
 
@@ -77,7 +72,7 @@ class OrderModel @Inject()(dao: Dao) {
     } yield OrderInput(order.id, order.customerId, order.addressId, order.inviterId,
       changingDateFormatForPlayForm(order.orderDay), changingDateFormatForPlayForm(order.deliveryDay),
       convertMinutesToString(order.deliverFrom), convertMinutesToString(order.deliverTo),
-      offers.flatMap(t =>  List.fill(t._2)(t._1.id.head)),
+      offers.flatMap(t => List.fill(t._2)(t._1.id.head)),
       order.total, order.discount,
       intToPayment(order.payment),
       order.offlineDelivery, order.deliveryOnMonday,
@@ -124,54 +119,57 @@ class OrderModel @Inject()(dao: Dao) {
         offers <- dao.getAllOfferIdByOrder(o.id.head)
       } yield CourierSticker(address,
         convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
-        inOrder = inOrderToString(offers, "+") )).unsafeRunSync()
+        inOrder = inOrderToString(offers, "+"))).unsafeRunSync()
     }
+
     def getParagraphWithFont(text: String, font: Font): Paragraph = {
       new Paragraph(text, font)
     }
+
     def getStingFromOptional(option: Option[String], needComa: Boolean = true): String = option match {
-      case Some(value) => value + (if(needComa) "," else "")
+      case Some(value) => value + (if (needComa) "," else "")
       case None => ""
     }
 
     dao.getAllOrdersWhere(date)
       .map(_.map(orderToCourierSticker).toArray)
-      .map{ ss =>
-      val document = new Document()
-      val byteArrayOutputStream = new ByteArrayOutputStream()
-      val bf = BaseFont.createFont("resourses/arialun.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
-      val mainFont = new Font(bf, 14)
-      val table = new PdfPTable(3)
-      val writer = PdfWriter.getInstance(document, byteArrayOutputStream)
+      .map { ss =>
+        val document = new Document()
+        val byteArrayOutputStream = new ByteArrayOutputStream()
+        val bf = BaseFont.createFont("resourses/arialun.ttf", BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
+        val mainFont = new Font(bf, 14)
+        val table = new PdfPTable(3)
+        val writer = PdfWriter.getInstance(document, byteArrayOutputStream)
 
-      document.open()
-      table.setTotalWidth(Array(198.425f, 198.425f, 198.425f))
-      table.setLockedWidth(true)
-      val canvas = writer.getDirectContent
-      table.writeSelectedRows(0, 0, document.left() + table.getTotalWidth, document.top(), canvas)
+        document.open()
+        table.setTotalWidth(Array(198.425f, 198.425f, 198.425f))
+        table.setLockedWidth(true)
+        val canvas = writer.getDirectContent
+        table.writeSelectedRows(0, 0, document.left() + table.getTotalWidth, document.top(), canvas)
 
-      ss.foreach{ sticker =>
-        val cell = new PdfPCell(getParagraphWithFont(s"""
+        ss.foreach { sticker =>
+          val cell = new PdfPCell(getParagraphWithFont(
+            s"""
            ${if (!sticker.address.city.contains("Київ")) sticker.address.city else ""}
            ${sticker.address.address}
            ${getStingFromOptional(sticker.address.entrance)} ${getStingFromOptional(sticker.address.floor)} ${getStingFromOptional(sticker.address.flat, needComa = false)}
            ${sticker.deliverFrom}-${sticker.deliverTo}
            ${sticker.inOrder}
           """, font = mainFont))
-        cell.setFixedHeight(172.913f)
-        table.addCell(cell)
-      }
-      // Adding empty cells
-      (0 to ss.length % 3).foreach(_ => table.addCell(""))
+          cell.setFixedHeight(172.913f)
+          table.addCell(cell)
+        }
+        // Adding empty cells
+        (0 to ss.length % 3).foreach(_ => table.addCell(""))
 
-      document.add(table)
-      document.close()
-      byteArrayOutputStream.toByteArray
-    }
+        document.add(table)
+        document.close()
+        byteArrayOutputStream.toByteArray
+      }
   }
 
   private def inOrderToString(inOrder: List[(Offer, Int)], separator: String): String = {
-    inOrder.map(t => t._1.name + (if(t._2 > 1) s"(${t._2})" else "")).mkString(separator)
+    inOrder.map(t => t._1.name + (if (t._2 > 1) s"(${t._2})" else "")).mkString(separator)
   }
 
   private def getAllOffersOnThisWeek: Seq[Offer] = {
@@ -185,6 +183,22 @@ class OrderModel @Inject()(dao: Dao) {
         IO(List())
       }, s => IO(s))
       .unsafeRunSync()
+  }
+
+  private def orderToOrderForDisplay(o: Order): IO[OrderForDisplay] = {
+    for {
+      customer <- dao.getCustomerBy(o.customerId)
+      address <- dao.getAddressBy(o.addressId)
+      inviter <- if (o.inviterId.isDefined) dao.getCustomerBy(o.inviterId.head).map(c => Option(c)) else IO(None)
+      offers <- getAllOfferIdByOrderId(o.id.head)
+    } yield OrderForDisplay(o.id, customer, address, inviter,
+      o.orderDay, o.deliveryDay, convertMinutesToString(o.deliverFrom), convertMinutesToString(o.deliverTo),
+      inOrderToString(offers, ", "),
+      o.total, o.discount,
+      intToPayment(o.payment),
+      o.offlineDelivery, o.deliveryOnMonday,
+      o.paid, o.delivered,
+      o.note)
   }
 
   private def convertStringToMinutes(timeInput: String): Minutes = {

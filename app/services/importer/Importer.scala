@@ -1,4 +1,5 @@
 package services.importer
+
 import scala.annotation.tailrec
 import java.io.File
 import org.apache.poi.ss.usermodel.{DataFormatter, WorkbookFactory}
@@ -38,7 +39,7 @@ class Importer {
   }
 
   def getAllXLSXsInDirectory(directory: File): List[File] = {
-    directory.listFiles(_.isFile).filter(_.getName.endsWith(".xlsx")).toList
+    directory.listFiles(_.isFile).filter(f => f.getName.endsWith(".xlsx") || f.getName.endsWith(".xls")).toList
   }
 
   def xlsxToLines(xlsx: File): Lines = {

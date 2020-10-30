@@ -19,6 +19,8 @@ GET         /searchCustomerForOrderById/:id         controllers.CustomerControll
 GET         /searchCustomerInviterForOrder          controllers.CustomerController.getCustomersInviterForOrder(search)
 
 GET         /orders                                 controllers.OrderController.toOrderFeedPage(search)
+GET         /ordersNextWeekForGivenDate             controllers.OrderController.toOrdersPageWithNextWeek
+GET         /ordersLastWeekForGivenDate             controllers.OrderController.toOrdersPageWithLastWeek
 GET         /createOrder                            controllers.OrderController.toOrderCreatePage
 GET         /createOrderWithCustomer/:id            controllers.OrderController.toOrderCreatePageWithCustomerId(id: Int)
 GET         /editOrder/:id                          controllers.OrderController.toOrderEditPage(id: Int)

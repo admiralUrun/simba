@@ -2,6 +2,7 @@ package controllers
 
 import java.text.SimpleDateFormat
 import java.util.Date
+
 import javax.inject._
 import play.api.Logger
 import play.api.http.HttpEntity
@@ -11,7 +12,8 @@ import play.api.mvc._
 import cats.effect.IO
 import akka.util.ByteString
 import services.SimbaAlias._
-import models.{OrderForDisplay, OrderInput, OrderModel}
+import models.{OrderForDisplay, OrderInput, OrderModel, PassingDate}
+import services.SimbaHTMLHelper.{getLastSundayFromGivenDate, getNextSundayFromGivenDate}
 
 @Singleton
 class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
@@ -31,25 +33,43 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
       "paid" -> boolean, "delivered" -> boolean,
       "note" -> optional(text)
     )(OrderInput.apply)(OrderInput.unapply))
+  private val passDateForm = Form(
+    mapping(
+      "date" -> date
+    )(PassingDate.apply)(PassingDate.unapply))
   private val orderFeedPage = Redirect(routes.OrderController.toOrderFeedPage(""))
-  private val errorToMessage: Map[Int, String] = Map(
-    404 -> "404 Я не знайшов тут нічого ;("
-  )
+  private val errorRedirect = Redirect(routes.HomeController.index()).flashing("error" -> "Не відома помилка... Мяу.")
   private val logger = Logger("OrderControllerLogger")
 
+
+  def toOrdersPageWithNextWeek: PlayAction = Action { implicit request =>
+    passDateForm.bindFromRequest.fold(
+      _ => errorRedirect,
+      Data => {
+        toOrdersPage(Data.date, getNextSundayFromGivenDate)
+      }
+    )
+  }
+
+  def toOrdersPageWithLastWeek: PlayAction = Action { implicit request =>
+    passDateForm.bindFromRequest.fold(
+      _ => errorRedirect,
+      Data => toOrdersPage(Data.date, getLastSundayFromGivenDate)
+    )
+  }
 
   def toOrderFeedPage(search: String): PlayAction = {
     val messageAndOrderMap = orderModel.getAllTableRows
       .redeemWith(t => {
         logger.error("See stack trace", t)
         IO {
-          val emptyMap: Map[Date, Seq[OrderForDisplay]] = Map()
-          ("Помилка 502: Я не зміг підключитись до Бази Даних", emptyMap)
+          val emptySeq: Seq[OrderForDisplay] = Seq()
+          ("Помилка 502: Я не зміг підключитись до Бази Даних", emptySeq)
         }
       }, s => IO(("", s)))
     Result
     Action { implicit request =>
-        messageAndOrderMap.map { case (m: String, r: Map[Date, Seq[OrderForDisplay]]) =>
+        messageAndOrderMap.map { case (m: String, r: Seq[OrderForDisplay]) =>
           if (r.isEmpty || m.nonEmpty) Ok(views.html.orders(r, search, Option(m)))
           else Ok(views.html.orders(r, search))
         }
@@ -121,6 +141,10 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
       header = ResponseHeader(200),
       body = HttpEntity.Strict(ByteString(orderModel.generateCourierStickers(format.parse(date)).unsafeRunSync()), Some("application/pdf"))
     )
+  }
+
+  private def toOrdersPage(date: Date, convertingDate: Date => String)(implicit mR: MessagesRequestHeader): Result = {
+    Ok(views.html.orders(orderModel.getAllOrdersWhere(date).unsafeRunSync(), "", currentDate = convertingDate(date)))
   }
 
   private def resultWithFlash(result: Result, modelResponse: Boolean, successFlash: String, errorFlash: String = "Щось пішло не так ;("): Result = {
