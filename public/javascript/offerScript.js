@@ -21,8 +21,12 @@ function deleteFromOffer(indexToDelete) {
 }
 
 function addToDropDown(recipe) {
+    var layOutClass = ""
+    if(recipe.wasUsed === 1) layOutClass = "bg-danger"
+    else if(recipe.wasUsed === 2) layOutClass = "bg-success"
+    else layOutClass = " "
     if (!$.exists(`#recipe${recipe.id}`)) {
-        let item = $(`<a id="recipe${recipe.id}" class="dropdown-item" onclick="addToDisplay('recipe${recipe.id}')">${recipe.name}</a>`)
+        let item = $(`<a id="recipe${recipe.id}" class="dropdown-item ${layOutClass}" onclick="addToDisplay('recipe${recipe.id}')">${recipe.name}</a>`)
         item.data("data", recipe)
         item.appendTo($("#searchMenu"))
     }

@@ -11,6 +11,7 @@ import services.SimbaAlias._
 @Singleton
 class OfferModel @Inject()(dao: Dao) {
   private val logger = Logger("OfferModelLogger")
+  private val milliSecondInTwoMonths = 65700000000L
 
   def getOfferPreferencesByMenuType(menuType: Int, executionDate: Date): EditOffer = {
     val offers = dao.getOfferByDateAndMenuType(executionDate, menuType)
@@ -144,13 +145,20 @@ class OfferModel @Inject()(dao: Dao) {
     }
   }
 
-  def getRecipesByName(name: String, menuType: Int): Seq[Recipe] = {
+  def getRecipesByName(name: String, menuType: Int): Seq[RecipeJson] = {
+    val currentTime = new Date().getTime
     dao.getRecipesLike(name, menuType)
       .redeemWith(t =>{
         logger.error(s"Can't get Recipes by name = $name", t)
         IO(List())
-      }, s => IO(s))
-      .unsafeRunSync()
+      }, s => IO(s)).map{ rs =>
+      rs.map(r => RecipeJson(r.id, r.name, r.menuType, r.edited, r.lastDate match {
+        case Some(date) =>
+          if (currentTime - date.getTime >= milliSecondInTwoMonths) 2
+          else 1
+        case None => 0
+      }))
+    }.unsafeRunSync()
   }
 
   def getAllRecipesOnThisWeek(date: Date): List[Recipe] = { // TODO
@@ -162,6 +170,15 @@ class OfferModel @Inject()(dao: Dao) {
 case class Offer(id: Option[ID], name: String, price: Int, executionDate: Option[Date], menuType: Int)
 
 case class Recipe(id: Option[ID], name: String, menuType: String, edited: Boolean)
+
+case class RecipeWithData(id: Option[ID], name: String, menuType: String, edited: Boolean, lastDate: Option[Date])
+
+/* wasUsed
+0: unknown
+1: was used recently
+2: a while ago or for long time
+*/
+case class RecipeJson(id: Option[ID], name: String, menuType: String, edited: Boolean, wasUsed: Int)
 
 case class OfferRecipes(offerId: ID, recipesId: ID, menuForPeople: Int)
 

@@ -1,7 +1,7 @@
 package controllers
 
 import java.text.SimpleDateFormat
-
+import java.util.Date
 import javax.inject.{Inject, Singleton}
 import models._
 import play.api.data.Forms._
@@ -37,12 +37,13 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
     )(PassingDate.apply)(PassingDate.unapply)
   )
 
-  private implicit val recipesWriter: Writes[Recipe] = (
+  private implicit val recipesWriter: Writes[RecipeJson] = (
     (JsPath \ "id").writeNullable[Int] and
       (JsPath \ "name").write[String] and
       (JsPath \ "menuType").write[String] and
-      (JsPath \ "edited").write[Boolean]
-    ) (unlift(Recipe.unapply))
+      (JsPath \ "edited").write[Boolean] and
+      (JsPath \ "wasUsed").write[Int]
+    ) (unlift(RecipeJson.unapply))
 
   private val offersPage = Redirect(routes.OfferController.toOffersPage())
   private val errorRedirect = Redirect(routes.HomeController.index()).flashing("error" -> "Не відома помилка... Мяу.")
@@ -77,7 +78,10 @@ class OfferController @Inject()(offerModel: OfferModel, mcc: MessagesControllerC
     val formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy")
       Ok(views.html.offer(title, {
         if(date == "None") None
-        else Option(formatter.parse(date))
+        else Option(formatter.parse(date
+          .replace("Some(", "")
+          .replace(")", ""))
+        )
       }, menuType))
   }
 

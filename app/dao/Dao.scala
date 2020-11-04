@@ -93,10 +93,20 @@ class Dao @Inject()(dS: DoobieStore) {
     .to[List]
     .transact(xa)
 
-  def getRecipesLike(s: String, menuType: Int): IO[Seq[Recipe]] = {
+  def getRecipesLike(s: String, menuType: Int): IO[Seq[RecipeWithData]] = {
     val search = '%' + s + '%'
-    (recipesSelect ++ ( if(menuType == 2 || menuType == 4 || menuType == 5) fr"where menu_type = $menuType and name like $search" else fr"where name like $search"))
-      .query[Recipe]
+    (sql"""select recipes.id,
+               recipes.name,
+               recipes.menu_type,
+               recipes.edited,
+               max(o2.expiration_date) as expiration_date
+               from recipes
+            left join offer_recipes o on recipes.id = o.recipe_id
+            left join offers o2 on o.offer_id = o2.id """ ++
+      (if(menuType == 2 || menuType == 4 || menuType == 5) fr"where recipes.menu_type = $menuType and recipes.name like $search"
+      else fr"where recipes.name like $search") ++
+      fr"group by recipes.id")
+      .query[RecipeWithData]
       .to[Seq]
       .transact(xa)
   }
@@ -189,7 +199,7 @@ class Dao @Inject()(dS: DoobieStore) {
       _ <- {
         if(menuType == 6) {
           val currentExpirationDate = SimbaHTMLHelper.formattingDateForForm(new Date())
-          sql"update offers set expiration_date = ${currentExpirationDate} where expiration_date is null and menu_type = 6".update.run
+          sql"update offers set expiration_date = $currentExpirationDate where expiration_date is null and menu_type = 6".update.run
         } else deleteBeforeUpdate(date, menuType)
       }
       _ <- list.traverse { o =>
