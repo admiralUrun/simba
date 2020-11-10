@@ -258,7 +258,7 @@ object SimbaHTMLHelper {
     s"<a id=${inDQ(htmlID)} class=${inDQ("dropdown-item")} href=${inDQ("#")} onclick=${inDQ(jSOnclick.body)} >$title</a>"
   }
 
-  def getStandardSearchDiv(formCall: Option[Call], dropdownHead: Option[String], sideButtonHref: Option[Call], withSideJS: Boolean): Html = {
+  def getStandardSearchDiv(formCall: Option[Call], dropdownHead: Option[String], sideButtonHref: Option[Call], withSideJS: Boolean, addButtonLabel: String = "Додати"): Html = {
     val formMethod = if (formCall.isDefined) formCall.head.method else ""
     val formAction = if (formCall.isDefined) formCall.head.url else ""
     val sideButtonAction = if (sideButtonHref.isDefined) sideButtonHref.head.url else ""
@@ -272,7 +272,7 @@ object SimbaHTMLHelper {
             SHTML(s"<input type=${if (withSideJS) inDQ("button") else inDQ("submit")} id=${inDQ("searchSubmit")} value=${inDQ("Пошук")} class=${inDQ("btn btn-primary btn-rounded btn-sm ")}>")
         }) +
         SHTML("</form>") +
-        getSHtmlInDiv(layoutClass = "float-right", content = SHTML(s"<a class= ${inDQ(" colLast btn btn-success")} href=${inDQ(sideButtonAction)} >Додати</a>"))
+        getSHtmlInDiv(layoutClass = "float-right", content = SHTML(s"<a class= ${inDQ(" colLast btn btn-success")} href=${inDQ(sideButtonAction)} >${addButtonLabel}</a>"))
     }
 
     getSHtmlInDiv("searchDIV", "clearfix", mainContent).toPlayHTML

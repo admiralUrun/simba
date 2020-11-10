@@ -53,7 +53,7 @@
     @getCustomerSearch = {
         <div id="customerInformation" class="row container-fluid">
             @if(isCreate) {
-                @getStandardSearchDiv(None, Option("Тут можна знайти Клієнта"), Option(routes.CustomerController.toCreateCustomerPageForOrder()), withSideJS = true)
+                @getStandardSearchDiv(None, Option("Тут можна знайти Клієнта"), Option(routes.CustomerController.toCreateCustomerPageForOrder()), withSideJS = true, "Додати клієнта")
             }
         </div>
     }
@@ -79,8 +79,8 @@
         @form(formCall, Symbol("id") -> "mainForm") {
             <fieldset>
                 @CSRF.formField
-                <input id="customerId" name="customerId" type="number" value="@getValueFromForm("customerId", oF)"  style="display: none">
-                <input id="addressId" name="addressId" type="number" value="@getValueFromForm("addressId", oF)" style="display: none">
+                <input id="customerId" class="form-control control " name="customerId" type="number" value="@getValueFromForm("customerId", oF)"  style="display: none">
+                <input id="addressId" class="form-control control " name="addressId" type="number" value="@getValueFromForm("addressId", oF)" style="display: none">
                 <input id="inviterId" name="inviterId" type="number" value="@getValueFromForm("inviterId", oF)" style="display: none">
 
                 <input name="orderDay" type="text" value="@{
@@ -94,9 +94,9 @@
 
                 <label class="label" for="dataInput"> Час доставки </label>
                 <div id="dataInput" class="container-fluid row">
-                    <input id="deliverFrom" name="deliverFrom" value="@getValueFromForm("deliverFrom", oF)" type="text" class=" col-auto">
+                    <input id="deliverFrom" name="deliverFrom" value="@getValueFromForm("deliverFrom", oF)" type="text" class="form-control control col-sm-1 is-invalid" onchange="listener($('deliverFrom'))">
                     <b class="col-auto"> По </b>
-                    <input id="deliverTo" name="deliverTo" value="@getValueFromForm("deliverTo", oF)" type="text" class=" col-auto">
+                    <input id="deliverTo" name="deliverTo" value="@getValueFromForm("deliverTo", oF)" type="text" class="form-control control col-sm-1 is-invalid" onchange="listener($('deliverTo'))">
                 </div>
                 <div>
                     <input id="total" name="total" value="@getValueFromForm("total", oF).getOrElse("")" type="text" style="display: none;">
@@ -105,11 +105,11 @@
 
                     <label for="discountInput" class="label">Знижка</label>
                     <div id="discountInput" class="container-fluid row">
-                        <input id="discount" name="discount" value="@getValueFromForm("discount", oF)" type="text" class=" col-auto">
+                        <input id="discount" name="discount" value="@getValueFromForm("discount", oF)" type="text" class="col-auto">
                     </div>
 
                     <div id="paymentDIV">
-                        <input id="payment" name="payment" value="@getValueFromForm("payment", oF)" type="text" style="display: none;">
+                        <input id="payment" class="form-control control " name="payment" value="@getValueFromForm("payment", oF)" type="text" style="display: none;">
                         <div id="paymentMenu">
                         @createDropDown("Спосіб Оплати", List("Готівка", "Карткою", "Бартер"), (s: String) => { // TODO: Add to database remove hardCode
                             val id = "paymentItem"
@@ -142,7 +142,7 @@
             </fieldset>
 
             <div class="actions">
-                <input type="submit" value="@buttonLabel" class="btn btn-primary"> Або
+                <input id="submitBtn" type="submit" value="@buttonLabel" class="btn btn-primary" disabled> Або
                 <a href="@routes.OrderController.toOrderFeedPage("")" class="btn">Скасувати</a>
             </div>
         }
@@ -150,16 +150,27 @@
         <script id="runtimeScript">
                 $(document).ready(function () {
                     const hasCustomerId = @{possibleIdAfterAddingCustomer.isDefined}
-                    const isCreate = @{!isCreate}
+                    const isEdit = @{!isCreate}
                     if (hasCustomerId) {
                         $.get("/searchCustomerForOrderById/" + @possibleIdAfterAddingCustomer.getOrElse(0), function (data) {
                             setCustomerAndAddressAddDropdown(data)
                             addInviterSearch()
                         })
                     }
-                    if (isCreate) {
+                    if (isEdit) {
                         setPayment(`@getValueFromForm("payment", oF)`)
+                        const deliverFrom = $('deliverFrom')
+                        const deliverTo= $('deliverTo')
+                        deliverFrom.classList.remove('is-invalid')
+                        deliverTo.classList.remove('is-invalid')
+                        deliverTo.classList.add('is-valid')
+                        deliverFrom.classList.add('is-valid')
                     }
+
+                    $('.form-control.control').change((event) => {
+                        const input = event.currentTarget
+                        listener(input)
+                    })
 
                     $("input").keypress(function (e) {
                         if (e.which === 13) {

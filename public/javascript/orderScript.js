@@ -174,7 +174,7 @@ function setCustomerAddAddressDropdown(id) {
 function setAddress(address, id) {
     function setAddress(address) {
         $(`#address`).remove()
-        $(`#addressId`).val(Number(address.id))
+        $(`#addressId`).val(Number(address.id)).trigger("change")
         displayAddress(address)
     }
 
@@ -183,7 +183,7 @@ function setAddress(address, id) {
 }
 
 function setCustomer(customer) {
-    $(`#customerId`).val(Number(customer.id))
+    $(`#customerId`).val(Number(customer.id)).trigger("change")
     displayCustomer(customer)
 }
 
@@ -222,9 +222,9 @@ function descriptionListElement(head, content, needDivWithCol) {
 }
 
 function editCustomerInOrder(id) {
-    $(`#customersID`).val("")
-    $(`#addressId`).val("")
-    $(`#inviterId`).val("")
+    $(`#customersID`).val("").trigger("change")
+    $(`#addressId`).val("").trigger("change")
+    $(`#inviterId`).val("").trigger("change")
 
     $(`#customer`).remove()
     $('#address').remove()
@@ -358,7 +358,7 @@ function setPayment(payment) {
     $(`<h5 id="paymentView">Спосіб оплати: ${payment}</h5>
         <button id="paymentEdit" class="btn btn-success"  onclick="removePayment()">Змінити</button>`).appendTo($('#paymentDIV'))
     $('#paymentMenu').hide()
-    $('#payment').val(payment)
+    $('#payment').val(payment).trigger("change")
 }
 
 function removePayment() {
@@ -366,11 +366,19 @@ function removePayment() {
     $('#paymentEdit').remove()
 
     $('#paymentMenu').show()
-    $('#payment').val('')
+    $('#payment').val('').trigger("change")
 }
 
-function setDiscountFromCustomer() {
-
+function listener (input) {
+    if(input.value !== "") {
+        input.classList.remove('is-invalid')
+        input.classList.add('is-valid')
+    } else {
+        input.classList.remove('is-valid')
+        input.classList.add('is-invalid')
+    }
+    const is_valid = $('.form-control.control').length === $('.form-control.control.is-valid').length;
+    $("#submitBtn").attr("disabled", !is_valid)
 }
 
 class Customer {
