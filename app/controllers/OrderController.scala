@@ -40,6 +40,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   private val orderFeedPage = Redirect(routes.OrderController.toOrderFeedPage(""))
   private val errorRedirect = Redirect(routes.HomeController.index()).flashing("error" -> "Не відома помилка... Мяу.")
   private val logger = Logger("OrderControllerLogger")
+  private val format = new SimpleDateFormat("yyyy-MM-dd")
 
 
   def toOrdersPageWithNextWeek: PlayAction = Action { implicit request =>
@@ -136,7 +137,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   def generateCourierStickers(date: String): PlayAction = Action { implicit request =>
-    val format = new SimpleDateFormat("yyyy-MM-dd")
+
     Result(
       header = ResponseHeader(200),
       body = HttpEntity.Strict(ByteString(orderModel.generateCourierStickers(format.parse(date)).unsafeRunSync()), Some("application/pdf"))
@@ -144,7 +145,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   private def toOrdersPage(date: Date, convertingDate: Date => String)(implicit mR: MessagesRequestHeader): Result = {
-    Ok(views.html.orders(orderModel.getAllOrdersWhere(date).unsafeRunSync(), "", currentDate = convertingDate(date)))
+    Ok(views.html.orders(orderModel.getAllOrdersWhere(format.parse(convertingDate(date))).unsafeRunSync(), "", currentDate = convertingDate(date)))
   }
 
   private def resultWithFlash(result: Result, modelResponse: Boolean, successFlash: String, errorFlash: String = "Щось пішло не так ;("): Result = {
