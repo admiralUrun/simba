@@ -1,7 +1,6 @@
 package dao
 
 import java.util.Date
-
 import javax.inject.Inject
 import cats.effect.IO
 import cats.implicits._

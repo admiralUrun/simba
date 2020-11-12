@@ -2,7 +2,6 @@ package controllers
 
 import java.text.SimpleDateFormat
 import java.util.Date
-
 import javax.inject._
 import play.api.Logger
 import play.api.http.HttpEntity
@@ -13,7 +12,7 @@ import cats.effect.IO
 import akka.util.ByteString
 import services.SimbaAlias._
 import models.{OrderForDisplay, OrderInput, OrderModel, PassingDate}
-import services.SimbaHTMLHelper.{getLastSundayFromGivenDate, getNextSundayFromGivenDate}
+import services.SimbaHTMLHelper.{getLastSundayFromGivenDate, getNextSundayFromGivenDate, getNextSundayFromCornetWeek}
 
 @Singleton
 class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
@@ -60,7 +59,7 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   def toOrderFeedPage(search: String): PlayAction = {
-    val messageAndOrderMap = orderModel.getAllTableRows
+    val messageAndOrderMap = orderModel.getAllOrdersWhere(format.parse(getNextSundayFromCornetWeek))
       .redeemWith(t => {
         logger.error("See stack trace", t)
         IO {
@@ -137,7 +136,6 @@ class OrderController @Inject()(orderModel: OrderModel, mcc: MessagesControllerC
   }
 
   def generateCourierStickers(date: String): PlayAction = Action { implicit request =>
-
     Result(
       header = ResponseHeader(200),
       body = HttpEntity.Strict(ByteString(orderModel.generateCourierStickers(format.parse(date)).unsafeRunSync()), Some("application/pdf"))

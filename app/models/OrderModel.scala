@@ -30,13 +30,6 @@ class OrderModel @Inject()(dao: Dao) {
     3 -> "Бартер")
   private val payments = List("Готівка", "Карткою", "Бартер")
 
-  def getAllTableRows: IO[Seq[OrderForDisplay]] = {
-    dao.getAllOrders.flatMap { orders =>
-      val listOfIO: List[IO[OrderForDisplay]] = orders.map(orderToOrderForDisplay)
-      val IoOfList: IO[List[OrderForDisplay]] = listOfIO.sequence
-      IoOfList
-    }
-  }
 
   def getAllOrdersWhere(date: Date): IO[Seq[OrderForDisplay]] = {
     dao.getAllOrdersWhere(date).flatMap { orders =>
