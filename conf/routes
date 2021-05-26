@@ -5,44 +5,40 @@
 
 GET         /                                       controllers.HomeController.index
 #GET     /javascriptRoutes               controllers.HomeController.javascriptRoutes
-POST        /importCustomers                        controllers.HomeController.importFromCVS()
 
-GET         /customers                              controllers.CustomerController.toCustomersListPage(search)
-GET         /addCustomer                            controllers.CustomerController.toCreateCustomerPage()
-GET         /addCustomerForOrder                    controllers.CustomerController.toCreateCustomerPageForOrder
-GET         /editCustomer/:id                       controllers.CustomerController.toEditCustomerPage(id: Int)
+GET         /customers                              controllers.CustomerController.getCustomerTabs()
+GET         /customers/:search                      controllers.CustomerController.getCustomers(search)
+GET         /loadCustomerByID/:id                   controllers.CustomerController.getCustomer(id: Int)
+GET         /searchAddresses/:search                controllers.CustomerController.getStreets(search)
 POST        /newCustomer                            controllers.CustomerController.createCustomer()
-POST        /newCustomeToOrder                      controllers.CustomerController.createCustomerThenToOrder()
-POST        /updateCustomer/:id                     controllers.CustomerController.update(id: Int)
-GET         /searchCustomerForOrder                 controllers.CustomerController.getCustomersForOrderSearch(search)
-GET         /searchCustomerForOrderById/:id         controllers.CustomerController.getCustomersForOrder(id: Int)
-GET         /searchCustomerInviterForOrder          controllers.CustomerController.getCustomersInviterForOrder(search)
+POST        /updateCustomer                         controllers.CustomerController.update()
 
-GET         /orders                                 controllers.OrderController.toOrderFeedPage(search)
-GET         /ordersNextWeekForGivenDate             controllers.OrderController.toOrdersPageWithNextWeek
-GET         /ordersLastWeekForGivenDate             controllers.OrderController.toOrdersPageWithLastWeek
-GET         /createOrder                            controllers.OrderController.toOrderCreatePage
-GET         /createOrderWithCustomer/:id            controllers.OrderController.toOrderCreatePageWithCustomerId(id: Int)
-GET         /editOrder/:id                          controllers.OrderController.toOrderEditPage(id: Int)
-GET         /getStickers/:date                      controllers.OrderController.generateCourierStickers(date: String)
+#GET         /searchCustomerForOrder                 controllers.CustomerController.getCustomersForOrderSearch(search)
+#GET         /searchCustomerInviterForOrder          controllers.CustomerController.getCustomersInviterForOrder(search)
+
+GET         /orders                                 controllers.OrderController.ordersOnThisWeek
+GET         /ordersForWeek                          controllers.OrderController.orderForDate
+#GET         /getStickers/:date                      controllers.OrderController.generateCourierStickers(date: String)
+GET         /findBy/:id                             controllers.OrderController.findBy(id: Int)
 POST        /newOrder                               controllers.OrderController.createOrder
-POST        /updateOrder/:id                        controllers.OrderController.updateOrder(id: Int)
+POST        /updateOrder                            controllers.OrderController.updateOrder
 
-GET         /offers                                 controllers.OfferController.toOffersPage
-GET         /offersNextWeekFromGivenDate            controllers.OfferController.toOfferPageWithNextWeek
-GET         /offersLastWeekFromGivenDate            controllers.OfferController.toOfferPageWithLastWeek
-GET         /offer/:title/:menuType                 controllers.OfferController.toOfferPage(title: String, menuType: Int)
+#GET         /offers                                 controllers.OfferController.toOffersPage
+#GET         /offersNextWeekFromGivenDate            controllers.OfferController.toOfferPageWithNextWeek
+#GET         /offersLastWeekFromGivenDate            controllers.OfferController.toOfferPageWithLastWeek
+#GET         /offer/:title/:menuType                 controllers.OfferController.toOfferPage(title: String, menuType: Int)
+
 # offerWithOutForm never used out side scala code in OfferController.scala
 
-GET         /offerWithOutForm/:title/:menuType/:date controllers.OfferController.toOfferPageWithOutForm(title: String, menuType: Int, date: String)
-GET         /setOffer/:menuType                     controllers.OfferController.toCreateOfferPage(menuType: Int)
-GET         /offerPreferance/:title/:menuType       controllers.OfferController.toOfferPreferencePage(title: String, menuType: Int)
-GET         /recipesOnThisWeek                      controllers.OfferController.toRecipesOnThisWeekPage()
-POST        /editOffer                              controllers.OfferController.editOffer
-POST        /setOffer/:menuType                     controllers.OfferController.setOffer(menuType: Int)
-GET         /searchResipeForOffer/:name/:menuType   controllers.OfferController.getRecipesForOfferSearch(name, menuType: Int)
+#GET         /offerWithOutForm/:title/:menuType/:date controllers.OfferController.toOfferPageWithOutForm(title: String, menuType: Int, date: String)
+#GET         /setOffer/:menuType                     controllers.OfferController.toCreateOfferPage(menuType: Int)
+#GET         /offerPreferance/:title/:menuType       controllers.OfferController.toOfferPreferencePage(title: String, menuType: Int)
+#GET         /recipesOnThisWeek                      controllers.OfferController.toRecipesOnThisWeekPage()
+#POST        /editOffer                              controllers.OfferController.editOffer
+#POST        /setOffer/:menuType                     controllers.OfferController.setOffer(menuType: Int)
+#GET         /searchResipeForOffer/:name/:menuType   controllers.OfferController.getRecipesForOfferSearch(name, menuType: Int)
 
-GET         /calculations                           controllers.CalculationController.toCalculationsView
+#GET         /calculations                           controllers.CalculationController.toCalculationsView
 
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file                           controllers.Assets.versioned(path="/public", file: Asset)

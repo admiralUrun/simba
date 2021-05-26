@@ -12,158 +12,158 @@ import services.SimbaAlias._
 class OfferModel @Inject()(dao: Dao) {
   private val logger = Logger("OfferModelLogger")
   private val milliSecondInTwoMonths = 65700000000L
-
-  def getOfferPreferencesByMenuType(menuType: Int, executionDate: Date): EditOffer = {
-    val offers = dao.getOfferByDateAndMenuType(executionDate, menuType)
-      .redeemWith(t => {
-        logger.error(s"Can't get Offers by given Date = $executionDate and menuType = $menuType", t)
-        IO(List())
-      }, s => IO(s))
-      .unsafeRunSync().toList
-    EditOffer(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), Option(executionDate), menuType)
-  }
-
-  def setOffer(sO: SettingOffer): Boolean = {
-    val standardTitleToPrice: Map[String, Int] = Map(
-      "5 на 4 Класичне" -> 2249,
-      "5 на 2 Класичне" -> 1289,
-      "3 на 2 Класичне" -> 849,
-      "3 на 4 Класичне" -> 1489,
-      "5 на 4 Лайт" -> 2249,
-      "5 на 2 Лайт" -> 1289,
-      "3 на 2 Лайт" -> 849,
-      "3 на 4 Лайт" -> 1489,
-      "5 на 4 Сніданок" -> 1589,
-      "5 на 2 Сніданок" -> 849,
-      "3 на 2 Сніданок" -> 549,
-      "3 на 4 Сніданок" -> 989,
-
-      "Класичне 1 на 4" -> 600,
-      "Класичне 2 на 4" -> 600,
-      "Класичне 3 на 4" -> 600,
-      "Класичне 4 на 4" -> 700,
-      "Класичне 5 на 4" -> 700,
-
-      "Класичне 1 на 2" -> 300,
-      "Класичне 2 на 2" -> 300,
-      "Класичне 3 на 2" -> 300,
-      "Класичне 4 на 2" -> 350,
-      "Класичне 5 на 2" -> 350,
-
-      "Сніданок 1 на 4" -> 366,
-      "Сніданок 2 на 4" -> 366,
-      "Сніданок 3 на 4" -> 366,
-      "Сніданок 4 на 4" -> 367,
-      "Сніданок 5 на 4" -> 367,
-
-      "Сніданок 1 на 2" -> 183,
-      "Сніданок 2 на 2" -> 183,
-      "Сніданок 3 на 2" -> 183,
-      "Сніданок 4 на 2" -> 183,
-      "Сніданок 5 на 2" -> 183,
-    )
-
-    def validationError(menuType: Int, howManyIds: Int): Boolean = Map(
-      6 -> (howManyIds == 3),
-      5 -> (howManyIds >= 1),
-      4 -> (howManyIds >= 1),
-      3 -> (howManyIds == 5),
-      2 -> (howManyIds == 5),
-      1 -> (howManyIds == 5)
-    )(menuType)
-
-    def primeMenuTypeInsets(menuType: Int, recipes: List[Recipe]): List[InsertOffer] = {
-      val recipesWithIndex = recipes.toArray
-      val allRecipesOnFour = List(
-        InsertOffer(s"${convertMenuTypeToString(menuType)} 1 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 1 на 4"), List(recipesWithIndex(0)), 2),
-        InsertOffer(s"${convertMenuTypeToString(menuType)} 2 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 2 на 4"), List(recipesWithIndex(1)), 2),
-        InsertOffer(s"${convertMenuTypeToString(menuType)} 3 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 3 на 4"), List(recipesWithIndex(2)), 2),
-        InsertOffer(s"${convertMenuTypeToString(menuType)} 4 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 4 на 4"), List(recipesWithIndex(3)), 2),
-        InsertOffer(s"${convertMenuTypeToString(menuType)} 5 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 5 на 4"), List(recipesWithIndex(4)), 2)
-      )
-      val allRecipesOnTwo = List(
-        InsertOffer(s"${convertMenuTypeToString(menuType)} 1 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 1 на 2"), List(recipesWithIndex(0)), 2),
-        InsertOffer(s"${convertMenuTypeToString(menuType)} 2 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 2 на 2"), List(recipesWithIndex(1)), 2),
-        InsertOffer(s"${convertMenuTypeToString(menuType)} 3 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 3 на 2"), List(recipesWithIndex(2)), 2),
-        InsertOffer(s"${convertMenuTypeToString(menuType)} 4 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 4 на 2"), List(recipesWithIndex(3)), 2),
-        InsertOffer(s"${convertMenuTypeToString(menuType)} 5 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 5 на 2"), List(recipesWithIndex(4)), 2)
-      )
-
-      List( // TODO: Think of something better
-        InsertOffer(s"5 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 2 ${convertMenuTypeToString(menuType)}"), recipes, 1),
-        InsertOffer(s"3 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 2 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 1),
-        InsertOffer(s"5 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 4 ${convertMenuTypeToString(menuType)}"), recipes, 2),
-        InsertOffer(s"3 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 4 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 2)
-      ) ::: allRecipesOnTwo ::: allRecipesOnFour
-    }
-
-    def sideMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = {
-      recipes.map(r => InsertOffer(r.name, 249, List(r), 1))
-    }
-
-    def promoMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = { // TODO promo prices + default menus
-      List(
-        InsertOffer("Промо на 2", 0, recipes, 1),
-        InsertOffer("Промо на 4", 0, recipes, 2)
-      )
-    }
-
-    val menuType = sO.menuType
-
-    if (!validationError(menuType, sO.recipeIds.length)) false
-    else {
-      val recipes = dao.getRecipesBy(sO.recipeIds)
-        .redeemWith(t => {
-          logger.error(s"Can't get Recipes by list of given  IDs ${sO.recipeIds.toString()}", t)
-          IO(List())
-        }, s => IO(s))
-        .unsafeRunSync().toList
-      val insertOffers = {
-        if (menuType == 4 || menuType == 5) sideMenuTypeInsets(recipes)
-        else if (menuType == 6) promoMenuTypeInsets(recipes)
-        else primeMenuTypeInsets(menuType, recipes)
-      }
-
-      dao.insertOrUpdateOffers(sO.executionDate, menuType, insertOffers)
-        .redeemWith(t => {
-        logger.error("Can't insert or Update Offers ", t)
-        IO(false)
-      }, _ => IO(true))
-        .unsafeRunSync()
-    }
-  }
-
-  def setOfferPreferences(editOffer: EditOffer): Boolean = {
-    if (editOffer.ids.length != editOffer.prices.length || editOffer.ids.length != editOffer.names.length) false
-    else {
-      dao.updateOffersNameAndPrice(editOffer.ids.zip(editOffer.names.zip(editOffer.prices)))
-        .redeemWith(t => {
-          logger.error("Can't set Offer Preferences", t)
-          IO(false)
-        }, _ => IO(true)
-      ).unsafeRunSync()
-    }
-  }
-
-  def getRecipesByName(name: String, menuType: Int): Seq[RecipeJson] = {
-    val currentTime = new Date().getTime
-    dao.getRecipesLike(name, menuType)
-      .redeemWith(t =>{
-        logger.error(s"Can't get Recipes by name = $name", t)
-        IO(List())
-      }, s => IO(s)).map{ rs =>
-      rs.map(r => RecipeJson(r.id, r.name, r.menuType, r.edited, r.lastDate match {
-        case Some(date) =>
-          if (currentTime - date.getTime >= milliSecondInTwoMonths) 2
-          else 1
-        case None => 0
-      }))
-    }.unsafeRunSync()
-  }
-
-  def getAllRecipesOnThisWeek(date: Date): List[Recipe] = { // TODO
-    List()
-  }
+//
+//  def getOfferPreferencesByMenuType(menuType: Int, executionDate: Date): EditOffer = {
+//    val offers = dao.getOfferByDateAndMenuType(executionDate, menuType)
+//      .redeemWith(t => {
+//        logger.error(s"Can't get Offers by given Date = $executionDate and menuType = $menuType", t)
+//        IO(List())
+//      }, s => IO(s))
+//      .unsafeRunSync().toList
+//    EditOffer(offers.map(_.id.head), offers.map(_.name), offers.map(_.price), Option(executionDate), menuType)
+//  }
+//
+//  def setOffer(sO: SettingOffer): Boolean = {
+//    val standardTitleToPrice: Map[String, Int] = Map(
+//      "5 на 4 Класичне" -> 2249,
+//      "5 на 2 Класичне" -> 1289,
+//      "3 на 2 Класичне" -> 849,
+//      "3 на 4 Класичне" -> 1489,
+//      "5 на 4 Лайт" -> 2249,
+//      "5 на 2 Лайт" -> 1289,
+//      "3 на 2 Лайт" -> 849,
+//      "3 на 4 Лайт" -> 1489,
+//      "5 на 4 Сніданок" -> 1589,
+//      "5 на 2 Сніданок" -> 849,
+//      "3 на 2 Сніданок" -> 549,
+//      "3 на 4 Сніданок" -> 989,
+//
+//      "Класичне 1 на 4" -> 600,
+//      "Класичне 2 на 4" -> 600,
+//      "Класичне 3 на 4" -> 600,
+//      "Класичне 4 на 4" -> 700,
+//      "Класичне 5 на 4" -> 700,
+//
+//      "Класичне 1 на 2" -> 300,
+//      "Класичне 2 на 2" -> 300,
+//      "Класичне 3 на 2" -> 300,
+//      "Класичне 4 на 2" -> 350,
+//      "Класичне 5 на 2" -> 350,
+//
+//      "Сніданок 1 на 4" -> 366,
+//      "Сніданок 2 на 4" -> 366,
+//      "Сніданок 3 на 4" -> 366,
+//      "Сніданок 4 на 4" -> 367,
+//      "Сніданок 5 на 4" -> 367,
+//
+//      "Сніданок 1 на 2" -> 183,
+//      "Сніданок 2 на 2" -> 183,
+//      "Сніданок 3 на 2" -> 183,
+//      "Сніданок 4 на 2" -> 183,
+//      "Сніданок 5 на 2" -> 183,
+//    )
+//
+//    def validationError(menuType: Int, howManyIds: Int): Boolean = Map(
+//      6 -> (howManyIds == 3),
+//      5 -> (howManyIds >= 1),
+//      4 -> (howManyIds >= 1),
+//      3 -> (howManyIds == 5),
+//      2 -> (howManyIds == 5),
+//      1 -> (howManyIds == 5)
+//    )(menuType)
+//
+//    def primeMenuTypeInsets(menuType: Int, recipes: List[Recipe]): List[InsertOffer] = {
+//      val recipesWithIndex = recipes.toArray
+//      val allRecipesOnFour = List(
+//        InsertOffer(s"${convertMenuTypeToString(menuType)} 1 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 1 на 4"), List(recipesWithIndex(0)), 2),
+//        InsertOffer(s"${convertMenuTypeToString(menuType)} 2 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 2 на 4"), List(recipesWithIndex(1)), 2),
+//        InsertOffer(s"${convertMenuTypeToString(menuType)} 3 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 3 на 4"), List(recipesWithIndex(2)), 2),
+//        InsertOffer(s"${convertMenuTypeToString(menuType)} 4 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 4 на 4"), List(recipesWithIndex(3)), 2),
+//        InsertOffer(s"${convertMenuTypeToString(menuType)} 5 на 4", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 5 на 4"), List(recipesWithIndex(4)), 2)
+//      )
+//      val allRecipesOnTwo = List(
+//        InsertOffer(s"${convertMenuTypeToString(menuType)} 1 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 1 на 2"), List(recipesWithIndex(0)), 2),
+//        InsertOffer(s"${convertMenuTypeToString(menuType)} 2 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 2 на 2"), List(recipesWithIndex(1)), 2),
+//        InsertOffer(s"${convertMenuTypeToString(menuType)} 3 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 3 на 2"), List(recipesWithIndex(2)), 2),
+//        InsertOffer(s"${convertMenuTypeToString(menuType)} 4 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 4 на 2"), List(recipesWithIndex(3)), 2),
+//        InsertOffer(s"${convertMenuTypeToString(menuType)} 5 на 2", standardTitleToPrice(s"${convertMenuTypeToString(menuType)} 5 на 2"), List(recipesWithIndex(4)), 2)
+//      )
+//
+//      List( // TODO: Think of something better
+//        InsertOffer(s"5 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 2 ${convertMenuTypeToString(menuType)}"), recipes, 1),
+//        InsertOffer(s"3 на 2 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 2 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 1),
+//        InsertOffer(s"5 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"5 на 4 ${convertMenuTypeToString(menuType)}"), recipes, 2),
+//        InsertOffer(s"3 на 4 ${convertMenuTypeToString(menuType)}", standardTitleToPrice(s"3 на 4 ${convertMenuTypeToString(menuType)}"), recipes.take(3), 2)
+//      ) ::: allRecipesOnTwo ::: allRecipesOnFour
+//    }
+//
+//    def sideMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = {
+//      recipes.map(r => InsertOffer(r.name, 249, List(r), 1))
+//    }
+//
+//    def promoMenuTypeInsets(recipes: List[Recipe]): List[InsertOffer] = { // TODO promo prices + default menus
+//      List(
+//        InsertOffer("Промо на 2", 0, recipes, 1),
+//        InsertOffer("Промо на 4", 0, recipes, 2)
+//      )
+//    }
+//
+//    val menuType = sO.menuType
+//
+//    if (!validationError(menuType, sO.recipeIds.length)) false
+//    else {
+//      val recipes = dao.getRecipesBy(sO.recipeIds)
+//        .redeemWith(t => {
+//          logger.error(s"Can't get Recipes by list of given  IDs ${sO.recipeIds.toString()}", t)
+//          IO(List())
+//        }, s => IO(s))
+//        .unsafeRunSync().toList
+//      val insertOffers = {
+//        if (menuType == 4 || menuType == 5) sideMenuTypeInsets(recipes)
+//        else if (menuType == 6) promoMenuTypeInsets(recipes)
+//        else primeMenuTypeInsets(menuType, recipes)
+//      }
+//
+//      dao.insertOrUpdateOffers(sO.executionDate, menuType, insertOffers)
+//        .redeemWith(t => {
+//        logger.error("Can't insert or Update Offers ", t)
+//        IO(false)
+//      }, _ => IO(true))
+//        .unsafeRunSync()
+//    }
+//  }
+//
+//  def setOfferPreferences(editOffer: EditOffer): Boolean = {
+//    if (editOffer.ids.length != editOffer.prices.length || editOffer.ids.length != editOffer.names.length) false
+//    else {
+//      dao.updateOffersNameAndPrice(editOffer.ids.zip(editOffer.names.zip(editOffer.prices)))
+//        .redeemWith(t => {
+//          logger.error("Can't set Offer Preferences", t)
+//          IO(false)
+//        }, _ => IO(true)
+//      ).unsafeRunSync()
+//    }
+//  }
+//
+//  def getRecipesByName(name: String, menuType: Int): Seq[RecipeJson] = {
+//    val currentTime = new Date().getTime
+//    dao.getRecipesLike(name, menuType)
+//      .redeemWith(t =>{
+//        logger.error(s"Can't get Recipes by name = $name", t)
+//        IO(List())
+//      }, s => IO(s)).map{ rs =>
+//      rs.map(r => RecipeJson(r.id, r.name, r.menuType, r.edited, r.lastDate match {
+//        case Some(date) =>
+//          if (currentTime - date.getTime >= milliSecondInTwoMonths) 2
+//          else 1
+//        case None => 0
+//      }))
+//    }.unsafeRunSync()
+//  }
+//
+//  def getAllRecipesOnThisWeek(date: Date): List[Recipe] = { // TODO
+//    List()
+//  }
 
 }
 

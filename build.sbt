@@ -11,6 +11,8 @@ resolvers += "Akka Snapshot Repository" at "https://repo.akka.io/snapshots/"
 scalaVersion := "2.12.2"
 
 libraryDependencies ++= Seq(jdbc, ehcache, ws, specs2 % Test, guice,
+  "dev.zio" %% "zio" % "1.0.6",
+  "dev.zio" %% "zio-interop-cats" % "2.0.0.0-RC12",
   "org.typelevel" %% "cats-core" % "2.1.1",
   "org.tpolecat" %% "doobie-core" % "0.8.8",
   "org.tpolecat" %% "doobie-h2" % "0.8.8",
@@ -19,7 +21,10 @@ libraryDependencies ++= Seq(jdbc, ehcache, ws, specs2 % Test, guice,
   "com.github.tototoshi" %% "scala-csv" % "1.3.6",
   "org.apache.poi" % "poi" % "3.17",
   "org.apache.poi" % "poi-ooxml" % "3.17",
-  "com.itextpdf" % "itextpdf" % "5.5.13.2"
+  "com.itextpdf" % "itextpdf" % "5.5.13.2",
+  "org.json4s" %% "json4s-jackson" % "3.6.7",
+  "joda-time" % "joda-time" % "2.9.3"
+//  "org.json4s" %% "json4s-native" % "3.6.7"
 )
 unmanagedResourceDirectories in Test <+= baseDirectory(_ / "target/web/public/test")
 

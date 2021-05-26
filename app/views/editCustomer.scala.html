@@ -1,5 +1,0 @@
-@(id:Int, cF: Form[CustomerInput], name: String)(implicit requestHeader: MessagesRequestHeader)
-
-@createOrEditCustomerTemplate(s"Клієнт $id: $name",
-    routes.CustomerController.update(id),
-    cF, buttonLabel =  "Змінити")

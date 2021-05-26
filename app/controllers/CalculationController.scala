@@ -7,7 +7,7 @@ import services.SimbaAlias._
 
 class CalculationController @Inject()(calculationModel: CalculationModel, mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
 
-  def toCalculationsView: PlayAction = Action {
-    Ok(views.html.calculations(calculationModel.getCalculations))
-  }
+//  def toCalculationsView: PlayAction = Action {
+//    Ok(views.html.calculations(calculationModel.getCalculations))
+//  }
 }

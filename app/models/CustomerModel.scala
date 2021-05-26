@@ -1,13 +1,10 @@
 package models
 
 import java.util.Date
+import javax.inject.{Inject, Singleton}
+import zio.Task
 import org.joda.time.{DateTime, DateTimeConstants}
 import dao.Dao
-import cats.effect.IO
-import cats.implicits._
-// IDEA doesn't see where it used
-import cats.effect.implicits._
-import javax.inject._
 import services.SimbaAlias._
 import services.SimbaHTMLHelper.addressToString
 
@@ -15,20 +12,23 @@ import services.SimbaHTMLHelper.addressToString
 class CustomerModel @Inject()(dao: Dao) {
   private val discountForInviteNewCustomers = 100
 
-  def getAllCustomerTableRows: IO[Seq[Customer]] = dao.getAllCustomers
+  def getAllCustomerTableRows: Task[Seq[Seq[Customer]]] =
+    dao.getAllCustomers
+      .map(_.grouped(50).toSeq)
 
-  def getAllCustomerTableRowsLike(search: String): IO[Seq[Customer]] = {
+  def getAllCustomerTableRowsLike(search: String): Task[Seq[Seq[Customer]]] = {
     dao.getAllCustomerTableRowsLike(search)
+      .map(cs => cs.grouped(50).toSeq)
   }
 
-  def insert(c: CustomerInput): IO[(Boolean, ID)] = {
-    dao.insertCustomer(c).redeemWith(_ => IO(false, -1), b => IO(true, b))
+  def insert(c: CustomerInput): Task[ID] = {
+    dao.insertCustomer(c)
   }
 
-  def findBy(id: ID): IO[CustomerInput] = {
+  def findBy(id: ID): Task[CustomerInput] = {
     for {
       c <- dao.getCustomerBy(id)
-      addresses <- dao.getAllCustomersAddresses(c.id.head).map(_.map(addressToString))
+      addresses <- dao.getAllCustomersAddresses(c.id.head)
     } yield CustomerInput(
       c.id, c.firstName, c.lastName,
       c.phone, c.phoneNote,
@@ -37,11 +37,11 @@ class CustomerModel @Inject()(dao: Dao) {
       addresses.toList)
   }
 
-  def editCustomer(id: ID, c: CustomerInput): IO[Boolean] = {
-    dao.editCustomer(id, c).redeemWith(_ => IO(false), _ => IO(true))
+  def editCustomer(c: CustomerInput): Task[Unit] = {
+    dao.editCustomer(c)
   }
 
-  def getDataForJsonToDisplayInOrderBy(id: ID): IO[CustomerAddressesForJson] = {
+  def getDataForJsonToDisplayInOrderBy(id: ID): Task[CustomerAddressesForJson] = {
     for {
       customer <- dao.getCustomerBy(id)
       addresses <- dao.getAllCustomersAddresses(id)
@@ -49,28 +49,28 @@ class CustomerModel @Inject()(dao: Dao) {
     } yield CustomerAddressesForJson(customer, addresses, discount * discountForInviteNewCustomers)
   }
 
-  def getInviterForJsonToDisplayInOrderBy(id: ID): IO[Customer] = {
+  def getInviterForJsonToDisplayInOrderBy(id: ID): Task[Customer] = {
     for {
       customer <- dao.getCustomerBy(id)
     } yield customer
   }
 
-  def getDataForJsonToDisplayInOrder(search: String): IO[Seq[CustomerAddressesForJson]] = {
-    def customerToJsonToDisplayInOrder(c: Customer): IO[CustomerAddressesForJson] = {
+  def getDataForJsonToDisplayInOrder(search: String): Task[Seq[CustomerAddressesForJson]] = {
+    def customerToJsonToDisplayInOrder(c: Customer): Task[CustomerAddressesForJson] = {
       for {
         addresses <- dao.getAllCustomersAddresses(c.id.head)
         discount <- dao.getDiscountFormCustomerBy(c.id.head, getLastSundayAndMonday)
       } yield CustomerAddressesForJson(c, addresses, discount * discountForInviteNewCustomers)
     }
 
-    dao.getAllCustomerTableRowsLike(search).flatMap {l =>
-     val listOfIO = l.map(customerToJsonToDisplayInOrder)
-      val IoOfList = listOfIO.sequence
-      IoOfList
+    dao.getAllCustomerTableRowsLike(search).flatMap{ cs =>
+      Task.foreach(cs)(customerToJsonToDisplayInOrder)
     }
   }
 
-  def getInviterForJsonToDisplayInOrder(search: String): IO[Seq[Customer]] = dao.getAllCustomerTableRowsLike(search)
+  def getInviterForJsonToDisplayInOrder(search: String): Task[Seq[Customer]] = dao.getAllCustomerTableRowsLike(search)
+
+  def getStreets(search: String): Task[Seq[String]] = dao.getStreets(search)
 
   private def getLastSundayAndMonday: (Date, Date) = {
     val today = DateTime.now
@@ -81,22 +81,22 @@ class CustomerModel @Inject()(dao: Dao) {
   }
 }
 
-case class Customer(id: Option[ID],
+case class Customer(id: Option[Int],
                     firstName: String, lastName: Option[String],
                     phone: String, phoneNote: Option[String],
                     phone2: Option[String], phoneNote2: Option[String],
                     instagram: Option[String],
                     preferences: Option[String], notes: Option[String])
 
-case class CustomerInput(id: Option[ID],
+case class CustomerInput(id: Option[Int],
                          firstName: String, lastName: Option[String],
                          phone: String, phoneNote: Option[String],
                          phone2: Option[String], phoneNote2: Option[String],
                          instagram: Option[String],
                          preferences: Option[String], notes: Option[String],
-                         addresses: List[String])
+                         addresses: List[Address])
 
-case class Address(id: Option[ID], customerId: Option[ID],
+case class Address(id: Option[Int], customerId: Option[Int],
                    city: String,
                    residentialComplex: Option[String],
                    address: String,

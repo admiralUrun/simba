@@ -1,12 +1,15 @@
 package models
 
 import java.util.Calendar
-import dao.Dao
 import javax.inject.Inject
+import zio.Task
+import dao.Dao
+
+
 
 class CalculationModel @Inject()(dao: Dao) {
 
-  def getCalculations: Seq[Calculation] = {
+  def getCalculations: Task[Seq[Calculation]] = {
     val m = Calendar.getInstance
     val s = Calendar.getInstance
     m.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
