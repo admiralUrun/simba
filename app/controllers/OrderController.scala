@@ -12,6 +12,7 @@ import zio.ZIO
 import akka.util.ByteString
 import services.SimbaAlias._
 import models.{OrderInput, OrderModel}
+import org.joda.time.format.DateTimeFormat
 import services.SimbaAction.ActionBuilderOps
 
 @Singleton
@@ -29,7 +30,7 @@ class OrderController @Inject()(orderModel: OrderModel, cc: ControllerComponents
 	}
 
 	def orderForDate: PlayAction = Action.zio(parse.default) { implicit req =>
-		extractClassFromJson("data")
+		extractClassFromJson("date")
 			.map(DateTime.parse)
 			.flatMap(orderModel.getAllOrdersWhere)
 			.map(os =>Ok(write(os)).as(JSON))
