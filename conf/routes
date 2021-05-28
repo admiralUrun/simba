@@ -17,7 +17,7 @@ POST        /updateCustomer                         controllers.CustomerControll
 #GET         /searchCustomerInviterForOrder          controllers.CustomerController.getCustomersInviterForOrder(search)
 
 GET         /orders                                 controllers.OrderController.ordersOnThisWeek
-GET         /ordersForWeek                          controllers.OrderController.orderForDate
+POST         /ordersForWeek                         controllers.OrderController.orderForDate
 #GET         /getStickers/:date                      controllers.OrderController.generateCourierStickers(date: String)
 GET         /findBy/:id                             controllers.OrderController.findBy(id: Int)
 POST        /newOrder                               controllers.OrderController.createOrder
